@@ -6,3 +6,21 @@ sym32 0006004C gb2_subshot_table   # SEQ header +0x34: sub-shot table -> 7 entri
 sym32 0601A398 gb2_subshot_dispatch  # NewSubShot jump table -> 7 entries
 sym32 0006042C gb2_life_icons      # global tbl[109] (hdr+0x1C +0x1B4): HUD life icons -> 7 entries
 06032066 015C                      # main-shot sound table [7] (Morrigan, DC 0x15C); was 0xFFFF padding
+060173A6 8807 8901                 # HitActS_S: sub-shot hit sound 0x5A also for kind 7 (Morrigan, DC 8C046E50);
+                                   #   was 'cmp/eq #6; bt exit' (6 already exits by default)
+# charge-gauge rows: read the gauge index (player+0x46, set by src/gauge.s) instead of charNo (player+0x58)
+06010532 E036                      # HUD gauge (dc_8c04e320)
+0601059E E036
+060105D2 E036
+06012B0A E036                      # FUN_06012AD8 (DC FUN_8C056600)
+06012B46 E036
+06012B72 E036
+06012BCE E036                      # FUN_06012BA8 (DC FUN_8C056900)
+06012BF2 E036
+06012C28 E036
+0601329A E036                      # PlayerSet
+060132C2 E036
+060132F2 E036
+06013460 E036                      # per-life init (DC FUN_8C058180)
+06013486 E036
+060134B6 E036

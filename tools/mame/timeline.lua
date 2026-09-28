@@ -9,6 +9,8 @@
 --   peek <addr> <len>          print bytes (hex) to stdout
 --   dbg <debugger command...>  run a debugger command (needs -debug)
 --   rtap <start> <end>         log each distinct PC that reads [start,end] (hex; print "RTAP pc addr data")
+--   usage <start> <end>        record every byte read/written in [start,end] (needs -nodrc: RAM is DRC fastram);
+--                              printed at exit as "USAGE r|w <addr> <pc,pc,...>"
 --   exit
 --   until <addr> <mask> <value> <interval> <field...>   pause the timeline (later frame numbers shift) and
 --                              tap <field> every <interval> frames until (u16 @addr & mask) == value
@@ -25,6 +27,7 @@ table.sort(events, function(a, b) return a.frame < b.frame end)
 
 local port = manager.machine.ioport.ports[":INPUTS"]
 local taps = {}      -- keep read taps alive
+local usage = nil
 local gate = nil     -- active "until" command
 local shift = 0      -- frames the timeline has been paused
 local held = {}      -- field name -> release frame (or -1 for hold)
@@ -89,10 +92,40 @@ local function run(cmd)
       if not seen[k] then seen[k] = true; print(string.format("RTAP pc=%08x addr=%08x data=%08x frame=%d", pc, offset, data, frame)) end
       return data
     end)
+  elseif op == "usage" then
+    local a, b = args:match("^(%x+)%s+(%x+)$")
+    a = tonumber(a, 16); b = tonumber(b, 16)
+    usage = usage or { r = {}, w = {}, base = a }
+    local cpu = manager.machine.devices[":maincpu"]
+    local function mark(t, offset, mask)
+      local pc = cpu.state["PC"].value
+      for k = 0, 3 do
+        if ((mask >> (8 * (3 - k))) & 0xff) ~= 0 then
+          local o = (offset & ~3) + k
+          t[o] = t[o] or {}
+          t[o][pc] = true
+        end
+      end
+    end
+    taps[#taps + 1] = space:install_read_tap(a, b, "ur", function(offset, data, mask) mark(usage.r, offset, mask); return data end)
+    taps[#taps + 1] = space:install_write_tap(a, b, "uw", function(offset, data, mask) mark(usage.w, offset, mask); return data end)
   elseif op == "until" then
     local a, m, v, iv, name = args:match("^(%x+)%s+(%x+)%s+(%x+)%s+(%d+)%s+(.+)$")
     gate = { a = tonumber(a, 16), m = tonumber(m, 16), v = tonumber(v, 16), iv = tonumber(iv), name = name, next = frame }
   elseif op == "exit" then
+    if usage then
+      for _, kind in ipairs({ "r", "w" }) do
+        local l = {}
+        for o in pairs(usage[kind]) do l[#l + 1] = o end
+        table.sort(l)
+        for _, o in ipairs(l) do
+          local pcs = {}
+          for pc in pairs(usage[kind][o]) do pcs[#pcs + 1] = string.format("%x", pc) end
+          table.sort(pcs)
+          print(string.format("USAGE %s %x %s", kind, o, table.concat(pcs, ",")))
+        end
+      end
+    end
     manager.machine:exit()
   end
 end

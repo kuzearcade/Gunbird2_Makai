@@ -174,10 +174,13 @@ def main():
             img.write(int(addr, 16), b, 'patch')
     # absolute-address assembly patches: first line '! @ <hex address>', optional '! defsym: name=0xaddr ...'
     # Branch targets are defined relative to a __base label so the assembler resolves short displacements.
+    # The section is linked at the 4-aligned address below the patch with '.skip' padding (then dropped), so
+    # '.align' in a patch refers to real addresses (SH .text sections are 4-aligned by the assembler).
     for asm in sorted(glob.glob(SRC + '/asm/*.s')):
         text = open(asm).read()
         addr = int(text.splitlines()[0].split('@')[1].strip(), 16)
-        pre = ['    .text', '__base:']
+        pad = addr & 3
+        pre = ['    .text', f'    .skip {pad}', '__base:']
         for l in text.splitlines():
             if l.startswith('! defsym:'):
                 for d in l.split(':', 1)[1].split():
@@ -187,9 +190,9 @@ def main():
         open(tmp, 'w').write('\n'.join(pre) + '\n' + text)
         o = tmp + '.o'; e = tmp + '.elf'
         run(f'{BIN}/sh-as -big --isa=sh2 {tmp} -o {o}')
-        run(f'{BIN}/sh-ld -EB -Ttext=0x{addr:x} -e 0x{addr:x} -L {SRC} -T {SRC}/asmpatch.ld --just-symbols={OUT}/obj/patch.elf -o {e} {o}')
+        run(f'{BIN}/sh-ld -EB -Ttext=0x{addr - pad:x} -e 0x{addr - pad:x} -L {SRC} -T {SRC}/asmpatch.ld --just-symbols={OUT}/obj/patch.elf -o {e} {o}')
         run(f'{BIN}/sh-objcopy -O binary --only-section=.text {e} {OUT}/obj/asm.bin')
-        b = open(OUT + '/obj/asm.bin', 'rb').read()
+        b = open(OUT + '/obj/asm.bin', 'rb').read()[pad:]
         img.write(addr, b, f'asm {os.path.basename(asm)}')
         print(f'  asm {os.path.basename(asm)} @ {addr:08x} ({len(b)} bytes)')
     crcs = split_and_write(img, a.set)
