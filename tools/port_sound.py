@@ -27,8 +27,17 @@ NOTE = 0x3F
 DC_SE, DC_GRP, DC_BASE = 0x8C08D57C, 0x8C08E974, 0x8C010000
 # DC IDs Morrigan uses (Effect ops in her scripts, voice/shot/item tables) -> (bank file, sample index)
 M_IDS = list(range(0x150, 0x163)) + [0x84]
-VOL = {0: 0x6C, 1: 0x6C, 2: 0x64, 3: 0x64}              # arcade level by DC group (voices 0/1, effects 2/3)
-VOL_ID = {0x84: 0x5F}                                   # Morrigan's 0x84 as loud as Marion's
+# level: the DC's per-sample level p1 mapped through the DC->arcade mix fit of tools/sound_levels.py
+# (re/sound_levels.json); pitch: the DC's per-sample pitch p0 (cents) added to NOTE, rounded to a semitone
+LEVELS = json.load(open(ROOT + '/re/sound_levels.json'))
+
+
+def level_and_note(bank, idx, grp):
+    from sound_levels import dc_params
+    p0, p1, _ = dc_params(bank, idx)
+    k = LEVELS['k_voice'] if grp in (0, 1) else LEVELS['k_sfx']
+    tl = (-k - LEVELS['u'] * p1) / 0.375
+    return max(0, min(127, round(127 - tl))), NOTE + round(p0 / 100)
 # arcade channel groups (FUN_0602BE6C: channels 0x0E-0x17 = 5,5,3,3,3,2,2,2,0,0); the player waits forever for a free
 # channel of the entry's group, so every entry must use one of them.  DC group 1 (a second voice group) -> 0 (voices)
 GROUP = {0: 0, 1: 0, 2: 2, 3: 3, 5: 5}
@@ -114,8 +123,10 @@ def main():
         e = banks[bk][ix]
         aid = FIRST_NEW_ID + k; remap[dcid] = aid
         wn = wave_of[(bk, e['start'], e['end'])]
-        ent = struct.pack('>HBBBB', wn, VOL_ID.get(dcid, VOL[grp]), 0, GROUP[grp], NOTE)
-        pat.append(f'{0x40300 + 6 * aid:08X} {ent.hex().upper()}      # id {aid:#05x} = DC {dcid:#05x} (wave {wn:#04x})')
+        vol, note = level_and_note(bk, ix, grp)
+        ent = struct.pack('>HBBBB', wn, vol, 0, GROUP[grp], note)
+        pat.append(f'{0x40300 + 6 * aid:08X} {ent.hex().upper()}      # id {aid:#05x} = DC {dcid:#05x} (wave {wn:#04x}, '
+                   f'volume {vol:#04x}, note {note:#04x})')
     pat += ['# voice tables, 1-based charNo (DC 8C087E9C/EAC/EBC have 7 entries; the arcade ones 6, followed by the',
             '# next table: [7] of the first two falls on the unused [0] of the next one, the third is redirected)',
             '06031FAE 005B                      # item voice A tbl 0x06031FA0[7] (DC 0x5B)',
