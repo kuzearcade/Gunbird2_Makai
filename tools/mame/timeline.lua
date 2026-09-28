@@ -15,6 +15,8 @@
 --   sndlog                     poll the sound-effect slots every frame (pending 0x06079DD8 = id+1, current
 --                              0x06079E08 = id, slots 0x0E-0x17); distinct ids printed at exit as "SND <id> <first frame>"
 --   sndtrace                   print sound-effect starts as "SNDT <frame> <channel> <id>"
+--   ymflog <file>              log every CPU write to the YMF278B (PS5 0x03100000-7) as
+--                              "<frame> <time us> <addr> <data> <mask>" (register/data write sequence and timing)
 --   exit
 --   until <addr> <mask> <value> <interval> <field...>   pause the timeline (later frame numbers shift) and
 --                              tap <field> every <interval> frames until (u16 @addr & mask) == value
@@ -33,6 +35,7 @@ local port = manager.machine.ioport.ports[":INPUTS"]
 local taps = {}      -- keep read taps alive
 local usage = nil
 local snd = nil      -- sndlog: id -> first frame
+local ymffh = nil
 local sndt = nil     -- sndtrace: slot -> last pending value
 local gate = nil     -- active "until" command
 local shift = 0      -- frames the timeline has been paused
@@ -126,9 +129,17 @@ local function run(cmd)
     gate = { a = tonumber(a, 16), m = tonumber(m, 16), v = tonumber(v, 16), iv = tonumber(iv), name = name, next = frame }
   elseif op == "sndlog" then
     snd = snd or {}
+  elseif op == "ymflog" then
+    local fh = io.open(args, "w")
+    taps[#taps + 1] = space:install_write_tap(0x03100000, 0x03100007, "ymflog", function(offset, data, mask)
+      fh:write(string.format("%d %.3f %x %08x %08x\n", frame, manager.machine.time:as_double() * 1e6, offset, data, mask))
+      return data
+    end)
+    ymffh = fh
   elseif op == "sndtrace" then
     sndt = sndt or {}
   elseif op == "exit" then
+    if ymffh then ymffh:close() end
     if snd then
       local l = {}
       for id in pairs(snd) do l[#l + 1] = id end
