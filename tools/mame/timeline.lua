@@ -17,6 +17,8 @@
 --   sndtrace                   print sound-effect starts as "SNDT <frame> <channel> <id>"
 --   ymflog <file>              log every CPU write to the YMF278B (PS5 0x03100000-7) as
 --                              "<frame> <time us> <addr> <data> <mask>" (register/data write sequence and timing)
+--   trace <file> <player x> <player hit ptr> <hit objs> <hit list> <hit count>   per-frame trace, same format as
+--                              tools/flycast/timeline.lua: F <frame> <x> <y> P <rects> T <task>:<hp>:<type> ...
 --   exit
 --   until <addr> <mask> <value> <interval> <field...>   pause the timeline (later frame numbers shift) and
 --                              tap <field> every <interval> frames until (u16 @addr & mask) == value
@@ -36,6 +38,7 @@ local taps = {}      -- keep read taps alive
 local usage = nil
 local snd = nil      -- sndlog: id -> first frame
 local ymffh = nil
+local tr = nil      -- trace
 local sndt = nil     -- sndtrace: slot -> last pending value
 local gate = nil     -- active "until" command
 local shift = 0      -- frames the timeline has been paused
@@ -129,6 +132,10 @@ local function run(cmd)
     gate = { a = tonumber(a, 16), m = tonumber(m, 16), v = tonumber(v, 16), iv = tonumber(iv), name = name, next = frame }
   elseif op == "sndlog" then
     snd = snd or {}
+  elseif op == "trace" then
+    local file, px, phit, objs, list, cnt = args:match("^(%S+)%s+(%x+)%s+(%x+)%s+(%x+)%s+(%x+)%s+(%x+)$")
+    tr = { fh = io.open(file, "w"), px = tonumber(px, 16), phit = tonumber(phit, 16), objs = tonumber(objs, 16),
+           list = tonumber(list, 16), cnt = tonumber(cnt, 16) }
   elseif op == "ymflog" then
     local fh = io.open(args, "w")
     taps[#taps + 1] = space:install_write_tap(0x03100000, 0x03100007, "ymflog", function(offset, data, mask)
@@ -140,6 +147,7 @@ local function run(cmd)
     sndt = sndt or {}
   elseif op == "exit" then
     if ymffh then ymffh:close() end
+    if tr then tr.fh:close() end
     if snd then
       local l = {}
       for id in pairs(snd) do l[#l + 1] = id end
@@ -163,8 +171,33 @@ local function run(cmd)
   end
 end
 
+local function s16(v) if v >= 0x8000 then return v - 0x10000 end return v end
+local function s32(v) if v >= 0x80000000 then return v - 0x100000000 end return v end
+local function trace_frame()
+  local out = { string.format("F %d %d %d L %d %d", frame, s32(space:read_u32(tr.px)), s32(space:read_u32(tr.px + 4)),
+                               space:read_u8(tr.px + 0x49), space:read_u16(tr.px + 0x4A)) }   -- shot level, power
+  local n = s16(space:read_u16(tr.cnt))
+  local rects, seen = {}, {}
+  for i = 0, n - 1 do
+    local k = space:read_u16(tr.list + 2 * i)
+    local e = tr.objs + k * 0x18
+    local xp = space:read_u32(e)
+    local r = string.format("%d,%d,%d,%d", s16(space:read_u16(e + 8)), s16(space:read_u16(e + 10)),
+                            s16(space:read_u16(e + 12)), s16(space:read_u16(e + 14)))
+    if xp == tr.phit then rects[#rects + 1] = r
+    elseif xp >= 0x06000000 and xp < 0x06100000 then            -- task x (s16 at task + 0x30)
+      local t = xp - 0x30
+      if not seen[t] then seen[t] = true; out[#out + 1] = string.format("T %x:%d:%x", t, s32(space:read_u32(t + 0x54)),
+                                                                        space:read_u32(t + 0x58)) end
+    end
+  end
+  table.insert(out, 2, "P " .. table.concat(rects, " "))
+  tr.fh:write(table.concat(out, " "), "\n")
+end
+
 emu.register_frame_done(function()
   frame = frame + 1
+  if tr then trace_frame() end
   if sndt then                   -- a start sets the channel's id (0x06079E08) and its counter (0x06079D90) to 10
     for i = 0x0E, 0x17 do
       local id, cnt = space:read_u16(0x06079E08 + 2 * i), space:read_u8(0x06079D90 + i)

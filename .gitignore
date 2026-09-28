@@ -16,3 +16,9 @@ out/tmp/
 out/snd/*.u9
 out/snd/*.u1
 unused_arcade_samples_removed/
+out/trace_compare/*.txt
+out/trace_compare/*.tl
+out/trace_compare/nv_*/
+out/trace_compare/noise/
+out/trace_compare/*.png
+out/trace_compare/run.log

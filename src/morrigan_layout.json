@@ -450,5 +450,9 @@
     }
    }
   }
+ },
+ "force_translate": {
+  "_doc": "DC address -> reason; translated as Morrigan data although MAP pairs it with an arcade object",
+  "8c41a7a4": "P1 sub-shot SetDt descriptor (her sub-shot script 0x8C41A828). On the DC it is also Aine's chardef+0x7C; the arcade Aine object (0x0D2CEC) is a C sub-shot table, not a SetDt descriptor: P1 darts were invisible and did no damage (found by tools/trace_compare.py)"
  }
 }

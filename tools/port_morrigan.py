@@ -26,6 +26,8 @@ MAP = {int(k, 16): int(v[0], 16) for k, v in json.load(open(ROOT + '/re/map_dc2a
 if os.path.exists(ROOT + '/re/map_extra.json'):
     MAP.update({int(k, 16): int(v, 16) for k, v in json.load(open(ROOT + '/re/map_extra.json')).items()})
 CFG = json.load(open(ROOT + '/src/morrigan_layout.json'))
+# DC objects that exist on the arcade too (MAP) but must be translated anyway: the arcade object has another format
+FORCE = {int(k, 16) for k in CFG.get('force_translate', {}) if not k.startswith('_')}
 # Morrigan's DC sound IDs -> arcade IDs (tools/port_sound.py): Effect <id> operands are remapped
 SND = {int(k, 16): v for k, v in json.load(open(ROOT + '/out/snd/remap.json')).items()} \
     if os.path.exists(ROOT + '/out/snd/remap.json') else {}
@@ -79,7 +81,7 @@ class Porter:
 
     # ---- discovery ---------------------------------------------------------------------------------
     def add(self, a, kind):
-        if a in MAP or a in self.objs: return
+        if (a in MAP and a not in FORCE) or a in self.objs: return
         self.objs[a] = kind
         self.todo.append((a, kind))
 
