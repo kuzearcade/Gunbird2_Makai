@@ -2,6 +2,7 @@
  * Unlike the six arcade characters (C-coded sub-shots), Morrigan's sub-shot spawns seq tasks running the
  * script at chardef+0x7C; count / limit per power level come from the SEQ hdr+0x34 table (0x0605D27C). */
 #include "arcade.h"
+#include "gen_sound.h"
 
 #define PLAYER(p)         (0x06055000 + (p) * 0xB0)
 #define P_X(p)            V16(PLAYER(p) + 0x10)
@@ -38,7 +39,7 @@ int gb2_newsubshot_jiki6(s16 p)
         P_SUB_ROT(p) = P_SUB_ROT(p) + 1;
         P_SUB_ACTIVE(p) = P_SUB_ACTIVE(p) + 1;
     }
-    PlaySound(0x15A);
+    PlaySound(SND_M(15A));                                 /* DC 0x15A */
     return 1;
 }
 

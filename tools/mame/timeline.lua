@@ -12,6 +12,9 @@
 --   usage <start> <end>        record every byte read/written in [start,end] (needs -nodrc: RAM is DRC fastram);
 --                              printed at exit as "USAGE r|w <addr> <pc,pc,...>"
 --   field <value> <name...>   set any input field (all ports), e.g. "1 field 0 Region" (0 = Japan)
+--   sndlog                     poll the sound-effect slots every frame (pending 0x06079DD8 = id+1, current
+--                              0x06079E08 = id, slots 0x0E-0x17); distinct ids printed at exit as "SND <id> <first frame>"
+--   sndtrace                   print sound-effect starts as "SNDT <frame> <channel> <id>"
 --   exit
 --   until <addr> <mask> <value> <interval> <field...>   pause the timeline (later frame numbers shift) and
 --                              tap <field> every <interval> frames until (u16 @addr & mask) == value
@@ -29,6 +32,8 @@ table.sort(events, function(a, b) return a.frame < b.frame end)
 local port = manager.machine.ioport.ports[":INPUTS"]
 local taps = {}      -- keep read taps alive
 local usage = nil
+local snd = nil      -- sndlog: id -> first frame
+local sndt = nil     -- sndtrace: slot -> last pending value
 local gate = nil     -- active "until" command
 local shift = 0      -- frames the timeline has been paused
 local held = {}      -- field name -> release frame (or -1 for hold)
@@ -119,7 +124,17 @@ local function run(cmd)
   elseif op == "until" then
     local a, m, v, iv, name = args:match("^(%x+)%s+(%x+)%s+(%x+)%s+(%d+)%s+(.+)$")
     gate = { a = tonumber(a, 16), m = tonumber(m, 16), v = tonumber(v, 16), iv = tonumber(iv), name = name, next = frame }
+  elseif op == "sndlog" then
+    snd = snd or {}
+  elseif op == "sndtrace" then
+    sndt = sndt or {}
   elseif op == "exit" then
+    if snd then
+      local l = {}
+      for id in pairs(snd) do l[#l + 1] = id end
+      table.sort(l)
+      for _, id in ipairs(l) do print(string.format("SND %03x %d", id, snd[id])) end
+    end
     if usage then
       for _, kind in ipairs({ "r", "w" }) do
         local l = {}
@@ -139,6 +154,22 @@ end
 
 emu.register_frame_done(function()
   frame = frame + 1
+  if sndt then                   -- a start sets the channel's id (0x06079E08) and its counter (0x06079D90) to 10
+    for i = 0x0E, 0x17 do
+      local id, cnt = space:read_u16(0x06079E08 + 2 * i), space:read_u8(0x06079D90 + i)
+      local k = id * 256 + cnt
+      if cnt == 10 and k ~= (sndt[i] or -1) then print(string.format("SNDT %d %x %03x", frame, i, id)) end
+      sndt[i] = k
+    end
+  end
+  if snd then
+    for i = 0x0E, 0x17 do
+      local p = space:read_u16(0x06079DD8 + 2 * i)
+      if p ~= 0 and p <= 0x200 and not snd[p - 1] then snd[p - 1] = frame end
+      local c = space:read_u16(0x06079E08 + 2 * i)
+      if c ~= 0 and c < 0x200 and not snd[c] then snd[c] = frame end
+    end
+  end
   for name, until_f in pairs(held) do
     if until_f ~= -1 and frame >= until_f then port.fields[name]:set_value(0); held[name] = nil end
   end

@@ -135,6 +135,8 @@ def split_and_write(img, setname):
         if n not in files: files[n] = z.read(n)
     if setname == 'gunbird2m':
         for n in ('3l.u6', '3h.u13'): files.pop(n, None)
+    snd = OUT + '/snd/sound.u9'                              # tools/port_sound.py (Morrigan's samples)
+    if os.path.exists(snd): files['sound.u9'] = open(snd, 'rb').read()
     files.update(gfx_chips(setname))
     for n, b in files.items():
         open(f'{d}/{n}', 'wb').write(b)
@@ -167,8 +169,8 @@ def main():
             t = syms[sym] if sym in syms else int(sym, 16)
             img.write(int(addr, 16), trampoline(int(addr, 16), t), f'hook->{sym}')
             print(f'  hook {addr} -> {sym} ({t:08x})')
-    pat = SRC + '/patches.txt'
-    if os.path.exists(pat):
+    for pat in (SRC + '/patches.txt', SRC + '/gen_sound_patches.txt'):
+        if not os.path.exists(pat): continue
         for line in open(pat):
             line = line.split('#')[0].strip()
             if not line: continue

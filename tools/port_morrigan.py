@@ -26,6 +26,9 @@ MAP = {int(k, 16): int(v[0], 16) for k, v in json.load(open(ROOT + '/re/map_dc2a
 if os.path.exists(ROOT + '/re/map_extra.json'):
     MAP.update({int(k, 16): int(v, 16) for k, v in json.load(open(ROOT + '/re/map_extra.json')).items()})
 CFG = json.load(open(ROOT + '/src/morrigan_layout.json'))
+# Morrigan's DC sound IDs -> arcade IDs (tools/port_sound.py): Effect <id> operands are remapped
+SND = {int(k, 16): v for k, v in json.load(open(ROOT + '/out/snd/remap.json')).items()} \
+    if os.path.exists(ROOT + '/out/snd/remap.json') else {}
 
 DC_CHARTBL, ARC_CHARTBL = 0x8C40F7F0, 0xCB298
 DC_SUBTBL, ARC_SUBTBL = 0x8C40FE20, 0xCB800
@@ -188,6 +191,7 @@ class Porter:
                 elif t[i] == 'l': out += struct.pack('>I', DI.l(y)); i += 2
                 elif t[i] in ('b4',): out += D.raw(y, 4); i += 2
                 elif t[i] == 'b2': out += D.raw(y, 2); i += 1
+                elif op == 0x34 and i == 0: out += struct.pack('>H', SND.get(DI.w(y), DI.w(y))); i += 1
                 else: out += struct.pack('>H', DI.w(y)); i += 1
         return bytes(out)
 

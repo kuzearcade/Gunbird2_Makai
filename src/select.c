@@ -49,7 +49,7 @@ static int udiv(int x, int d) { int q = 0; while (x >= d) { x -= d; q++; } retur
 static s32 gt;                                  /* global object table (SEQ hdr +0x1C) */
 #define GT(off) ((const void *)V32(gt + (off)))
 
-static int voice(int c) { return SND_SELECT(c); }   /* [6] = 0x150 (patches.txt) */
+static int voice(int c) { return SND_SELECT(c); }   /* [6] = Morrigan (src/gen_sound_patches.txt) */
 static const s16 *port_anim(int c) { return c == 6 ? anim_morrigan : PORT_ANIM(c); }
 static const s16 *rec(int p, int c) { return c == 6 ? rec_morrigan[p] : REC(p, c); }
 static const void *icon(int c) { return c == 6 ? (const void *)obj_sel_icon : GT(0x198 + c * 4); }

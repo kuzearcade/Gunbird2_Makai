@@ -5,9 +5,9 @@ sym32 0006004C gb2_subshot_table   # SEQ header +0x34: sub-shot table -> 7 entri
 0602E0E4 0007 0007                 # Stage Select (maintenance): 1P/2P character max 6 -> 7 (Jiki6)
 sym32 0601A398 gb2_subshot_dispatch  # NewSubShot jump table -> 7 entries
 sym32 0006042C gb2_life_icons      # global tbl[109] (hdr+0x1C +0x1B4): HUD life icons -> 7 entries
-06032066 015C                      # main-shot sound table [7] (Morrigan, DC 0x15C); was 0xFFFF padding
 060173A6 8807 8901                 # HitActS_S: sub-shot hit sound 0x5A also for kind 7 (Morrigan, DC 8C046E50);
                                    #   was 'cmp/eq #6; bt exit' (6 already exits by default)
+# Morrigan's sound IDs / voice-table entries: src/gen_sound_patches.txt (tools/port_sound.py)
 # charge-gauge rows: read the gauge index (player+0x46, set by src/gauge.s) instead of charNo (player+0x58)
 06010532 E036                      # HUD gauge (dc_8c04e320)
 0601059E E036
@@ -24,8 +24,6 @@ sym32 0006042C gb2_life_icons      # global tbl[109] (hdr+0x1C +0x1B4): HUD life
 06013460 E036                      # per-life init (DC FUN_8C058180)
 06013486 E036
 060134B6 E036
-06032116 0150                      # select voice table 0x0603210A[6] = Morrigan (DC 8C087CA0[6]); the word was
-                                   #   the original select's initial P1 slot (select is replaced by src/select.c)
 # stage demos (tools/port_stagedemo.py): 27-slot scene tables, portrait rows with Morrigan (7 = bank 0xA0, 8 = 0xB0)
 sym32 00060228 gb2_demo_stages     # (*(hdr+8))[0]: stage list
 sym32 000BC3FC gb2_demo_portraits_s0
