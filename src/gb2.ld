@@ -2,10 +2,11 @@
 OUTPUT_FORMAT("elf32-shbig-linux")
 OUTPUT_ARCH(sh)
 INCLUDE arcade_syms.ld
+INCLUDE res_syms.ld
 MEMORY
 {
-    ROMFREE1 (rx) : ORIGIN = 0x00033000, LENGTH = 0x0000D000   /* free program ROM, executed in place */
-    ROMFREE2 (r)  : ORIGIN = 0x00057E00, LENGTH = 0x00008200   /* free program ROM (verify before use) */
+    ROMFREE1 (rx) : ORIGIN = 0x00033000, LENGTH = 0x00005000   /* patch code (0x38000-0x3FFFF = Morrigan OBJDT) */
+    ROMFREE2 (r)  : ORIGIN = 0x00057E00, LENGTH = 0x00008200   /* Morrigan scripts/data (tools/port_morrigan.py) */
     RAMFREE  (rw) : ORIGIN = 0x06033000, LENGTH = 0x0000D000   /* unused RAM between D and BSS sections */
 }
 SECTIONS

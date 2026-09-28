@@ -25,7 +25,7 @@ def rgb888(c555):
     r, g, b = (c555 >> 10) & 31, (c555 >> 5) & 31, c555 & 31
     return (expand5(r) << 24) | (expand5(g) << 16) | (expand5(b) << 8)
 
-def build_palette(cells_list, reserve=None, max_colours=255):
+def build_palette(cells_list, reserve=None, max_colours=255, start=1):
     """cells_list: list of lists of 16x16 uint16 cells. reserve: dict c555->index to keep."""
     counts = {}
     for cells in cells_list:
@@ -33,7 +33,7 @@ def build_palette(cells_list, reserve=None, max_colours=255):
             v = c[(c & 0x8000) != 0] & 0x7FFF
             for x in np.unique(v).tolist(): counts[x] = counts.get(x, 0) + 1
     pal = dict(reserve or {})
-    nxt = max(pal.values(), default=0) + 1
+    nxt = max(max(pal.values(), default=0) + 1, start)
     for c555 in sorted(counts, key=lambda x: -counts[x]):
         if c555 in pal: continue
         if nxt > max_colours: raise ValueError(f'too many colours ({len(counts)})')

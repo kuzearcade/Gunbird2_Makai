@@ -1,0 +1,6 @@
+# <address> <hex bytes>            raw patch (RAM-code/D-section addresses are mapped to their ROM copy)
+# sym32 <address> <symbol>         32-bit big-endian pointer to a patch symbol
+sym32 00060048 gb2_chardef_table   # SEQ header +0x30: chardef table -> 7 entries
+sym32 0006004C gb2_subshot_table   # SEQ header +0x34: sub-shot table -> 7 entries
+0602E0E4 0007 0007                 # Stage Select (maintenance): 1P/2P character max 6 -> 7 (Jiki6)
+sym32 0601A398 gb2_subshot_dispatch  # NewSubShot jump table -> 7 entries

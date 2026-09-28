@@ -3,3 +3,4 @@
 06022a3e gb2_secret_clear
 06022a4e gb2_secret_save
 06022b10 gb2_secret_load
+0602847c gb2_pal_queue          # palette upload queue (+ Morrigan palette with the player palette)
