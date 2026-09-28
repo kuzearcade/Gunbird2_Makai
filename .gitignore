@@ -15,3 +15,4 @@ re/1st_read_*.bin
 out/tmp/
 out/snd/*.u9
 out/snd/*.u1
+unused_arcade_samples_removed/
