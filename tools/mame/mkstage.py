@@ -20,7 +20,8 @@ tap('P1 Button 1'); t += 50
 for _ in range(a.char): tap('P1 Right')        # 1P Character
 tap('P1 Down')                                 # -> 2P Character (0 = NoUse)
 if a.p2 is not None:
-    for _ in range(a.p2 + 1): tap('P1 Right')
+    # values 0 = NoUse, 1.. = Jiki0..; the menu skips 1P's value, so one Right less once past it
+    for _ in range(a.p2 + 1 - (a.p2 > a.char)): tap('P1 Right')
 tap('P1 Down')                                 # -> Round
 for _ in range(a.round - 1): tap('P1 Right')
 tap('P1 Down')                                 # -> Stage

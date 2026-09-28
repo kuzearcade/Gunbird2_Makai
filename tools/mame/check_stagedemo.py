@@ -11,6 +11,9 @@ ROOT = os.path.abspath(os.path.dirname(__file__) + '/../..')
 SNAPS = list(range(1700, 3000, 50))
 
 
+SET = {'orig': 'gunbird2', 'patched': 'gunbird2m'}
+
+
 def run(romdir, eep, stage, p1, p2, jp, tag, work):
     d = f'{work}/{tag}'; os.makedirs(d, exist_ok=True)
     args = [sys.executable, ROOT + '/tools/mame/mkstage.py', str(stage), str(p1), '--mode', '2']
@@ -19,9 +22,11 @@ def run(romdir, eep, stage, p1, p2, jp, tag, work):
     if jp: tl = ['1 field 0 Region', '1200 poke32 06040004 0'] + tl
     tl += [f'{f} snap {d}/f{f}.png' for f in SNAPS] + [f'{SNAPS[-1] + 1} exit']
     open(d + '.tl', 'w').write('\n'.join(tl) + '\n')
-    nv = d + '_nv'; shutil.rmtree(nv, ignore_errors=True); os.makedirs(nv + '/gunbird2')
-    shutil.copy(eep, nv + '/gunbird2/eeprom')
-    subprocess.run([ROOT + '/tools/mame/run.sh', romdir, d + '.tl'], capture_output=True, env=dict(os.environ, GB2_NVRAM=nv))
+    st = SET['orig'] if romdir.endswith('mame_roms') else SET['patched']
+    nv = d + '_nv'; shutil.rmtree(nv, ignore_errors=True); os.makedirs(f'{nv}/{st}')
+    shutil.copy(eep, f'{nv}/{st}/eeprom')
+    subprocess.run([ROOT + '/tools/mame/run.sh', romdir, d + '.tl'], capture_output=True,
+                   env=dict(os.environ, GB2_NVRAM=nv, GB2_SET=st))
     return d
 
 
