@@ -29,7 +29,6 @@
 #define REC(p, i)       ((const s16 *)((p ? 0x060320E4 : 0x060320C0) + (i) * 6))  /* {prio, x, y} */
 #define AINE_CODE       VU8(0x06032108)   /* 0x40 = Down */
 #define MORRIGAN_CODE   0x80              /* Up (DC 0x8C087C9F) */
-#define MORRIGAN_VOICE  0x150             /* DC select voice table [6] */
 #define ROT_AINE        0xF
 #define ROT_MORRIGAN    0x12
 #define BIT(p)          ((p) ? 2 : 1)       /* no dynamic shifts on SH-2 */
@@ -50,7 +49,7 @@ static int udiv(int x, int d) { int q = 0; while (x >= d) { x -= d; q++; } retur
 static s32 gt;                                  /* global object table (SEQ hdr +0x1C) */
 #define GT(off) ((const void *)V32(gt + (off)))
 
-static int voice(int c) { return c == 6 ? MORRIGAN_VOICE : SND_SELECT(c); }
+static int voice(int c) { return SND_SELECT(c); }   /* [6] = 0x150 (patches.txt) */
 static const s16 *port_anim(int c) { return c == 6 ? anim_morrigan : PORT_ANIM(c); }
 static const s16 *rec(int p, int c) { return c == 6 ? rec_morrigan[p] : REC(p, c); }
 static const void *icon(int c) { return c == 6 ? (const void *)obj_sel_icon : GT(0x198 + c * 4); }
@@ -113,9 +112,11 @@ int gb2_select(void)
 
     gt = V32(SEQHDR + 0x1C);
     hdr8 = V32(SEQHDR + 8);
-    slot[0] = VU16(0x06032116); slot[1] = VU16(0x06032118);
-    refresh[0] = VU16(0x0603211A); refresh[1] = VU16(0x0603211C);
-    wason[0] = VU16(0x0603211E); wason[1] = VU16(0x06032120);
+    /* initial values of the original (D-section 0x06032116..0x06032121); 0x06032116 now holds Morrigan's voice,
+     * extending the select voice table 0x0603210A to 7 entries (also read in-game by 0x06011784 / 0x0601EFA2) */
+    slot[0] = 1; slot[1] = 3;
+    refresh[0] = 1; refresh[1] = 1;
+    wason[0] = 0; wason[1] = 0;
     V16(0x0604C750) = 0;
     V16(0x0605CCDE) = 0x134;
     SndInit1(); SndInit2(); SndInit3(7);

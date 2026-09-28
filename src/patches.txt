@@ -24,3 +24,5 @@ sym32 0006042C gb2_life_icons      # global tbl[109] (hdr+0x1C +0x1B4): HUD life
 06013460 E036                      # per-life init (DC FUN_8C058180)
 06013486 E036
 060134B6 E036
+06032116 0150                      # select voice table 0x0603210A[6] = Morrigan (DC 8C087CA0[6]); the word was
+                                   #   the original select's initial P1 slot (select is replaced by src/select.c)
