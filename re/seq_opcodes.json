@@ -1,0 +1,2618 @@
+[
+ {
+  "op": 0,
+  "name": "NOP",
+  "nargs": 0,
+  "dc": "0x8c010080",
+  "arc": "0x60234bc",
+  "tag": "",
+  "flags": ""
+ },
+ {
+  "op": 1,
+  "name": "End",
+  "nargs": 0,
+  "dc": "0x8c05cc66",
+  "arc": "0x6007ad8",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 2,
+  "name": "Sleep",
+  "nargs": 0,
+  "dc": "0x8c05cc6a",
+  "arc": "0x6007adc",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "0": 143
+  }
+ },
+ {
+  "op": 3,
+  "name": "BgTransFer",
+  "nargs": 0,
+  "dc": "0x8c066120",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 1
+ },
+ {
+  "op": 4,
+  "name": "AllSleep",
+  "nargs": 1,
+  "dc": "0x8c05cca0",
+  "arc": "0x6007aea",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 5,
+  "name": "Call",
+  "nargs": 2,
+  "dc": "0x8c05cdc0",
+  "arc": "0x6007b98",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "5": 1
+  }
+ },
+ {
+  "op": 6,
+  "name": "Ret",
+  "nargs": 0,
+  "dc": "0x8c05ce60",
+  "arc": "0x6007bc4",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "4": 3,
+   "23": 1,
+   "19": 1
+  }
+ },
+ {
+  "op": 7,
+  "name": "ObjTransFer",
+  "nargs": 0,
+  "dc": "0x8c066260",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 1
+ },
+ {
+  "op": 8,
+  "name": "Jump",
+  "nargs": 2,
+  "dc": "0x8c05cd60",
+  "arc": "0x6007b80",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "21": 7,
+   "6": 18,
+   "8": 6,
+   "13": 2,
+   "4": 1,
+   "7": 1,
+   "24": 6,
+   "2": 3,
+   "10": 1
+  }
+ },
+ {
+  "op": 9,
+  "name": "JumpForMail",
+  "nargs": 3,
+  "dc": "0x8c060700",
+  "arc": "0x6009730",
+  "tag": "",
+  "flags": "*EDBG"
+ },
+ {
+  "op": 10,
+  "name": "JumpCompare",
+  "nargs": 0,
+  "dc": "0x8c061620",
+  "arc": "0x6009dca",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "5": 15,
+   "6": 2014,
+   "22": 1,
+   "11": 622,
+   "8": 6,
+   "12": 1,
+   "9": 843,
+   "13": 8,
+   "17": 10,
+   "25": 3,
+   "18": 5,
+   "19": 4,
+   "20": 1,
+   "29": 1,
+   "15": 5,
+   "14": 4,
+   "31": 3
+  }
+ },
+ {
+  "op": 11,
+  "name": "CalcWork",
+  "nargs": 0,
+  "dc": "0x8c0618e0",
+  "arc": "0x6009f3e",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "3": 1013,
+   "4": 1311
+  }
+ },
+ {
+  "op": 12,
+  "name": "AnimTrans",
+  "nargs": 0,
+  "dc": "0x8c066400",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 7
+ },
+ {
+  "op": 13,
+  "name": "NAnimTrans",
+  "nargs": 0,
+  "dc": "0x8c0665a0",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 7
+ },
+ {
+  "op": 14,
+  "name": "AnmAngleTrans",
+  "nargs": 0,
+  "dc": "0x8c066740",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 6
+ },
+ {
+  "op": 15,
+  "name": "PutTrans",
+  "nargs": 0,
+  "dc": "0x8c066980",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 4
+ },
+ {
+  "op": 16,
+  "name": "LoopStart",
+  "nargs": 1,
+  "dc": "0x8c05cf00",
+  "arc": "0x6007bda",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "1": 58
+  }
+ },
+ {
+  "op": 17,
+  "name": "LoopRepeat",
+  "nargs": 2,
+  "dc": "0x8c05cf40",
+  "arc": "0x6007bf8",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "2": 57
+  }
+ },
+ {
+  "op": 18,
+  "name": "LoopS",
+  "nargs": 1,
+  "dc": "0x8c05cfc0",
+  "arc": "0x6007c2a",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "1": 46
+  }
+ },
+ {
+  "op": 19,
+  "name": "LoopE",
+  "nargs": 0,
+  "dc": "0x8c05d0a0",
+  "arc": "0x6007c82",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "0": 42
+  }
+ },
+ {
+  "op": 20,
+  "name": "Do",
+  "nargs": 0,
+  "dc": "0x8c05d172",
+  "arc": "0x6007cc6",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 21,
+  "name": "Done",
+  "nargs": 0,
+  "dc": "0x8c05d200",
+  "arc": "0x6007cea",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 22,
+  "name": "Continue",
+  "nargs": 0,
+  "dc": "0x8c05d260",
+  "arc": "0x6007cfa",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 23,
+  "name": "NPutTrans",
+  "nargs": 0,
+  "dc": "0x8c066a20",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 4
+ },
+ {
+  "op": 24,
+  "name": "ExtraCall",
+  "nargs": 3,
+  "dc": "0x8c060ae0",
+  "arc": "0x6009944",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 25,
+  "name": "ExtraKill",
+  "nargs": 3,
+  "dc": "0x8c060c20",
+  "arc": "0x60099a0",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "3": 2
+  }
+ },
+ {
+  "op": 26,
+  "name": "FncCall",
+  "nargs": 3,
+  "dc": "0x8c05f980",
+  "arc": "0x6009044",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "3": 3536
+  }
+ },
+ {
+  "op": 27,
+  "name": "Jiki3BomTrans",
+  "nargs": 0,
+  "dc": "0x8c066ac0",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 6
+ },
+ {
+  "op": 28,
+  "name": "Jiki3BomAngle",
+  "nargs": 0,
+  "dc": "0x8c066c80",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 5
+ },
+ {
+  "op": 29,
+  "name": "FileRead",
+  "nargs": 0,
+  "dc": "0x8c066fe0",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 1
+ },
+ {
+  "op": 30,
+  "name": "MailToOya",
+  "nargs": 1,
+  "dc": "0x8c05f3e0",
+  "arc": "0x6008e20",
+  "tag": "",
+  "flags": "*EDBG"
+ },
+ {
+  "op": 31,
+  "name": "MailToKo",
+  "nargs": 1,
+  "dc": "0x8c05f440",
+  "arc": "0x6008e44",
+  "tag": "",
+  "flags": "*EDBG"
+ },
+ {
+  "op": 32,
+  "name": "SetNewAct",
+  "nargs": 3,
+  "dc": "0x8c05f720",
+  "arc": "0x6008f76",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "3": 49,
+   "6": 3,
+   "5": 1
+  }
+ },
+ {
+  "op": 33,
+  "name": "SetNewActP",
+  "nargs": 5,
+  "dc": "0x8c05f800",
+  "arc": "0x6008fa4",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "5": 486,
+   "10": 7,
+   "7": 28,
+   "13": 10
+  }
+ },
+ {
+  "op": 34,
+  "name": "SubSeqAwake",
+  "nargs": 5,
+  "dc": "0x8c0608c0",
+  "arc": "0x6009830",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "5": 53
+  }
+ },
+ {
+  "op": 35,
+  "name": "TaskMark",
+  "nargs": 0,
+  "dc": "0x8c061c3a",
+  "arc": "0x600a0f0",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "0": 245
+  }
+ },
+ {
+  "op": 36,
+  "name": "TaskMarkEnd",
+  "nargs": 0,
+  "dc": "0x8c061c8e",
+  "arc": "0x600a120",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "0": 214
+  }
+ },
+ {
+  "op": 37,
+  "name": "KillTask",
+  "nargs": 2,
+  "dc": "0x8c061d40",
+  "arc": "0x600a15c",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 38,
+  "name": "TaskJumpOn",
+  "nargs": 0,
+  "dc": "0x8c05d960",
+  "arc": "0x6007fea",
+  "tag": "",
+  "flags": "*EDBG"
+ },
+ {
+  "op": 39,
+  "name": "TaskJumpOff",
+  "nargs": 0,
+  "dc": "0x8c05d9a0",
+  "arc": "0x6007ffa",
+  "tag": "",
+  "flags": "*EDBG",
+  "obs": {
+   "0": 24
+  }
+ },
+ {
+  "op": 40,
+  "name": "EndSyncOn",
+  "nargs": 0,
+  "dc": "0x8c05f360",
+  "arc": "0x6008df4",
+  "tag": "",
+  "flags": "*EDBG"
+ },
+ {
+  "op": 41,
+  "name": "EndSyncOff",
+  "nargs": 0,
+  "dc": "0x8c05f3a0",
+  "arc": "0x6008e10",
+  "tag": "",
+  "flags": "*EDBG"
+ },
+ {
+  "op": 42,
+  "name": "DmgSyncOn",
+  "nargs": 0,
+  "dc": "0x8c05f200",
+  "arc": "0x6008d20",
+  "tag": "",
+  "flags": "*ED**",
+  "obs": {
+   "0": 9
+  }
+ },
+ {
+  "op": 43,
+  "name": "DmgSyncOff",
+  "nargs": 0,
+  "dc": "0x8c05f260",
+  "arc": "0x6008d56",
+  "tag": "",
+  "flags": "*ED**"
+ },
+ {
+  "op": 44,
+  "name": "DeathSyncOn",
+  "nargs": 0,
+  "dc": "0x8c05f2e0",
+  "arc": "0x6008db0",
+  "tag": "",
+  "flags": "*EDBG",
+  "obs": {
+   "0": 52
+  }
+ },
+ {
+  "op": 45,
+  "name": "DeathSyncOff",
+  "nargs": 0,
+  "dc": "0x8c05f320",
+  "arc": "0x6008de4",
+  "tag": "",
+  "flags": "*EDBG"
+ },
+ {
+  "op": 46,
+  "name": "LifeSyncOn",
+  "nargs": 0,
+  "dc": "0x8c064700",
+  "arc": "0x600b4de",
+  "tag": "",
+  "flags": "*E***"
+ },
+ {
+  "op": 47,
+  "name": "LifeSyncOff",
+  "nargs": 0,
+  "dc": "0x8c064740",
+  "arc": "0x600b4ea",
+  "tag": "",
+  "flags": "*E***"
+ },
+ {
+  "op": 48,
+  "name": "DeathFlg",
+  "nargs": 1,
+  "dc": "0x8c060e40",
+  "arc": "0x6009a90",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "1": 5
+  }
+ },
+ {
+  "op": 49,
+  "name": "SetGroup",
+  "nargs": 1,
+  "dc": "0x8c05d720",
+  "arc": "0x6007ee6",
+  "tag": "",
+  "flags": "*EDBG",
+  "obs": {
+   "1": 9
+  }
+ },
+ {
+  "op": 50,
+  "name": "SetDt",
+  "nargs": 3,
+  "dc": "0x8c062120",
+  "arc": "0x600a360",
+  "tag": "",
+  "flags": "*EDBG",
+  "obs": {
+   "3": 59
+  }
+ },
+ {
+  "op": 51,
+  "name": "Sound",
+  "nargs": 1,
+  "dc": "0x8c060260",
+  "arc": "0x60094ee",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "1": 2
+  }
+ },
+ {
+  "op": 52,
+  "name": "Effect",
+  "nargs": 1,
+  "dc": "0x8c060320",
+  "arc": "0x6009514",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "1": 291
+  }
+ },
+ {
+  "op": 53,
+  "name": "SoundFade",
+  "nargs": 1,
+  "dc": "0x8c065220",
+  "arc": "0x600ba60",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "1": 8
+  }
+ },
+ {
+  "op": 54,
+  "name": "StageEnd",
+  "nargs": 0,
+  "dc": "0x8c05f500",
+  "arc": "0x6008e74",
+  "tag": "",
+  "flags": "*ED*G",
+  "obs": {
+   "0": 2
+  }
+ },
+ {
+  "op": 55,
+  "name": "BattleEnd",
+  "nargs": 0,
+  "dc": "0x8c05f4be",
+  "arc": "0x6008e6c",
+  "tag": "",
+  "flags": "*ED*G"
+ },
+ {
+  "op": 56,
+  "name": "Jiki2BomTrans",
+  "nargs": 0,
+  "dc": "0x8c066e40",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 6
+ },
+ {
+  "op": 57,
+  "name": "DebugLabel",
+  "nargs": 0,
+  "dc": "0x8c064020",
+  "arc": "0x600b1b4",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 58,
+  "name": "DebugComment",
+  "nargs": 0,
+  "dc": "0x8c064020",
+  "arc": "0x600b1b4",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 59,
+  "name": "SeqAssert",
+  "nargs": 0,
+  "dc": "0x8c064020",
+  "arc": "0x600b1b4",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 60,
+  "name": "KanjiPrint2",
+  "nargs": 4,
+  "dc": "0x8c064d68",
+  "arc": "0x600b848",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 61,
+  "name": "KanjiPrint",
+  "nargs": 7,
+  "dc": "0x8c0620a0",
+  "arc": "0x600a2d4",
+  "tag": "",
+  "flags": "SED*G"
+ },
+ {
+  "op": 62,
+  "name": "DispValue",
+  "nargs": 3,
+  "dc": "0x8c062740",
+  "arc": "0x600a64a",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 63,
+  "name": "AnkPrint",
+  "nargs": 4,
+  "dc": "0x8c0627e0",
+  "arc": "0x600a66c",
+  "tag": "",
+  "flags": "SED*G"
+ },
+ {
+  "op": 64,
+  "name": "MoveSpeed",
+  "nargs": 1,
+  "dc": "0x8c05e0c0",
+  "arc": "0x6008368",
+  "tag": "",
+  "flags": "*EDBG",
+  "obs": {
+   "1": 692
+  }
+ },
+ {
+  "op": 65,
+  "name": "MoveAngle",
+  "nargs": 1,
+  "dc": "0x8c05e140",
+  "arc": "0x60083b8",
+  "tag": "",
+  "flags": "*EDBG",
+  "obs": {
+   "1": 483
+  }
+ },
+ {
+  "op": 66,
+  "name": "MoveStep",
+  "nargs": 5,
+  "dc": "0x8c05e400",
+  "arc": "0x6008594",
+  "tag": "",
+  "flags": "*EDBG",
+  "obs": {
+   "5": 2675
+  }
+ },
+ {
+  "op": 67,
+  "name": "AngleStep",
+  "nargs": 3,
+  "dc": "0x8c05e1c0",
+  "arc": "0x60083fa",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 68,
+  "name": "MovePosition",
+  "nargs": 5,
+  "dc": "0x8c05ebe0",
+  "arc": "0x60089b0",
+  "tag": "",
+  "flags": "*EDBG",
+  "obs": {
+   "5": 13
+  }
+ },
+ {
+  "op": 69,
+  "name": "AppearPoint",
+  "nargs": 2,
+  "dc": "0x8c05d300",
+  "arc": "0x6007d20",
+  "tag": "",
+  "flags": "*EDBG"
+ },
+ {
+  "op": 70,
+  "name": "AnimTransFer",
+  "nargs": 0,
+  "dc": "0x8c0670c0",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 7
+ },
+ {
+  "op": 71,
+  "name": "FileMemFree",
+  "nargs": 0,
+  "dc": "0x8c0672e0",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 1
+ },
+ {
+  "op": 72,
+  "name": "Accelerate",
+  "nargs": 3,
+  "dc": "0x8c05e280",
+  "arc": "0x6008482",
+  "tag": "",
+  "flags": "*EDBG",
+  "obs": {
+   "3": 48
+  }
+ },
+ {
+  "op": 73,
+  "name": "SlowDown",
+  "nargs": 3,
+  "dc": "0x8c05e340",
+  "arc": "0x600850a",
+  "tag": "",
+  "flags": "*EDBG",
+  "obs": {
+   "3": 45
+  }
+ },
+ {
+  "op": 74,
+  "name": "MoveForJk",
+  "nargs": 3,
+  "dc": "0x8c05e4e0",
+  "arc": "0x600862c",
+  "tag": "",
+  "flags": "*EDBG"
+ },
+ {
+  "op": 75,
+  "name": "MoveTrace",
+  "nargs": 2,
+  "dc": "0x8c05ea00",
+  "arc": "0x60088da",
+  "tag": "",
+  "flags": "*EDBG",
+  "obs": {
+   "2": 4
+  }
+ },
+ {
+  "op": 76,
+  "name": "SpinPoint",
+  "nargs": 3,
+  "dc": "0x8c0642e0",
+  "arc": "0x600b2d0",
+  "tag": "",
+  "flags": "*EDBG"
+ },
+ {
+  "op": 77,
+  "name": "SetMoveArea",
+  "nargs": 4,
+  "dc": "0x8c05ef20",
+  "arc": "0x6008b9c",
+  "tag": "",
+  "flags": "*EDB*"
+ },
+ {
+  "op": 78,
+  "name": "ResetMoveArea",
+  "nargs": 0,
+  "dc": "0x8c05f020",
+  "arc": "0x6008c2e",
+  "tag": "",
+  "flags": "*EDB*"
+ },
+ {
+  "op": 79,
+  "name": "SetVirtualArea",
+  "nargs": 2,
+  "dc": "0x8c05d4c0",
+  "arc": "0x6007e04",
+  "tag": "",
+  "flags": "*EDB*",
+  "obs": {
+   "2": 38
+  }
+ },
+ {
+  "op": 80,
+  "name": "TurnToJK",
+  "nargs": 3,
+  "dc": "0x8c063468",
+  "arc": "0x600ace4",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 81,
+  "name": "TurnToJKLimit",
+  "nargs": 5,
+  "dc": "0x8c0636e0",
+  "arc": "0x600adfc",
+  "tag": "",
+  "flags": "*EDB*"
+ },
+ {
+  "op": 82,
+  "name": "SpinPoint2",
+  "nargs": 3,
+  "dc": "0x8c0644c0",
+  "arc": "0x600b3d0",
+  "tag": "",
+  "flags": "*EDBG"
+ },
+ {
+  "op": 83,
+  "name": "TurnToPos",
+  "nargs": 4,
+  "dc": "0x8c063bc0",
+  "arc": "0x600afc0",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 84,
+  "name": "RelativeXY",
+  "nargs": 4,
+  "dc": "0x8c05d620",
+  "arc": "0x6007e8c",
+  "tag": "",
+  "flags": "*EDBG",
+  "obs": {
+   "4": 51
+  }
+ },
+ {
+  "op": 85,
+  "name": "TurnToPosW",
+  "nargs": 4,
+  "dc": "0x8c063de0",
+  "arc": "0x600b0ae",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 86,
+  "name": "SetSyncPtr",
+  "nargs": 1,
+  "dc": "0x8c05d6a0",
+  "arc": "0x6007ecc",
+  "tag": "",
+  "flags": "*EDBG",
+  "obs": {
+   "1": 1
+  }
+ },
+ {
+  "op": 87,
+  "name": "KillSyncPtr",
+  "nargs": 1,
+  "dc": "0x8c062400",
+  "arc": "0x600a4ba",
+  "tag": "",
+  "flags": "SED*G"
+ },
+ {
+  "op": 88,
+  "name": "GetEnemyTime",
+  "nargs": 1,
+  "dc": "0x8c065aa0",
+  "arc": "0x600be6c",
+  "tag": "",
+  "flags": "*E***"
+ },
+ {
+  "op": 89,
+  "name": "PutTransFer",
+  "nargs": 0,
+  "dc": "0x8c067340",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 4
+ },
+ {
+  "op": 90,
+  "name": "BgFileRead",
+  "nargs": 0,
+  "dc": "0x8c067460",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 1
+ },
+ {
+  "op": 91,
+  "name": "BgPutTrans",
+  "nargs": 0,
+  "dc": "0x8c067540",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 2
+ },
+ {
+  "op": 92,
+  "name": "BgMemFree",
+  "nargs": 0,
+  "dc": "0x8c0676a0",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 1
+ },
+ {
+  "op": 93,
+  "name": "MesFileRead",
+  "nargs": 0,
+  "dc": "0x8c067700",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 1
+ },
+ {
+  "op": 94,
+  "name": "MesTrans",
+  "nargs": 0,
+  "dc": "0x8c067780",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 1
+ },
+ {
+  "op": 95,
+  "name": "EndFileRead",
+  "nargs": 0,
+  "dc": "0x8c0678e0",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 1
+ },
+ {
+  "op": 96,
+  "name": "PutObj",
+  "nargs": 2,
+  "dc": "0x8c05db20",
+  "arc": "0x600806c",
+  "tag": "",
+  "flags": "*EDB*",
+  "obs": {
+   "2": 108
+  }
+ },
+ {
+  "op": 97,
+  "name": "AnimObj",
+  "nargs": 5,
+  "dc": "0x8c05dba0",
+  "arc": "0x60080cc",
+  "tag": "",
+  "flags": "*EDB*",
+  "obs": {
+   "5": 570
+  }
+ },
+ {
+  "op": 98,
+  "name": "NPutObj",
+  "nargs": 2,
+  "dc": "0x8c062560",
+  "arc": "0x600a554",
+  "tag": "",
+  "flags": "*EDB*"
+ },
+ {
+  "op": 99,
+  "name": "NAnimObj",
+  "nargs": 5,
+  "dc": "0x8c0625c0",
+  "arc": "0x600a588",
+  "tag": "",
+  "flags": "*EDB*",
+  "obs": {
+   "5": 12
+  }
+ },
+ {
+  "op": 100,
+  "name": "HideObj",
+  "nargs": 0,
+  "dc": "0x8c05dd00",
+  "arc": "0x6008194",
+  "tag": "",
+  "flags": "*EDB*",
+  "obs": {
+   "0": 360
+  }
+ },
+ {
+  "op": 101,
+  "name": "ShowObj",
+  "nargs": 0,
+  "dc": "0x8c05dd40",
+  "arc": "0x60081a0",
+  "tag": "",
+  "flags": "*EDB*",
+  "obs": {
+   "0": 392
+  }
+ },
+ {
+  "op": 102,
+  "name": "EndTrans",
+  "nargs": 0,
+  "dc": "0x8c067960",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 1
+ },
+ {
+  "op": 103,
+  "name": "PutObjWork",
+  "nargs": 0,
+  "dc": "0x8c067ac0",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 3
+ },
+ {
+  "op": 104,
+  "name": "AnmIntervalSet",
+  "nargs": 1,
+  "dc": "0x8c0652a0",
+  "arc": "0x600ba7c",
+  "tag": "",
+  "flags": "SEDB*",
+  "obs": {
+   "1": 11
+  }
+ },
+ {
+  "op": 105,
+  "name": "AnmTypeSet",
+  "nargs": 1,
+  "dc": "0x8c065320",
+  "arc": "0x600bae0",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 106,
+  "name": "AnmInvCode",
+  "nargs": 1,
+  "dc": "0x8c061dc0",
+  "arc": "0x600a1a8",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 107,
+  "name": "AnmAngleChange",
+  "nargs": 4,
+  "dc": "0x8c063080",
+  "arc": "0x600aa6c",
+  "tag": "",
+  "flags": "*EDB*",
+  "obs": {
+   "4": 18
+  }
+ },
+ {
+  "op": 108,
+  "name": "AnmsAngleChange",
+  "nargs": 5,
+  "dc": "0x8c063180",
+  "arc": "0x600ab12",
+  "tag": "",
+  "flags": "*EDB*",
+  "obs": {
+   "5": 12
+  }
+ },
+ {
+  "op": 109,
+  "name": "GetAnmNowPat",
+  "nargs": 1,
+  "dc": "0x8c065400",
+  "arc": "0x600bb50",
+  "tag": "",
+  "flags": "*EDB*"
+ },
+ {
+  "op": 110,
+  "name": "EndSound",
+  "nargs": 0,
+  "dc": "0x8c067e20",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 1
+ },
+ {
+  "op": 111,
+  "name": "AnimFix",
+  "nargs": 0,
+  "dc": "0x8c067c80",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 5
+ },
+ {
+  "op": 112,
+  "name": "ChangePltObj",
+  "nargs": 1,
+  "dc": "0x8c060200",
+  "arc": "0x60094cc",
+  "tag": "",
+  "flags": "*EDB*",
+  "obs": {
+   "1": 10
+  }
+ },
+ {
+  "op": 113,
+  "name": "ChangeShadeObj",
+  "nargs": 1,
+  "dc": "0x8c062fe0",
+  "arc": "0x600aa08",
+  "tag": "",
+  "flags": "*EDB*",
+  "obs": {
+   "1": 8
+  }
+ },
+ {
+  "op": 114,
+  "name": "ReduceObj",
+  "nargs": 2,
+  "dc": "0x8c05dd80",
+  "arc": "0x60081ac",
+  "tag": "",
+  "flags": "*EDB*",
+  "obs": {
+   "2": 3
+  }
+ },
+ {
+  "op": 115,
+  "name": "PutFix",
+  "nargs": 0,
+  "dc": "0x8c067e80",
+  "arc": "0x600a6d0",
+  "tag": "DC-ONLY",
+  "flags": "",
+  "nargs_dc": 2
+ },
+ {
+  "op": 116,
+  "name": "ObjPriority",
+  "nargs": 1,
+  "dc": "0x8c05d9e0",
+  "arc": "0x6008008",
+  "tag": "",
+  "flags": "*EDB*",
+  "obs": {
+   "1": 520
+  }
+ },
+ {
+  "op": 117,
+  "name": "HardObjPriority",
+  "nargs": 1,
+  "dc": "0x8c061e80",
+  "arc": "0x600a1ea",
+  "tag": "",
+  "flags": "SEDB*",
+  "obs": {
+   "1": 15
+  }
+ },
+ {
+  "op": 118,
+  "name": "GroupPrt",
+  "nargs": 2,
+  "dc": "0x8c063360",
+  "arc": "0x600ac5e",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "2": 6
+  }
+ },
+ {
+  "op": 119,
+  "name": "M_ObjPriority",
+  "nargs": 1,
+  "dc": "0x8c05da40",
+  "arc": "0x6008022",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 120,
+  "name": "SetObjTbl",
+  "nargs": 2,
+  "dc": "0x8c05d5d6",
+  "arc": "0x6007e64",
+  "tag": "",
+  "flags": "*ED**"
+ },
+ {
+  "op": 121,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 122,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 123,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 124,
+  "name": "BlinkObjStart",
+  "nargs": 1,
+  "dc": "0x8c065040",
+  "arc": "0x600b9a8",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "1": 440
+  }
+ },
+ {
+  "op": 125,
+  "name": "BlinkObjEnd",
+  "nargs": 0,
+  "dc": "0x8c065120",
+  "arc": "0x600ba00",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 126,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 127,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 128,
+  "name": "ShowBg",
+  "nargs": 0,
+  "dc": "0x8c062c80",
+  "arc": "0x600a8ba",
+  "tag": "",
+  "flags": "****G",
+  "obs": {
+   "0": 478
+  }
+ },
+ {
+  "op": 129,
+  "name": "HideBg",
+  "nargs": 0,
+  "dc": "0x8c062cc0",
+  "arc": "0x600a8c8",
+  "tag": "",
+  "flags": "****G"
+ },
+ {
+  "op": 130,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 131,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 132,
+  "name": "BgPriority",
+  "nargs": 1,
+  "dc": "0x8c062c20",
+  "arc": "0x600a8a0",
+  "tag": "",
+  "flags": "****G",
+  "obs": {
+   "1": 14
+  }
+ },
+ {
+  "op": 133,
+  "name": "BgShade",
+  "nargs": 1,
+  "dc": "0x8c062d00",
+  "arc": "0x600a8f8",
+  "tag": "",
+  "flags": "****G",
+  "obs": {
+   "1": 43
+  }
+ },
+ {
+  "op": 134,
+  "name": "BgCfd",
+  "nargs": 1,
+  "dc": "0x8c062d80",
+  "arc": "0x600a932",
+  "tag": "",
+  "flags": "****G",
+  "obs": {
+   "1": 9
+  }
+ },
+ {
+  "op": 135,
+  "name": "BgFullScreenSet",
+  "nargs": 1,
+  "dc": "0x8c062e40",
+  "arc": "0x600a966",
+  "tag": "",
+  "flags": "****G",
+  "obs": {
+   "1": 19
+  }
+ },
+ {
+  "op": 136,
+  "name": "BgScreenNoSet",
+  "nargs": 1,
+  "dc": "0x8c062de0",
+  "arc": "0x600a94c",
+  "tag": "",
+  "flags": "****G",
+  "obs": {
+   "1": 41
+  }
+ },
+ {
+  "op": 137,
+  "name": "BgScrollPrmSet",
+  "nargs": 2,
+  "dc": "0x8c062ea0",
+  "arc": "0x600a980",
+  "tag": "",
+  "flags": "****G"
+ },
+ {
+  "op": 138,
+  "name": "MapSetUP",
+  "nargs": 6,
+  "dc": "0x8c0629e0",
+  "arc": "0x600a734",
+  "tag": "",
+  "flags": "****G"
+ },
+ {
+  "op": 139,
+  "name": "MapSetU",
+  "nargs": 2,
+  "dc": "0x8c062980",
+  "arc": "0x600a71c",
+  "tag": "",
+  "flags": "****G"
+ },
+ {
+  "op": 140,
+  "name": "MapSetP",
+  "nargs": 6,
+  "dc": "0x8c062920",
+  "arc": "0x600a6ec",
+  "tag": "",
+  "flags": "****G",
+  "obs": {
+   "6": 13
+  }
+ },
+ {
+  "op": 141,
+  "name": "MapSet",
+  "nargs": 2,
+  "dc": "0x8c0628c0",
+  "arc": "0x600a6d4",
+  "tag": "",
+  "flags": "****G",
+  "obs": {
+   "2": 6
+  }
+ },
+ {
+  "op": 142,
+  "name": "BgMapListBkClr",
+  "nargs": 0,
+  "dc": "0x8c062a40",
+  "arc": "0x600a764",
+  "tag": "",
+  "flags": "****G"
+ },
+ {
+  "op": 143,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 144,
+  "name": "BgUpdate",
+  "nargs": 1,
+  "dc": "0x8c062f20",
+  "arc": "0x600a9c2",
+  "tag": "",
+  "flags": "****G"
+ },
+ {
+  "op": 145,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 146,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 147,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 148,
+  "name": "SyncBgChangeChar",
+  "nargs": 5,
+  "dc": "0x8c062a80",
+  "arc": "0x600a7a8",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 149,
+  "name": "BgChangeChar",
+  "nargs": 4,
+  "dc": "0x8c062b60",
+  "arc": "0x600a830",
+  "tag": "",
+  "flags": "****G",
+  "obs": {
+   "4": 2
+  }
+ },
+ {
+  "op": 150,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 151,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 152,
+  "name": "BgPluginFuncSet",
+  "nargs": 2,
+  "dc": "0x8c062f80",
+  "arc": "0x600a9dc",
+  "tag": "",
+  "flags": "****G"
+ },
+ {
+  "op": 153,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 154,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 155,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 156,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 157,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 158,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 159,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 160,
+  "name": "PltSet",
+  "nargs": 3,
+  "dc": "0x8c0601a0",
+  "arc": "0x60094a2",
+  "tag": "",
+  "flags": "SED*G"
+ },
+ {
+  "op": 161,
+  "name": "PltBlockSet",
+  "nargs": 3,
+  "dc": "0x8c060ea0",
+  "arc": "0x6009ac0",
+  "tag": "",
+  "flags": "SED*G",
+  "obs": {
+   "3": 60
+  }
+ },
+ {
+  "op": 162,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 163,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 164,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 165,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 166,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 167,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 168,
+  "name": "FadeScreen",
+  "nargs": 3,
+  "dc": "0x8c061f00",
+  "arc": "0x600a20e",
+  "tag": "",
+  "flags": "SED*G",
+  "obs": {
+   "3": 20
+  }
+ },
+ {
+  "op": 169,
+  "name": "FadePriority",
+  "nargs": 1,
+  "dc": "0x8c061f80",
+  "arc": "0x600a254",
+  "tag": "",
+  "flags": "SED*G"
+ },
+ {
+  "op": 170,
+  "name": "FadeColorSet",
+  "nargs": 2,
+  "dc": "0x8c061fe0",
+  "arc": "0x600a270",
+  "tag": "",
+  "flags": "SED*G"
+ },
+ {
+  "op": 171,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 172,
+  "name": "BackColorSet",
+  "nargs": 6,
+  "dc": "0x8c062020",
+  "arc": "0x600a280",
+  "tag": "",
+  "flags": "SED*G",
+  "obs": {
+   "6": 2
+  }
+ },
+ {
+  "op": 173,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 174,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 175,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 176,
+  "name": "ColorFaderEx",
+  "nargs": 8,
+  "dc": "0x8c060080",
+  "arc": "0x600940a",
+  "tag": "",
+  "flags": "SED*G"
+ },
+ {
+  "op": 177,
+  "name": "ColorFader",
+  "nargs": 7,
+  "dc": "0x8c05ffe0",
+  "arc": "0x60093a0",
+  "tag": "",
+  "flags": "SED*G"
+ },
+ {
+  "op": 178,
+  "name": "ColorFaderStop",
+  "nargs": 1,
+  "dc": "0x8c060140",
+  "arc": "0x6009486",
+  "tag": "",
+  "flags": "*ED*G"
+ },
+ {
+  "op": 179,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 180,
+  "name": "ColorCycle",
+  "nargs": 5,
+  "dc": "0x8c05ff00",
+  "arc": "0x6009320",
+  "tag": "",
+  "flags": "SED*G",
+  "obs": {
+   "5": 26
+  }
+ },
+ {
+  "op": 181,
+  "name": "ColorCycleStop",
+  "nargs": 2,
+  "dc": "0x8c05ff80",
+  "arc": "0x6009370",
+  "tag": "",
+  "flags": "SED*G"
+ },
+ {
+  "op": 182,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 183,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 184,
+  "name": "ScreenMask",
+  "nargs": 1,
+  "dc": "0x8c05f540",
+  "arc": "0x6008e7c",
+  "tag": "",
+  "flags": "SED*G"
+ },
+ {
+  "op": 185,
+  "name": "SetStrCrOffSet",
+  "nargs": 1,
+  "dc": "0x8c065ee0",
+  "arc": "0x600c0dc",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 186,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 187,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 188,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 189,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 190,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 191,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 192,
+  "name": "UnderSubPrt",
+  "nargs": 1,
+  "dc": "0x8c064060",
+  "arc": "0x600b1c6",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "1": 3
+  }
+ },
+ {
+  "op": 193,
+  "name": "ShadowInit",
+  "nargs": 3,
+  "dc": "0x8c064780",
+  "arc": "0x600b4f6",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "3": 2
+  }
+ },
+ {
+  "op": 194,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 195,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 196,
+  "name": "SetHitAreaEX",
+  "nargs": 2,
+  "dc": "0x8c05d880",
+  "arc": "0x6007f94",
+  "tag": "",
+  "flags": "*EDBG",
+  "obs": {
+   "2": 6
+  }
+ },
+ {
+  "op": 197,
+  "name": "SetHitArea",
+  "nargs": 2,
+  "dc": "0x8c05d7a0",
+  "arc": "0x6007f28",
+  "tag": "",
+  "flags": "*EDBG",
+  "obs": {
+   "2": 110
+  }
+ },
+ {
+  "op": 198,
+  "name": "AddPoints",
+  "nargs": 0,
+  "dc": "0x8c0603a0",
+  "arc": "0x600956c",
+  "tag": "",
+  "flags": "*ED**",
+  "obs": {
+   "0": 14
+  }
+ },
+ {
+  "op": 199,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 200,
+  "name": "SetItem",
+  "nargs": 2,
+  "dc": "0x8c05fce8",
+  "arc": "0x600922a",
+  "tag": "",
+  "flags": "*ED*G"
+ },
+ {
+  "op": 201,
+  "name": "PutItem",
+  "nargs": 4,
+  "dc": "0x8c05fd40",
+  "arc": "0x6009242",
+  "tag": "",
+  "flags": "*ED*G",
+  "obs": {
+   "4": 9
+  }
+ },
+ {
+  "op": 202,
+  "name": "CheckPowerItem",
+  "nargs": 1,
+  "dc": "0x8c064860",
+  "arc": "0x600b56c",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "1": 1
+  }
+ },
+ {
+  "op": 203,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 204,
+  "name": "Explosion",
+  "nargs": 4,
+  "dc": "0x8c05f9e0",
+  "arc": "0x6009070",
+  "tag": "",
+  "flags": "*EDBG",
+  "obs": {
+   "4": 194
+  }
+ },
+ {
+  "op": 205,
+  "name": "ExpPieceMain",
+  "nargs": 7,
+  "dc": "0x8c05fb00",
+  "arc": "0x6009120",
+  "tag": "",
+  "flags": "*ED*G",
+  "obs": {
+   "7": 1
+  }
+ },
+ {
+  "op": 206,
+  "name": "ExplosionHPrio",
+  "nargs": 5,
+  "dc": "0x8c05fa60",
+  "arc": "0x60090c2",
+  "tag": "",
+  "flags": "*EDBG"
+ },
+ {
+  "op": 207,
+  "name": "HitMarkDisp",
+  "nargs": 0,
+  "dc": "0x8c064820",
+  "arc": "0x600b530",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 208,
+  "name": "Fire",
+  "nargs": 8,
+  "dc": "0x8c05fde0",
+  "arc": "0x60092a0",
+  "tag": "",
+  "flags": "*EDB*",
+  "obs": {
+   "8": 274
+  }
+ },
+ {
+  "op": 209,
+  "name": "FireByRank",
+  "nargs": 8,
+  "dc": "0x8c05fe40",
+  "arc": "0x60092c0",
+  "tag": "",
+  "flags": "*EDB*",
+  "obs": {
+   "8": 2
+  }
+ },
+ {
+  "op": 210,
+  "name": "FireByRankEx",
+  "nargs": 8,
+  "dc": "0x8c05fea0",
+  "arc": "0x60092e0",
+  "tag": "",
+  "flags": "*EDB*"
+ },
+ {
+  "op": 211,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 212,
+  "name": "ShellErase",
+  "nargs": 1,
+  "dc": "0x8c064fe0",
+  "arc": "0x600b964",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "1": 1
+  }
+ },
+ {
+  "op": 213,
+  "name": "Jk5SubHitMark",
+  "nargs": 2,
+  "dc": "0x8c065c60",
+  "arc": "0x600bf46",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 214,
+  "name": "JikiExpl",
+  "nargs": 3,
+  "dc": "0x8c0660a0",
+  "arc": "0x600c1da",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 215,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 216,
+  "name": "GetJkAngle",
+  "nargs": 4,
+  "dc": "0x8c065860",
+  "arc": "0x600bd46",
+  "tag": "",
+  "flags": "SEDB*",
+  "obs": {
+   "4": 22
+  }
+ },
+ {
+  "op": 217,
+  "name": "GetMyDist",
+  "nargs": 2,
+  "dc": "0x8c065970",
+  "arc": "0x600bdf2",
+  "tag": "",
+  "flags": "SEDB*",
+  "obs": {
+   "2": 2
+  }
+ },
+ {
+  "op": 218,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 219,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 220,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 221,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 222,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 223,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 224,
+  "name": "JikiSpeedSet",
+  "nargs": 8,
+  "dc": "0x8c0624a0",
+  "arc": "0x600a4de",
+  "tag": "",
+  "flags": "**D**"
+ },
+ {
+  "op": 225,
+  "name": "JikiPrtSet",
+  "nargs": 1,
+  "dc": "0x8c064280",
+  "arc": "0x600b28a",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 226,
+  "name": "JikiPrtChange",
+  "nargs": 1,
+  "dc": "0x8c0640c0",
+  "arc": "0x600b1dc",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "1": 3
+  }
+ },
+ {
+  "op": 227,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 228,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 229,
+  "name": "Jk2SpShot",
+  "nargs": 6,
+  "dc": "0x8c065fc0",
+  "arc": "0x600c154",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 230,
+  "name": "Jk3SpSmk",
+  "nargs": 2,
+  "dc": "0x8c065f40",
+  "arc": "0x600c0f8",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 231,
+  "name": "Jk0SpShot2",
+  "nargs": 7,
+  "dc": "0x8c065e00",
+  "arc": "0x600c03e",
+  "tag": "",
+  "flags": "SEDB*",
+  "obs": {
+   "7": 60
+  }
+ },
+ {
+  "op": 232,
+  "name": "SubShotCntDec",
+  "nargs": 1,
+  "dc": "0x8c0651a0",
+  "arc": "0x600ba38",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 233,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 234,
+  "name": "Jk5BombPetal",
+  "nargs": 3,
+  "dc": "0x8c065be0",
+  "arc": "0x600bf0e",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 235,
+  "name": "Jk3SpShot",
+  "nargs": 5,
+  "dc": "0x8c065b20",
+  "arc": "0x600bea0",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 236,
+  "name": "BombPrtChange",
+  "nargs": 1,
+  "dc": "0x8c0641e0",
+  "arc": "0x600b264",
+  "tag": "",
+  "flags": "SED*G",
+  "obs": {
+   "1": 3
+  }
+ },
+ {
+  "op": 237,
+  "name": "BombPrtSet",
+  "nargs": 0,
+  "dc": "0x8c064240",
+  "arc": "0x600b27a",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 238,
+  "name": "BombSealer",
+  "nargs": 2,
+  "dc": "0x8c064e20",
+  "arc": "0x600b8ac",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 239,
+  "name": "Jk2SpHitMark",
+  "nargs": 1,
+  "dc": "0x8c065ce0",
+  "arc": "0x600bf88",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 240,
+  "name": "SetAttackPower",
+  "nargs": 2,
+  "dc": "0x8c0623a8",
+  "arc": "0x600a4a4",
+  "tag": "",
+  "flags": "*ED**"
+ },
+ {
+  "op": 241,
+  "name": "ExDefense",
+  "nargs": 2,
+  "dc": "0x8c064f20",
+  "arc": "0x600b924",
+  "tag": "",
+  "flags": "*ED**",
+  "obs": {
+   "3": 7
+  }
+ },
+ {
+  "op": 242,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 243,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 244,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 245,
+  "name": "SetInVincible",
+  "nargs": 1,
+  "dc": "0x8c065160",
+  "arc": "0x600ba20",
+  "tag": "",
+  "flags": "*ED**"
+ },
+ {
+  "op": 246,
+  "name": "ChangeBulletPri",
+  "nargs": 1,
+  "dc": "0x8c0657a0",
+  "arc": "0x600bd2e",
+  "tag": "",
+  "flags": "***B*",
+  "obs": {
+   "1": 2
+  }
+ },
+ {
+  "op": 247,
+  "name": "NewSeqShot",
+  "nargs": 5,
+  "dc": "0x8c065d40",
+  "arc": "0x600bfd0",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 248,
+  "name": "EndingDisp",
+  "nargs": 5,
+  "dc": "0x8c064980",
+  "arc": "0x600b5ec",
+  "tag": "",
+  "flags": "SEDBG"
+ },
+ {
+  "op": 249,
+  "name": "StripBombPrint",
+  "nargs": 3,
+  "dc": "0x8c065460",
+  "arc": "0x600bba0",
+  "tag": "",
+  "flags": "SEDBG",
+  "obs": {
+   "3": 112
+  }
+ },
+ {
+  "op": 250,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 251,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 252,
+  "name": "AnmStop",
+  "nargs": 0,
+  "dc": "0x8c0653c0",
+  "arc": "0x600bb34",
+  "tag": "",
+  "flags": "SEDB*"
+ },
+ {
+  "op": 253,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 254,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ },
+ {
+  "op": 255,
+  "name": "-",
+  "nargs": 0,
+  "dc": "0x8c062880",
+  "arc": "0x600a6d0",
+  "tag": "",
+  "flags": "SED**"
+ }
+]
