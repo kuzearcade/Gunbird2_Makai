@@ -1,0 +1,15 @@
+# copyrighted data - never commit
+mame_roms/
+Dreamcast/
+assets/dc/
+assets/arcade/
+out/roms/
+*.zip
+*.bin
+*.raw
+*.gdi
+tools/local/
+re/ghidra_proj/
+re/export/
+re/1st_read_*.bin
+out/tmp/
