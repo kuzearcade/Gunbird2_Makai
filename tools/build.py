@@ -187,7 +187,7 @@ def main():
         open(tmp, 'w').write('\n'.join(pre) + '\n' + text)
         o = tmp + '.o'; e = tmp + '.elf'
         run(f'{BIN}/sh-as -big --isa=sh2 {tmp} -o {o}')
-        run(f'{BIN}/sh-ld -EB -Ttext=0x{addr:x} -e 0x{addr:x} -L {SRC} -T {SRC}/asmpatch.ld -o {e} {o}')
+        run(f'{BIN}/sh-ld -EB -Ttext=0x{addr:x} -e 0x{addr:x} -L {SRC} -T {SRC}/asmpatch.ld --just-symbols={OUT}/obj/patch.elf -o {e} {o}')
         run(f'{BIN}/sh-objcopy -O binary --only-section=.text {e} {OUT}/obj/asm.bin')
         b = open(OUT + '/obj/asm.bin', 'rb').read()
         img.write(addr, b, f'asm {os.path.basename(asm)}')

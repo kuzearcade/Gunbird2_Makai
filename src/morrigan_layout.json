@@ -4,7 +4,36 @@
   "colr": 255,
   "index_start": 16,
   "palette_mode": "high",
-  "_doc": "palette_mode high: pens 16.. with colr 0xFF -> palette RAM 0x1000+ (lines 0x100-0x13F, never used by the game)"
+  "_doc": "palette_mode high: pens 16.. with colr 0xFF -> palette RAM 0x1000+ (lines 0x100-0x13F, never used by the game)",
+  "extra_cells": [
+   [
+    "SYSTEM.CHR",
+    365,
+    "life_icon"
+   ]
+  ],
+  "select_objects": {
+   "sel_portrait": [
+    "8c377a78",
+    5,
+    "SELECT.CHR"
+   ],
+   "sel_side_1p": [
+    "8c378408",
+    4,
+    "SELECT.CHR"
+   ],
+   "sel_side_2p": [
+    "8c3783d8",
+    4,
+    "SELECT.CHR"
+   ],
+   "sel_icon": [
+    "8c375768",
+    6,
+    "SELECT.CHR"
+   ]
+  }
  },
  "objdt_area": [
   229376,

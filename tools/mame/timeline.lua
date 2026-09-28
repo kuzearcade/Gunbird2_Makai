@@ -9,6 +9,8 @@
 --   peek <addr> <len>          print bytes (hex) to stdout
 --   dbg <debugger command...>  run a debugger command (needs -debug)
 --   exit
+--   until <addr> <mask> <value> <interval> <field...>   pause the timeline (later frame numbers shift) and
+--                              tap <field> every <interval> frames until (u16 @addr & mask) == value
 -- Frame numbers count from machine start (frame_done callbacks).
 local path = os.getenv("GB2_TIMELINE")
 local events = {}
@@ -21,6 +23,8 @@ end
 table.sort(events, function(a, b) return a.frame < b.frame end)
 
 local port = manager.machine.ioport.ports[":INPUTS"]
+local gate = nil     -- active "until" command
+local shift = 0      -- frames the timeline has been paused
 local held = {}      -- field name -> release frame (or -1 for hold)
 local frame = 0
 local idx = 1
@@ -72,6 +76,9 @@ local function run(cmd)
     print(string.format("PEEK %08x %s", a, table.concat(s, " ")))
   elseif op == "dbg" then
     manager.machine.debugger:command(args)
+  elseif op == "until" then
+    local a, m, v, iv, name = args:match("^(%x+)%s+(%x+)%s+(%x+)%s+(%d+)%s+(.+)$")
+    gate = { a = tonumber(a, 16), m = tonumber(m, 16), v = tonumber(v, 16), iv = tonumber(iv), name = name, next = frame }
   elseif op == "exit" then
     manager.machine:exit()
   end
@@ -82,7 +89,19 @@ emu.register_frame_done(function()
   for name, until_f in pairs(held) do
     if until_f ~= -1 and frame >= until_f then port.fields[name]:set_value(0); held[name] = nil end
   end
-  while idx <= #events and events[idx].frame <= frame do
+  if gate then
+    if (space:read_u16(gate.a) & gate.m) == gate.v then
+      print(string.format("UNTIL met at frame %d (shift %d)", frame, shift)); gate = nil
+    else
+      shift = shift + 1
+      if frame >= gate.next and not held[gate.name] then
+        local f = field(gate.name); if f then f:set_value(1); held[gate.name] = frame + 4 end
+        gate.next = frame + gate.iv
+      end
+      return
+    end
+  end
+  while idx <= #events and events[idx].frame + shift <= frame do
     run(events[idx].cmd); idx = idx + 1
   end
 end)

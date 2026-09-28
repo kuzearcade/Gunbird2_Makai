@@ -18,7 +18,21 @@ typedef int s32;          typedef unsigned int u32;
 /* ---- system ---------------------------------------------------------------------------------- */
 #define WaitFrame          FN(void, 0x0602883C, (void))            /* dc_8c01f760 */
 #define ScreenClear        FN(void, 0x0602763E, (int, int, int, int)) /* dc_8c021220 */
-#define FadeSet            FN(void, 0x06024CA8, (int))              /* dc_8c0156c0 */
+/* object (sprite/text slot) list at 0x06040060, 0x24 bytes each; +0x1C bit15 = hidden */
+#define ObjAlloc           FN(s16,  0x060249D4, (void))             /* dc_8c0145e0 */
+#define ObjSet             FN(void, 0x06024AFC, (int, int, int, const void *)) /* dc_8c014a60: static frame 0 */
+#define ObjSetAnim         FN(void, 0x06024B6E, (int, int, int, const void *, int, int, int)) /* dc_8c014ec0: frames, delay, flags */
+#define ObjShow            FN(void, 0x06024C8E, (int))              /* dc_8c015660 */
+#define ObjHide            FN(void, 0x06024CA8, (int))              /* dc_8c0156c0 */
+#define ObjShade           FN(void, 0x06024D10, (int, int))         /* dc_8c0157e0 */
+#define AnmPrtSet          FN(void, 0x06024D42, (int, int))         /* priority */
+#define ObjFlag            FN(void, 0x06024D54, (int, int))         /* dc_8c015940 */
+#define CreateTask         FN(s32,  0x0600C25E, (int, s32))         /* dc_8c059c20 */
+#define MusicSet           FN(void, 0x0602B292, (int))              /* dc_8c01bc60 */
+#define SndInit1           FN(void, 0x0602B8D4, (void))             /* dc_8c01c8b2 */
+#define SndInit2           FN(void, 0x0602B8FC, (void))             /* dc_8c01c920 */
+#define SndInit3           FN(void, 0x0602BA56, (int))              /* dc_8c01cc40 */
+#define WaitFrameR         FN(int,  0x0602883C, (void))             /* WaitFrame: nonzero = abort to attract */
 #define TextClear          FN(void, 0x06000FEC, (void))             /* dc_8c072c20 */
 #define PrintCentered      FN(s16,  0x0602A1EC, (const char *, int)) /* dc_8c026500: returns text slot */
 #define PrintNumber        FN(void, 0x06029938, (s16 *, int, int, int)) /* dc_8c024ec6 */

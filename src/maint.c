@@ -96,7 +96,7 @@ void gb2_maintenance_code(void)
     for (i = 0; i < 5; i++) digit[i] = INIT_DIGITS[i];
     while (TASK_BUSY != 0) WaitFrame();
     ScreenClear(0, 4, 0, 6);
-    FadeSet(V16(0x0605CB50));
+    ObjHide(V16(0x0605CB50));
 
     do {
         WaitFrame();

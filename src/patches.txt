@@ -4,3 +4,5 @@ sym32 00060048 gb2_chardef_table   # SEQ header +0x30: chardef table -> 7 entrie
 sym32 0006004C gb2_subshot_table   # SEQ header +0x34: sub-shot table -> 7 entries
 0602E0E4 0007 0007                 # Stage Select (maintenance): 1P/2P character max 6 -> 7 (Jiki6)
 sym32 0601A398 gb2_subshot_dispatch  # NewSubShot jump table -> 7 entries
+sym32 0006042C gb2_life_icons      # global tbl[109] (hdr+0x1C +0x1B4): HUD life icons -> 7 entries
+06032066 015C                      # main-shot sound table [7] (Morrigan, DC 0x15C); was 0xFFFF padding
