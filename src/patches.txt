@@ -26,3 +26,7 @@ sym32 0006042C gb2_life_icons      # global tbl[109] (hdr+0x1C +0x1B4): HUD life
 060134B6 E036
 06032116 0150                      # select voice table 0x0603210A[6] = Morrigan (DC 8C087CA0[6]); the word was
                                    #   the original select's initial P1 slot (select is replaced by src/select.c)
+# stage demos (tools/port_stagedemo.py): 27-slot scene tables, portrait rows with Morrigan (7 = bank 0xA0, 8 = 0xB0)
+sym32 00060228 gb2_demo_stages     # (*(hdr+8))[0]: stage list
+sym32 000BC3FC gb2_demo_portraits_s0
+sym32 000BC418 gb2_demo_portraits_s1

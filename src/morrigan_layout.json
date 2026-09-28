@@ -33,6 +33,55 @@
     6,
     "SELECT.CHR"
    ]
+  },
+  "demo_portraits": {
+   "_doc": "Morrigan stage-demo portraits (DC portrait char 6: PutTransFer texture 0x1E side 0 / 0x20 side 1, face records 0-3)",
+   "colrs": [
+    "a0",
+    "b0"
+   ],
+   "objects": {
+    "demo_s0f0": [
+     "8c383d3c",
+     "STGDEMO.030",
+     0
+    ],
+    "demo_s0f1": [
+     "8c383d9c",
+     "STGDEMO.030",
+     1
+    ],
+    "demo_s0f2": [
+     "8c383dfc",
+     "STGDEMO.030",
+     2
+    ],
+    "demo_s0f3": [
+     "8c383e5c",
+     "STGDEMO.030",
+     3
+    ],
+    "demo_s1f0": [
+     "8c383eec",
+     "STGDEMO.032",
+     0
+    ],
+    "demo_s1f1": [
+     "8c383f4c",
+     "STGDEMO.032",
+     1
+    ],
+    "demo_s1f2": [
+     "8c383fac",
+     "STGDEMO.032",
+     2
+    ],
+    "demo_s1f3": [
+     "8c38400c",
+     "STGDEMO.032",
+     3
+    ]
+   }
   }
  },
  "objdt_area": [
@@ -41,7 +90,7 @@
  ],
  "data_area": [
   359936,
-  393216
+  372736
  ],
  "chardef_ptrs": {
   "0x40": "objdt",

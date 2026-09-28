@@ -11,6 +11,7 @@
 --   rtap <start> <end>         log each distinct PC that reads [start,end] (hex; print "RTAP pc addr data")
 --   usage <start> <end>        record every byte read/written in [start,end] (needs -nodrc: RAM is DRC fastram);
 --                              printed at exit as "USAGE r|w <addr> <pc,pc,...>"
+--   field <value> <name...>   set any input field (all ports), e.g. "1 field 0 Region" (0 = Japan)
 --   exit
 --   until <addr> <mask> <value> <interval> <field...>   pause the timeline (later frame numbers shift) and
 --                              tap <field> every <interval> frames until (u16 @addr & mask) == value
@@ -109,6 +110,12 @@ local function run(cmd)
     end
     taps[#taps + 1] = space:install_read_tap(a, b, "ur", function(offset, data, mask) mark(usage.r, offset, mask); return data end)
     taps[#taps + 1] = space:install_write_tap(a, b, "uw", function(offset, data, mask) mark(usage.w, offset, mask); return data end)
+  elseif op == "field" then
+    local v, name = args:match("^(%d+)%s+(.+)$")
+    for tag, p in pairs(manager.machine.ioport.ports) do
+      local f = p.fields[name]
+      if f then f:set_value(tonumber(v)); print("FIELD " .. tag .. " " .. name .. " = " .. v) end
+    end
   elseif op == "until" then
     local a, m, v, iv, name = args:match("^(%x+)%s+(%x+)%s+(%x+)%s+(%d+)%s+(.+)$")
     gate = { a = tonumber(a, 16), m = tonumber(m, 16), v = tonumber(v, 16), iv = tonumber(iv), name = name, next = frame }
