@@ -13,6 +13,16 @@ public class ApplySymbols extends GhidraScript {
             String[] p = l.split("\\s+");
             Address a = sp.getAddress(Long.parseLong(p[0], 16));
             Function f = getFunctionAt(a);
+            boolean isFn = p.length < 3 || !p[2].equals("label");
+            if (f == null && isFn && currentProgram.getMemory().getBlock(a) != null
+                    && currentProgram.getMemory().getBlock(a).isExecute()) {
+                Function nx = getFunctionAfter(a);
+                if (nx != null && nx.getEntryPoint().subtract(a) < 0x20 && nx.getEntryPoint().subtract(a) > 0
+                        && getFunctionContaining(a) == null)
+                    removeFunction(nx);
+                disassemble(a);
+                f = createFunction(a, null);
+            }
             if (f != null) f.setName(p[1], SourceType.USER_DEFINED);
             else currentProgram.getSymbolTable().createLabel(a, p[1], SourceType.USER_DEFINED);
             n++;

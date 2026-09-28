@@ -6,7 +6,7 @@ img = open(sys.argv[1], 'rb').read(); base = int(sys.argv[2], 16); fmt = '<' if 
 want = {int(v, 16) for v in sys.argv[5].split(',')}
 pat = re.compile(r'mov\.l (?:@\()?(0x[0-9a-f]+)(?:,pc\))?,(r\d+)$')
 for line in open(sys.argv[4]):
-    a, fn, ins = line.rstrip('\n').split('\t')
+    a, fn, ins, ent = (line.rstrip('\n').split('\t') + ['-'])[:4]
     m = pat.search(ins)
     if not m: continue
     o = int(m.group(1), 16) - base

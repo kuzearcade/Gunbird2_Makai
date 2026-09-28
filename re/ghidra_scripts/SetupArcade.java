@@ -23,7 +23,7 @@ public class SetupArcade extends GhidraScript {
         byte[] rom = Files.readAllBytes(Paths.get(root + "/assets/arcade/prog_be.bin"));
         byte[] pd = Files.readAllBytes(Paths.get(root + "/assets/arcade/pdata_be.bin"));
         blk("DATAROM", 0x05000000L, pd, 0, pd.length);
-        blk("RAM_P", 0x06000000L, rom, 0x780, 0x2DCDC).setWrite(true);
+        blk("RAM_P", 0x06000000L, rom, 0x780, 0x2DCDC).setExecute(true);
         blk("RAM_D", 0x0602DCDCL, rom, 0x2E47C, 0x4A61).setWrite(true);
         mem.createUninitializedBlock("RAM_FREE", sp.getAddress(0x0603273DL), 0x06040000L - 0x0603273DL, false).setWrite(true);
         mem.createUninitializedBlock("RAM_BSS", sp.getAddress(0x06040000L), 0x40000, false).setWrite(true);

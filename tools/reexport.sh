@@ -14,7 +14,7 @@ for R1 in US JP; do
 done
 touch re/arcade.sym
 tools/ghidra_headless.sh re/ghidra_proj arcade -process prog_be.bin -noanalysis -scriptPath re/ghidra_scripts \
-  -postScript ApplySymbols.java $R/re/arcade.sym -postScript ExportAll.java $R/re/export/arcade > re/export/arcade_exp.log 2>&1 &
+  -preScript SetExec.java -postScript ApplySymbols.java $R/re/arcade.sym -postScript ExportAll.java $R/re/export/arcade > re/export/arcade_exp.log 2>&1 &
 wait
 grep -P "^060" re/export/arcade.lst > re/export/arcade_ram.lst
 python3 tools/lst_strrefs.py assets/arcade/ram_init.bin 06000000 be re/export/arcade_ram.lst > re/export/arcade_strrefs.tsv

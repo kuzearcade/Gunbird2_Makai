@@ -17,11 +17,11 @@ def cstr(a):
 pat = re.compile(r'mov\.l (?:@\()?(0x[0-9a-f]+)(?:,pc\))?,r\d+$')
 mova = re.compile(r'mova (?:@\()?(0x[0-9a-f]+)')
 for line in open(sys.argv[4]):
-    a, fn, ins = line.rstrip('\n').split('\t')
+    a, fn, ins, ent = (line.rstrip('\n').split('\t') + ['-'])[:4]
     m = pat.search(ins); mv = mova.search(ins)
     if m: v = rd32(int(m.group(1), 16))
     elif mv: v = int(mv.group(1), 16)
     else: continue
     if v is None: continue
     s = cstr(v)
-    if s: print(f"{fn}\t{a}\t{v:08x}\t{s}")
+    if s: print(f"{fn}\t{a}\t{v:08x}\t{s}\t{ent}")

@@ -24,7 +24,8 @@ public class ExportAll extends GhidraScript {
             }
             for (Instruction ins : currentProgram.getListing().getInstructions(currentProgram.getMemory(), true)) {
                 Function f = currentProgram.getFunctionManager().getFunctionContaining(ins.getAddress());
-                l.println(ins.getAddress() + "\t" + (f == null ? "-" : f.getName()) + "\t" + ins.toString());
+                l.println(ins.getAddress() + "\t" + (f == null ? "-" : f.getName()) + "\t" + ins.toString()
+                          + "\t" + (f == null ? "-" : f.getEntryPoint().toString()));
             }
         }
         println("functions: " + currentProgram.getFunctionManager().getFunctionCount());
