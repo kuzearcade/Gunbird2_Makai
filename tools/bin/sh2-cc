@@ -1,0 +1,11 @@
+#!/bin/sh
+# Compile C for the Gunbird 2 arcade SH-2 (big-endian, Hitachi ABI) using the SH4 cc1 in no-FPU mode,
+# then assemble with --isa=sh2 so any SH-3/SH-4-only instruction is rejected.
+# usage: sh2-cc file.c -o file.o [extra cc1 flags]
+D=$(dirname "$(readlink -f "$0")")/../local/root
+export LD_LIBRARY_PATH=$D/usr/lib/x86_64-linux-gnu
+src=$1; shift; out=$1; [ "$out" = "-o" ] && { shift; out=$1; shift; }
+tmp=${out%.o}.s
+$D/usr/libexec/gcc-cross/sh4-linux-gnu/15/cc1 -quiet "$src" -m4-nofpu -mb -mhitachi -O2 -ffreestanding -fno-pic \
+   -fno-builtin -fno-common -fno-jump-tables -std=gnu99 "$@" -o "$tmp" || exit 1
+$D/usr/bin/sh4-linux-gnu-as -big --isa=sh2 "$tmp" -o "$out"
