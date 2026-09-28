@@ -19,6 +19,8 @@
 --                              "<frame> <time us> <addr> <data> <mask>" (register/data write sequence and timing)
 --   trace <file> <player x> <player hit ptr> <hit objs> <hit list> <hit count>   per-frame trace, same format as
 --                              tools/flycast/timeline.lua: F <frame> <x> <y> P <rects> T <task>:<hp>:<type> ...
+--   weaken <hit objs> <hit list> <hit count> <hp>   every frame, cap the HP (s32 16.16 at task + 0x54) of every
+--                              task owning an active hit object at <hp> (hex): stages clear fast (test runs only)
 --   exit
 --   until <addr> <mask> <value> <interval> <field...>   pause the timeline (later frame numbers shift) and
 --                              tap <field> every <interval> frames until (u16 @addr & mask) == value
@@ -39,6 +41,7 @@ local usage = nil
 local snd = nil      -- sndlog: id -> first frame
 local ymffh = nil
 local tr = nil      -- trace
+local weak = nil    -- weaken
 local sndt = nil     -- sndtrace: slot -> last pending value
 local gate = nil     -- active "until" command
 local shift = 0      -- frames the timeline has been paused
@@ -136,6 +139,9 @@ local function run(cmd)
     local file, px, phit, objs, list, cnt = args:match("^(%S+)%s+(%x+)%s+(%x+)%s+(%x+)%s+(%x+)%s+(%x+)$")
     tr = { fh = io.open(file, "w"), px = tonumber(px, 16), phit = tonumber(phit, 16), objs = tonumber(objs, 16),
            list = tonumber(list, 16), cnt = tonumber(cnt, 16) }
+  elseif op == "weaken" then
+    local objs, list, cnt, hp = args:match("^(%x+)%s+(%x+)%s+(%x+)%s+(%x+)$")
+    weak = { objs = tonumber(objs, 16), list = tonumber(list, 16), cnt = tonumber(cnt, 16), hp = tonumber(hp, 16) }
   elseif op == "ymflog" then
     local fh = io.open(args, "w")
     taps[#taps + 1] = space:install_write_tap(0x03100000, 0x03100007, "ymflog", function(offset, data, mask)
@@ -195,9 +201,21 @@ local function trace_frame()
   tr.fh:write(table.concat(out, " "), "\n")
 end
 
+local function weaken_frame()
+  local n = s16(space:read_u16(weak.cnt))
+  for i = 0, n - 1 do
+    local xp = space:read_u32(weak.objs + space:read_u16(weak.list + 2 * i) * 0x18)
+    if xp >= 0x06000000 and xp < 0x06100000 and (xp < 0x06055000 or xp >= 0x06055160) then   -- not a player block
+      local t = xp - 0x30
+      if s32(space:read_u32(t + 0x54)) > weak.hp then space:write_u32(t + 0x54, weak.hp) end
+    end
+  end
+end
+
 emu.register_frame_done(function()
   frame = frame + 1
   if tr then trace_frame() end
+  if weak then weaken_frame() end
   if sndt then                   -- a start sets the channel's id (0x06079E08) and its counter (0x06079D90) to 10
     for i = 0x0E, 0x17 do
       local id, cnt = space:read_u16(0x06079E08 + 2 * i), space:read_u8(0x06079D90 + i)

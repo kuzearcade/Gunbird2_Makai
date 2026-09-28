@@ -5,6 +5,8 @@ sym32 0006004C gb2_subshot_table   # SEQ header +0x34: sub-shot table -> 7 entri
 0602E0E4 0007 0007                 # Stage Select (maintenance): 1P/2P character max 6 -> 7 (Jiki6)
 sym32 0601A398 gb2_subshot_dispatch  # NewSubShot jump table -> 7 entries
 sym32 0006042C gb2_life_icons      # global tbl[109] (hdr+0x1C +0x1B4): HUD life icons -> 7 entries
+sym32 000B8A48 gb2_life_icons      # all-clear bonus tally (story entry 5): lives-row icon PutObj and its
+sym32 000B8A58 gb2_life_icons      #   AnmAngleChange (frame = charNo) read the 6-entry ROM list directly
 060173A6 8807 8901                 # HitActS_S: sub-shot hit sound 0x5A also for kind 7 (Morrigan, DC 8C046E50);
                                    #   was 'cmp/eq #6; bt exit' (6 already exits by default)
 # Morrigan's sound IDs / voice-table entries: src/gen_sound_patches.txt (tools/port_sound.py)
