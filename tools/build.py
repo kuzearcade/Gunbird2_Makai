@@ -9,6 +9,7 @@
 
 usage: build.py [--set gunbird2] [--no-compile]
 """
+import numpy as np
 import os, sys, struct, subprocess, glob, json, zipfile, hashlib, zlib, argparse
 
 ROOT = os.path.dirname(os.path.abspath(__file__)) + '/..'
@@ -94,24 +95,28 @@ def trampoline(a, target):
     return bytes.fromhex('d001402b0009') + struct.pack('>I', target)
 
 
-def gfx_chips():
-    """apply out/gfx/place.json to the gfx image and return modified chip files"""
+def gfx_chips(setname='gunbird2'):
+    """apply out/gfx/place.json to the gfx image and return modified chip files.
+    gunbird2: stock layout (0x3800000, bank 3 = 2 x 32M).  gunbird2m: bank 3 = 2 x 64M EPROMs (U6/U13), gfx up to
+    0x4000000 - same PS5 board, the sockets take 64M parts (see MORRIGAN_BACKPORT_PLAN.md 0.1)."""
+    limit = 0x4000000 if setname == 'gunbird2m' else 0x3800000
     pj = OUT + '/gfx/place.json'
     if not os.path.exists(pj): return {}
     g = bytearray(open(ROOT + '/assets/arcade/gfx.bin', 'rb').read())
     for off, f in json.load(open(pj)).items():
         b = open(OUT + '/gfx/' + f, 'rb').read(); o = int(off, 16)
-        if o + len(b) > len(g): g += b'\xff' * (o + len(b) - len(g))
+        if o + len(b) > limit: sys.exit(f'gfx {f} @ {o:#x} exceeds the {setname} gfx space ({limit:#x})')
+        if o + len(b) > len(g): g += b'\0' * (o + len(b) - len(g))
         g[o:o + len(b)] = b
         print(f'  gfx {f} @ {o:#x} ({len(b):#x} bytes)')
     chips = {}
-    names = [('0l.u3', '0h.u10'), ('1l.u4', '1h.u11'), ('2l.u5', '2h.u12'), ('3l.u6', '3h.u13')]
+    if len(g) < limit: g += b'\0' * (limit - len(g))
+    names = [('0l.u3', '0h.u10'), ('1l.u4', '1h.u11'), ('2l.u5', '2h.u12'),
+             ('3l_m.u6', '3h_m.u13') if setname == 'gunbird2m' else ('3l.u6', '3h.u13')]
     for bank, (lo, hi) in enumerate(names):
         seg = g[bank * 0x1000000:(bank + 1) * 0x1000000]
-        L = bytearray(len(seg) // 2); H = bytearray(len(seg) // 2)
-        for i in range(0, len(seg), 4):
-            L[i // 2:i // 2 + 2] = seg[i:i + 2]; H[i // 2:i // 2 + 2] = seg[i + 2:i + 4]
-        chips[lo], chips[hi] = bytes(L), bytes(H)
+        w = np.frombuffer(bytes(seg), dtype='>u2')
+        chips[lo], chips[hi] = w[0::2].tobytes(), w[1::2].tobytes()
     return chips
 
 
@@ -128,7 +133,9 @@ def split_and_write(img, setname):
     z = zipfile.ZipFile(ROOT + '/mame_roms/gunbird2.zip')
     for n in z.namelist():
         if n not in files: files[n] = z.read(n)
-    files.update(gfx_chips())
+    if setname == 'gunbird2m':
+        for n in ('3l.u6', '3h.u13'): files.pop(n, None)
+    files.update(gfx_chips(setname))
     for n, b in files.items():
         open(f'{d}/{n}', 'wb').write(b)
     return {n: (f'{zlib.crc32(b):08x}', hashlib.sha1(b).hexdigest(), len(b)) for n, b in files.items()}

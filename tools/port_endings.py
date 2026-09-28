@@ -18,6 +18,17 @@ OBJ_OPS = {0x60, 0x61, 0x63, 0x6B, 0x6C, 0x6F, 0x73}      # ops whose pointer op
 WREG_KIND = {0x0A: 'text', 0x0C: 'pic', 0x10: 'pic', 0x14: 'pic'}
 
 
+FRAMES = {}                                                  # composite -> animation frame count
+
+
+def all_parts(v):
+    """parts of every animation frame of composite v (frames are stored back to back)"""
+    out, a = [], v
+    for _ in range(FRAMES.get(v, 1)):
+        ps = dcend.parts(DI, a); out += ps; a += 12 * len(ps)
+    return out
+
+
 def is_res(v): return 0x8C300000 <= v < 0x8C300000 + len(D.res)
 
 
@@ -57,6 +68,7 @@ def crawl(slots=None):
                     if v not in seen and v not in insns: seen.add(v); todo.append(v)
                 else:
                     refs[v].add(('obj' if op in OBJ_OPS else name, x))
+                    if op == 0x61: FRAMES[v] = max(FRAMES.get(v, 1), DI.w(x + 6))   # AnimObj ptr, frames, delay, flags
     return insns, refs
 
 
@@ -93,7 +105,9 @@ from make_gfx import quantize
 BLOB_BASE, BLOB_END = 0x06034000, 0x06040000
 FILES = {26: 'END6.CHR', 6: 'END60.CHR', 12: 'END61.CHR', 17: 'END62.CHR', 21: 'END63.CHR', 24: 'END64.CHR'}
 COMMON_FILE = 'END6.CHR'            # engine/common UI composites (identical cells in every END file)
-COMMON_BANK = 0xF0
+COMMON_BANK = 0xE0                  # bank 0xF0 stays free: the DC engine's BG map 0x8C3E5918 (arcade 0x0ACB78, used by
+                                    # END60/END61) draws with palette bank 0xF0 as loaded by the arcade
+MAX_OWN_BANKS = 12                  # per ending: 12 own banks 0x10-0xC0 + 1 shared bank 0xD0 for the smaller composites
 TEXT_MAGIC = 0x54585431             # 'TXT1'
 DC_PUTOBJWORK = 0x67
 
@@ -107,6 +121,22 @@ class Blob:
     def u16(self, v): self.data += struct.pack('>H', v & 0xFFFF)
     def u32(self, v): self.data += struct.pack('>I', v & 0xFFFFFFFF)
     def ref(self, key): self.fix.append((len(self.data), key)); self.data += b'\0\0\0\0'
+
+
+_users = {}
+
+
+def common_file(v):
+    """END file to take a common composite's cells from: common code (e.g. the sparkle task 0x8C3E5EF4) is shared,
+    but its cells only exist in the END files of the endings that run it (END61/END64 for the sparkle; END6 has
+    Morrigan picture cells at those indices)"""
+    if not _users:
+        for s in ENDINGS: _users[s] = set(crawl([s])[1])
+    fs = [FILES[s] for s in ENDINGS if v in _users[s]] or [COMMON_FILE]
+    idx = [p['idx'] + j for p in all_parts(v) for j in range(p['W'] * p['H'])]
+    for f in fs[1:]:
+        assert all(np.array_equal(dcend.cells('US', fs[0])[k], dcend.cells('US', f)[k]) for k in idx), (hex(v), fs)
+    return fs[0]
 
 
 def owners(refs):
@@ -131,26 +161,25 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
     groups = collections.defaultdict(list)                   # (ending|None, bank) -> [composite]
     for e in sorted({e for e in use.values()}, key=lambda x: (x is None, x)):
         comps = sorted([v for v, o in use.items() if o == e],
-                       key=lambda v: -sum(p['W'] * p['H'] for p in dcend.parts(DI, v)))
+                       key=lambda v: -sum(p['W'] * p['H'] for p in all_parts(v)))
         if e is None:
             groups[(None, COMMON_BANK)] = comps; continue
-        big = comps[:13]; small = comps[13:]
+        big = comps[:MAX_OWN_BANKS]; small = comps[MAX_OWN_BANKS:]
         for i, v in enumerate(big): groups[(e, 0x10 + 0x10 * i)].append(v)
         if small: groups[(e, 0x10 + 0x10 * len(big))] += small
     tiles, tile_of_part, pal_of_group, comp_bank = bytearray(), {}, {}, {}
     part_tiles = {}                                          # content hash -> tnum offset
     for (e, bank), comps in groups.items():
-        fn = FILES.get(e, COMMON_FILE)
-        cs = dcend.cells('US', fn)
+        cfile = {v: FILES[e] if e is not None else common_file(v) for v in comps}
         counts = {}
         for v in comps:
-            comp_bank[v] = bank
-            for p in dcend.parts(DI, v):
+            comp_bank[v] = bank; cs = dcend.cells('US', cfile[v])
+            for p in all_parts(v):
                 for j in range(p['W'] * p['H']):
                     c = cs[p['idx'] + j]; vv = c[(c & 0x8000) != 0] & 0x7FFF
                     u, n = np.unique(vv, return_counts=True)
                     for a, b in zip(u.tolist(), n.tolist()): counts[a] = counts.get(a, 0) + b
-        rep = quantize(counts, 255)
+        rep = quantize(counts, 191)            # pens 1-0xBF: 0xC0-0xFF are per-pen alpha when a layer uses alphamap
         reps = sorted(set(rep.values()), key=lambda r: -sum(counts[c] for c in rep if rep[c] == r))
         pen = {r: 1 + i for i, r in enumerate(reps)}
         pal = {c: pen[rep[c]] for c in rep}
@@ -158,7 +187,8 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
         for r, p in pen.items(): cols[p] = int(gfxconv.rgb888(int(r)))
         pal_of_group[(e, bank)] = cols
         for v in comps:
-            for p in dcend.parts(DI, v):
+            cs = dcend.cells('US', cfile[v])
+            for p in all_parts(v):
                 cells = [cs[p['idx'] + j] for j in range(p['W'] * p['H'])]
                 t = gfxconv.cells_to_tiles(cells, pal)
                 k = (bank, e, hashlib.md5(t).hexdigest())
@@ -170,7 +200,7 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
     B = Blob(BLOB_BASE); addr = {}
     for v, e in sorted(use.items()):
         B.align(); addr[v] = B.here()
-        for p in dcend.parts(DI, v):
+        for p in all_parts(v):
             w = p['raw']; t = tnum_base + tile_of_part[(v, p['idx'], e)]
             B.u16(w[0]); B.u16(w[1]); B.u16(w[2]); B.u16(w[3])
             B.u16((comp_bank[v] << 8) | 0x80 | ((t >> 16) & 7)); B.u16(t & 0xFFFF)
@@ -315,7 +345,7 @@ def generate(only):
         for bank, cols in lst:
             pals.append((int(slot), bank, data_off + len(data)))
             data += rev32(b''.join(struct.pack('>I', c) for c in cols))
-    assert data_off + len(data) <= 0x3800000, f'gfx overflow {data_off + len(data):#x}'
+    assert data_off + len(data) <= 0x4000000, f'gfx overflow {data_off + len(data):#x}'   # gunbird2m (bank 3 = 64M)
     open(ROOT + '/out/gfx/ending.tiles', 'wb').write(tiles)
     open(ROOT + '/out/gfx/ending.data', 'wb').write(bytes(data))
     place[f'{tnum_base * 256:08x}'] = 'ending.tiles'
