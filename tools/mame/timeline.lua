@@ -52,6 +52,15 @@ local function run(cmd)
       fh:write(string.char((v >> 24) & 255, (v >> 16) & 255, (v >> 8) & 255, v & 255))
     end
     fh:close()
+  elseif op == "dumpmem" then
+    local a, n, file = args:match("^(%x+)%s+(%x+)%s+(.+)$")
+    a = tonumber(a, 16); n = tonumber(n, 16)
+    local fh = io.open(file, "wb")
+    for x = a, a + n - 1, 4 do
+      local v = space:read_u32(x)
+      fh:write(string.char((v >> 24) & 255, (v >> 16) & 255, (v >> 8) & 255, v & 255))
+    end
+    fh:close()
   elseif op == "poke8" or op == "poke16" or op == "poke32" then
     local a, v = args:match("^(%x+)%s+(%x+)$")
     a = tonumber(a, 16); v = tonumber(v, 16)
