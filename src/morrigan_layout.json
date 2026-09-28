@@ -82,6 +82,37 @@
      3
     ]
    }
+  },
+  "ranking": {
+   "_doc": "high-score ranking: Morrigan's animated sprite (DC ranking script 0x8C3E4D88 w1==6 branch: AnimObj 0x8C389910 + 5 x 6 frames, RANKING.CHR), own 256-colour bank loaded by the branch",
+   "colr": "90",
+   "objects": {
+    "rank_m0": [
+     "8c389910",
+     6,
+     "RANKING.CHR"
+    ],
+    "rank_m1": [
+     "8c389958",
+     6,
+     "RANKING.CHR"
+    ],
+    "rank_m2": [
+     "8c3899a0",
+     6,
+     "RANKING.CHR"
+    ],
+    "rank_m3": [
+     "8c3899e8",
+     6,
+     "RANKING.CHR"
+    ],
+    "rank_m4": [
+     "8c389a30",
+     6,
+     "RANKING.CHR"
+    ]
+   }
   }
  },
  "objdt_area": [

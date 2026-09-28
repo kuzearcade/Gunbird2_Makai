@@ -31,3 +31,7 @@ sym32 000BC418 gb2_demo_portraits_s1
 # endings (tools/port_endings.py): 27-slot ending table, native PutObjWork (seq op 0x67)
 sym32 00060238 gb2_end_table       # (*(hdr+8))[4]: ending table
 sym32 06031A4C gb2_seq_putobjwork  # seq handler table 0x060318B0 [0x67] (was the DC-only stub 0x0600A6D0)
+# high-score ranking (tools/port_ranking.py): the character-animation chain's last test 'w1 == 5 -> Aine loop'
+# becomes 'w1 >= 5 -> gb2_rank_chain' (Aine as before, w1 == 6 Morrigan, else End)
+000AC4AE 0540                      # JumpCompare condition 0x100 (==) -> 0x500 (>=)
+sym32 000AC4B6 gb2_rank_chain

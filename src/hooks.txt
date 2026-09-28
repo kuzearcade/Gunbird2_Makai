@@ -4,3 +4,5 @@
 06022a4e gb2_secret_save
 06022b10 gb2_secret_load
 0601cdfc gb2_select
+060108f6 gb2_fireinawake      # FireInawake: keep bank 0xFF of Morrigan's objects (life icon in HUD/ranking)
+06020230 gb2_ranking_entry    # G_Ranking: load Morrigan's palette for her ranking-list icon

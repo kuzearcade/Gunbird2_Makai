@@ -57,13 +57,14 @@ def run(romdir, eep, case, work):
         snap = cache
     os.makedirs(snap, exist_ok=True)
     nvroot = f'{work}/nv_{os.path.basename(romdir)}_{case}'
-    nv = nvroot + '/gunbird2'
+    setname = 'gunbird2' if romdir == ORIG else 'gunbird2m'
+    nv = f'{nvroot}/{setname}'
     shutil.rmtree(nvroot, ignore_errors=True); os.makedirs(nv)
     shutil.copy(eep, nv + '/eeprom')
     tl = f'{work}/{os.path.basename(romdir)}_{case}.tl'
     open(tl, 'w').write(timeline(case, snap))
     out = subprocess.run([ROOT + '/tools/mame/run.sh', romdir, tl], capture_output=True, text=True,
-                         env=dict(os.environ, GB2_NVRAM=nvroot)).stdout
+                         env=dict(os.environ, GB2_NVRAM=nvroot, GB2_SET=setname)).stdout
     if 'UNTIL met' not in out: print(f'  {case}: select screen never reached ({romdir})')
     return snap
 
