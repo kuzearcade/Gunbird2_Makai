@@ -30,3 +30,6 @@ sym32 0006042C gb2_life_icons      # global tbl[109] (hdr+0x1C +0x1B4): HUD life
 sym32 00060228 gb2_demo_stages     # (*(hdr+8))[0]: stage list
 sym32 000BC3FC gb2_demo_portraits_s0
 sym32 000BC418 gb2_demo_portraits_s1
+# endings (tools/port_endings.py): 27-slot ending table, native PutObjWork (seq op 0x67)
+sym32 00060238 gb2_end_table       # (*(hdr+8))[4]: ending table
+sym32 06031A4C gb2_seq_putobjwork  # seq handler table 0x060318B0 [0x67] (was the DC-only stub 0x0600A6D0)
