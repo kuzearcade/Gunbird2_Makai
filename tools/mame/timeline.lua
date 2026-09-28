@@ -8,6 +8,7 @@
 --   poke8/poke16/poke32 <addr> <value>   write memory (hex)
 --   peek <addr> <len>          print bytes (hex) to stdout
 --   dbg <debugger command...>  run a debugger command (needs -debug)
+--   rtap <start> <end>         log each distinct PC that reads [start,end] (hex; print "RTAP pc addr data")
 --   exit
 --   until <addr> <mask> <value> <interval> <field...>   pause the timeline (later frame numbers shift) and
 --                              tap <field> every <interval> frames until (u16 @addr & mask) == value
@@ -23,6 +24,7 @@ end
 table.sort(events, function(a, b) return a.frame < b.frame end)
 
 local port = manager.machine.ioport.ports[":INPUTS"]
+local taps = {}      -- keep read taps alive
 local gate = nil     -- active "until" command
 local shift = 0      -- frames the timeline has been paused
 local held = {}      -- field name -> release frame (or -1 for hold)
@@ -76,6 +78,17 @@ local function run(cmd)
     print(string.format("PEEK %08x %s", a, table.concat(s, " ")))
   elseif op == "dbg" then
     manager.machine.debugger:command(args)
+  elseif op == "rtap" then
+    local a, b = args:match("^(%x+)%s+(%x+)$")
+    a = tonumber(a, 16); b = tonumber(b, 16)
+    local cpu = manager.machine.devices[":maincpu"]
+    local seen = {}
+    taps[#taps + 1] = space:install_read_tap(a, b, "rtap" .. #taps, function(offset, data, mask)
+      local pc = cpu.state["PC"].value
+      local k = pc .. ":" .. offset
+      if not seen[k] then seen[k] = true; print(string.format("RTAP pc=%08x addr=%08x data=%08x frame=%d", pc, offset, data, frame)) end
+      return data
+    end)
   elseif op == "until" then
     local a, m, v, iv, name = args:match("^(%x+)%s+(%x+)%s+(%x+)%s+(%d+)%s+(.+)$")
     gate = { a = tonumber(a, 16), m = tonumber(m, 16), v = tonumber(v, 16), iv = tonumber(iv), name = name, next = frame }

@@ -361,7 +361,14 @@
   },
   "shotdesc": {
    "size": 8,
-   "default": "w"
+   "default": "w",
+   "remap": {
+    "0x2": {
+     "_why": "DC-only shot types 0x0D/0x0E (Morrigan charge / bomb) are handled exactly like type 9 by the only consumer, HitActE (DC 8C045D20: type==9||0xD||0xE, both sites; arcade 06016C80 tests ==9)",
+     "13": 9,
+     "14": 9
+    }
+   }
   }
  }
 }

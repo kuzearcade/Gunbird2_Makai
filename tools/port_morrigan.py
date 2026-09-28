@@ -206,6 +206,9 @@ class Porter:
     def tr_typed(self, kind, a, size):
         spec = CFG['typed'][kind]
         fields = {int(o, 16): t for o, t in spec.get('fields', {}).items()}
+        # value remaps for 16-bit fields: {"0x2": {"13": 9}} (DC-only enum values -> arcade equivalents)
+        remap = {int(o, 16): {int(k): v for k, v in m.items() if not k.startswith('_')}
+                 for o, m in spec.get('remap', {}).items()}
         out = bytearray(); off = 0
         while off < size:
             t = fields.get(off)
@@ -215,7 +218,7 @@ class Porter:
             if t == 'p': out += struct.pack('>I', self.reloc(D.u32(a + off), f'{kind}@{D.name(a)}+{off:x}')); off += 4
             elif t == 'l': out += struct.pack('>I', D.u32(a + off)); off += 4
             elif t == 'b': out += D.raw(a + off, 1); off += 1
-            else: out += struct.pack('>H', D.u16(a + off)); off += 2
+            else: out += struct.pack('>H', remap.get(off, {}).get(D.u16(a + off), D.u16(a + off))); off += 2
         return bytes(out)
 
     def translate(self):
