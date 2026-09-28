@@ -1,0 +1,5 @@
+# arcade function entry (RAM code address)  ->  replacement symbol
+0600731c gb2_maintenance_code   # maintenance-code screen (+ Morrigan code 5-1-9-9-4)
+06022a3e gb2_secret_clear
+06022a4e gb2_secret_save
+06022b10 gb2_secret_load
