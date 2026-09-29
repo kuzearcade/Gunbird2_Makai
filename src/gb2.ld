@@ -1,7 +1,6 @@
 /* Gunbird 2 Morrigan backport - patch code layout (real PS5 limits: everything inside the 1 MB program ROM) */
 OUTPUT_FORMAT("elf32-shbig-linux")
 OUTPUT_ARCH(sh)
-INCLUDE arcade_syms.ld
 INCLUDE res_syms.ld
 MEMORY
 {

@@ -208,6 +208,19 @@ ROMs, run step 6 to update the driver entry (and these tables).
 | `docs/MORRIGAN_BACKPORT_PLAN.md` | Original plan and hardware-capacity study |
 | `docs/PORT_TODO.md` | Detailed task list with status |
 
+Research tools (not part of the build; they regenerate the maps in `re/` or support analysis):
+
+| Tool | Purpose |
+|---|---|
+| `tools/rescrawl.py`, `tools/blockmatch.py`, `tools/objdt_match.py` | DC↔arcade resource correspondence (`re/map_dc2arc.json`, `re/morrigan_closure.json`, `re/globaltbl_align.json`) |
+| `tools/funcmatch2.py`, `tools/funcmatch.py` | DC↔arcade function matching (`re/func_dc2arc.json`, `re/arcade.sym`) |
+| `tools/seq_oplen.py`, `tools/seqtypes.py` | Sequence-VM operand counts and types (`re/seq_opcodes.json`, `re/seq_types.json`) |
+| `tools/sound_audit.py`, `tools/sound_levels.py`, `tools/mame/sndcov.py` | Sound ID audit, levels and coverage (`re/sound_*.json`) |
+| `tools/dc_verdiff.py`, `tools/dc_codediff.py` | Dreamcast US v1.000 vs JP v1.002 balance diff |
+| `tools/reexport.sh`, `tools/ghidra_headless.sh`, `re/ghidra_scripts/` | Ghidra symbol application and export (local, git-ignored `re/export/`) |
+| `tools/annotate_asm.py`, `tools/lst_litrefs.py`, `tools/render_objdt.py`, `tools/render_composite.py` | Annotated disassembly, literal xrefs, sprite / composite renders |
+| `tools/mame/dbgcmds.lua`, `tools/mame/dumpram.lua` | Run MAME debugger commands from a file; dump main RAM |
+
 ## Testing
 
 All test tools compare the patched set with the original in MAME, or with the Dreamcast in Flycast.  First create
