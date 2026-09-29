@@ -255,15 +255,10 @@ blaming a patch (`docs/NOTES.md` has examples).
 
 ## To do
 
-- **Real-PCB re-test (open).** On a real board, the 64M bank-3 EPROM pair works: all six endings ran from it.
-  Still to check on the board with this build:
-  - Her sprite and select-screen colours. They first used palette entries `0x1000+`, which MAME has but the real PS5
-    does not render. They now use palette lines the original game does not draw with while hers are shown:
-    `0x20–0x23` (freed by moving the red damage-flash bank down four lines) plus unused text-palette entries in game
-    (all 99 colours kept), and `0x10–0x1F` on the select screen, saved and restored around it
-    (`tools/mame/sprlog.py`; `tools/mame/check_palette.py` checks her colours through whole games).
-  - Enemy hit flashes and red debris after the red-bank move.
-  - The ending fixes: the Jiki6 + Jiki1 backdrop and the Jiki6 + Jiki4 Japanese text.
+- **Real-PCB re-test (open).** Confirmed on a real board: her palette (select-screen art and in-game sprites),
+  enemy hit flashes and red debris after the red-bank move, the Jiki6 + Jiki4 Japanese ending text, and the 64M
+  bank-3 EPROM pair (all six endings ran from it). Still open: the Jiki6 + Jiki1 ending shows wrongly on the board
+  (fine in MAME), under investigation.
 - **Not planned (Dreamcast-only):** stage-demo and ending voices (no sound ROM space), and the staff-roll movie (no
   video playback on the board).
 
