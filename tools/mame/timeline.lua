@@ -20,6 +20,8 @@
 --                              "<frame> <time us> <addr> <data> <mask>" (register/data write sequence and timing)
 --   trace <file> <player x> <player hit ptr> <hit objs> <hit list> <hit count>   per-frame trace, same format as
 --                              tools/flycast/timeline.lua: F <frame> <x> <y> P <rects> T <task>:<hp>:<type> ...
+--   phash <n> <file>           every n frames: "<frame> <screen hash> <stage counter> <1P score> <2P score> <GameLoop state>"
+--                              (whole-game regression: tools/mame/regress_game.py)
 --   pc                         print the main CPU's program counter ("PC <frame> <pc>")
 --   weaken <hit objs> <hit list> <hit count> <hp>   every frame, cap the HP (s32 16.16 at task + 0x54) of every
 --                              task owning an active hit object at <hp> (hex): stages clear fast (test runs only)
@@ -44,6 +46,7 @@ local snd = nil      -- sndlog: id -> first frame
 local ymffh = nil
 local tr = nil      -- trace
 local weak = nil    -- weaken
+local ph = nil      -- phash
 local sndt = nil     -- sndtrace: slot -> last pending value
 local gate = nil     -- active "until" command
 local shift = 0      -- frames the timeline has been paused
@@ -152,6 +155,9 @@ local function run(cmd)
     local file, px, phit, objs, list, cnt = args:match("^(%S+)%s+(%x+)%s+(%x+)%s+(%x+)%s+(%x+)%s+(%x+)$")
     tr = { fh = io.open(file, "w"), px = tonumber(px, 16), phit = tonumber(phit, 16), objs = tonumber(objs, 16),
            list = tonumber(list, 16), cnt = tonumber(cnt, 16) }
+  elseif op == "phash" then
+    local n, file = args:match("^(%d+)%s+(.+)$")
+    ph = { n = tonumber(n), fh = io.open(file, "w"), scr = manager.machine.screens[":screen"] }
   elseif op == "pc" then
     print(string.format("PC %d %08x", frame, manager.machine.devices[":maincpu"].state["PC"].value))
   elseif op == "weaken" then
@@ -169,6 +175,7 @@ local function run(cmd)
   elseif op == "exit" then
     if ymffh then ymffh:close() end
     if tr then tr.fh:close() end
+    if ph then ph.fh:close() end
     if snd then
       local l = {}
       for id in pairs(snd) do l[#l + 1] = id end
@@ -216,6 +223,17 @@ local function trace_frame()
   tr.fh:write(table.concat(out, " "), "\n")
 end
 
+local function phash_frame()
+  local px, w, h = ph.scr:pixels()
+  local hsh = 2166136261
+  for i = 1, #px - 7, 8 do                                  -- FNV-1a over 64-bit words, folded to 32 bits
+    local a = string.unpack("<i8", px, i)
+    hsh = ((hsh ~ a) * 16777619) & 0xFFFFFFFF
+  end
+  ph.fh:write(string.format("%d %08x %02x %d %d %d\n", frame, hsh, space:read_u8(0x0604C8C0),
+                            space:read_u32(0x06055030), space:read_u32(0x060550E0), space:read_u32(0x0604C744)))
+end
+
 local function weaken_frame()
   local n = s16(space:read_u16(weak.cnt))
   for i = 0, n - 1 do
@@ -231,6 +249,7 @@ emu.register_frame_done(function()
   frame = frame + 1
   if tr then trace_frame() end
   if weak then weaken_frame() end
+  if ph and frame % ph.n == 0 then phash_frame() end
   if sndt then                   -- a start sets the channel's id (0x06079E08) and its counter (0x06079D90) to 10
     for i = 0x0E, 0x17 do
       local id, cnt = space:read_u16(0x06079E08 + 2 * i), space:read_u8(0x06079D90 + i)
