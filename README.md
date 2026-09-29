@@ -130,6 +130,65 @@ story text from the Dreamcast images (no text and no pixels; `story_text.py --le
 transcriptions). `build.py --set gunbird2` (the stock 56 MB layout) stops
 with a graphics overflow, because the ending tiles need bank 3's second half.
 
+## Checksums
+
+**Input: MAME `gunbird2` set** (`mame_roms/gunbird2.zip`, the parent set, "Gunbird 2 (set 1)"; `mame -verifyroms
+gunbird2` reports it good). The zip's own checksum depends on how it was packed, so the table lists its files:
+
+| File | Size | CRC32 | SHA-1 |
+|---|---:|---|---|
+| `1_prog_h.u17` | 524288 | `7328d8bf` | `c640de1ab5b32400b2d77e0dc6e3ee0f78ab7803` |
+| `2_prog_l.u16` | 524288 | `76f934f0` | `cf197796d66f15639a6b3d5311c18da33cefd06b` |
+| `3_pdata.u1` | 524288 | `a5b697e6` | `947f124fa585c2cf77c6571af7559bd652897b89` |
+| `0l.u3` | 8388608 | `5c826bc8` | `74fb6b242b4c5fe5365cfcc3029ed6da4cf3a621` |
+| `0h.u10` | 8388608 | `3df0cb6c` | `271d276fa0f63d84e458223316a9517865fc2255` |
+| `1l.u4` | 8388608 | `1558358d` | `e3b9c3da4e9b29ffa9568b57d14fe2b600aead68` |
+| `1h.u11` | 8388608 | `4ee0103b` | `29bbe0162dda39919fcd188ea4a6b7b5f20366ff` |
+| `2l.u5` | 8388608 | `e1c7a7b8` | `b5f6e5d53e21928197773df7dde0e7c83f4082af` |
+| `2h.u12` | 8388608 | `bc8a41df` | `90460b11eea778f17cf8be67430e2ab149680686` |
+| `3l.u6` | 4194304 | `0229d37f` | `f9d98d1d2dda2d552b2a46c76b4c7fc84b1aa4c6` |
+| `3h.u13` | 4194304 | `f41bbf2b` | `b705274e392541e2f513a4ae4bae543c03be0913` |
+| `sound.u9` | 4194304 | `f19796ab` | `b978f0550ebd675e8ce9d9edcfcc3f6214e49e8b` |
+| `eeprom-gunbird2.bin` | 256 | `7ac38846` | `c5f4b05a94211f3c96b8c472adbe634f2e77d753` |
+
+**Input: Dreamcast discs** (Redump-verified GDI dumps). The build reads the US disc's `track03.bin`; the JP disc is
+optional (Japanese-version comparison and research tools).
+
+| Disc / file | Size | CRC32 | SHA-1 |
+|---|---:|---|---|
+| *Gunbird 2 v1.000 (2000)(Capcom)(US)[!]* `.gdi` | 87 | `ae10ab3d` | `3f6db4a24a9ef1f4efaf36985c5cb9cc2f56013d` |
+| US `track01.bin` | 1232448 | `bdf0a8c9` | `e70773bf5b99cb33d5f2c51934ffea67a9311d8f` |
+| US `track02.raw` | 1237152 | `48fff429` | `b0d28980a64765c022b4b3e47244aad32a345270` |
+| US `track03.bin` | 1185760800 | `ca4876bb` | `d33dd712e9c908705e5d53dd924962446faf9dff` |
+| *Gunbird 2 v1.002 (2000)(Capcom)(JP)(en)[!]* `.gdi` | 87 | `ae10ab3d` | `3f6db4a24a9ef1f4efaf36985c5cb9cc2f56013d` |
+| JP `track01.bin` | 1232448 | `e697c743` | `a64257a22406656d86b4fa89b0ebd5b32ce1ba81` |
+| JP `track02.raw` | 1735776 | `0de03f29` | `db680939aae4bf61d0e588414c72a47c6dd92cdd` |
+| JP `track03.bin` | 1185760800 | `ba049f36` | `a6e18b33ab2fa5ea6ca74c1de3d7bf8d5752304b` |
+
+**Output: `out/roms/gunbird2m/`** from `tools/build.py --set gunbird2m`. The program ROMs (`1_prog_h`, `2_prog_l`,
+`3_pdata`) contain compiled code, so they match only when built with the same SH toolchain: Ubuntu
+`gcc-15-sh4-linux-gnu` 15.2.0-16ubuntu1cross2 and `binutils-sh4-linux-gnu` 2.46-3ubuntu2. The other files don't
+depend on the compiler.
+
+| File | Size | CRC32 | SHA-1 |
+|---|---:|---|---|
+| `1_prog_h.u17` | 524288 | `4b426396` | `2670d4ca9252d752e2f0686bb174478fd030836c` |
+| `2_prog_l.u16` | 524288 | `6df5eab9` | `bac346a49cd57e72e7171563c461e037a773e8c0` |
+| `3_pdata.u1` | 524288 | `59e702c2` | `165e515410b633ea7a18dbaec22f1e78d5bb0287` |
+| `0l.u3` | 8388608 | `5c826bc8` | `74fb6b242b4c5fe5365cfcc3029ed6da4cf3a621` |
+| `0h.u10` | 8388608 | `3df0cb6c` | `271d276fa0f63d84e458223316a9517865fc2255` |
+| `1l.u4` | 8388608 | `1558358d` | `e3b9c3da4e9b29ffa9568b57d14fe2b600aead68` |
+| `1h.u11` | 8388608 | `4ee0103b` | `29bbe0162dda39919fcd188ea4a6b7b5f20366ff` |
+| `2l.u5` | 8388608 | `e1c7a7b8` | `b5f6e5d53e21928197773df7dde0e7c83f4082af` |
+| `2h.u12` | 8388608 | `bc8a41df` | `90460b11eea778f17cf8be67430e2ab149680686` |
+| `3l_m.u6` | 8388608 | `21bec42f` | `20ef3142aa7cf48786440e96bde2a0b76986f4ed` |
+| `3h_m.u13` | 8388608 | `2f7cbfd4` | `e3b758959640321f0a8ef04eac3e5bcec1e6d4cc` |
+| `sound.u9` | 4194304 | `ba917b65` | `b5128356b99ef7b8da3e85b1e52631ae95ace0f5` |
+| `eeprom-gunbird2.bin` | 256 | `7ac38846` | `c5f4b05a94211f3c96b8c472adbe634f2e77d753` |
+
+Banks 0-2 and the EEPROM image are the original files, unchanged. `build.py` also writes these values to
+`out/roms/gunbird2m.crc.json`; compare against it after a build.
+
 ## Repository layout
 
 | Path | Contents |
