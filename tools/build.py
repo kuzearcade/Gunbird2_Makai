@@ -95,22 +95,52 @@ def trampoline(a, target):
     return bytes.fromhex('d001402b0009') + struct.pack('>I', target)
 
 
-def gfx_chips(setname='gunbird2'):
-    """apply out/gfx/place.json to the gfx image and return modified chip files.
-    gunbird2: stock layout (0x3800000, bank 3 = 2 x 32M).  gunbird2m: bank 3 = 2 x 64M EPROMs (U6/U13), gfx up to
-    0x4000000 - same PS5 board, the sockets take 64M parts (see MORRIGAN_BACKPORT_PLAN.md 0.1)."""
+def gfx_image(setname='gunbird2'):
+    """the whole gfx ROM image (MAME region order) with out/gfx/place.json applied, padded to the set's size"""
     limit = 0x4000000 if setname == 'gunbird2m' else 0x3800000
-    pj = OUT + '/gfx/place.json'
-    if not os.path.exists(pj): return {}
     g = bytearray(open(ROOT + '/assets/arcade/gfx.bin', 'rb').read())
-    for off, f in json.load(open(pj)).items():
+    pj = OUT + '/gfx/place.json'
+    for off, f in (json.load(open(pj)).items() if os.path.exists(pj) else ()):
         b = open(OUT + '/gfx/' + f, 'rb').read(); o = int(off, 16)
         if o + len(b) > limit: sys.exit(f'gfx {f} @ {o:#x} exceeds the {setname} gfx space ({limit:#x})')
         if o + len(b) > len(g): g += b'\0' * (o + len(b) - len(g))
         g[o:o + len(b)] = b
         print(f'  gfx {f} @ {o:#x} ({len(b):#x} bytes)')
-    chips = {}
     if len(g) < limit: g += b'\0' * (limit - len(g))
+    return g
+
+
+def rom_checksums(img, g, snd, setname):
+    """ROM test (0x0602D370, results 0x0602D558 'CHARn' / 'SOUND'): records at data-ROM header[12] (CHECKSUM
+    section), 8 bytes each: {u16 count, u16 lo, u16 hi, u16 lo + hi}; count = 128 KB gfx banks read through the
+    0x24060000 window (the CPU sees each gfx u32 byte-reversed: sums of the low / high halfwords of the little-endian
+    u32s), 0x8000 = sound ROM (byte sum via the YMF278B, only the last word checked), 0 = end.  Stock: CHAR0-2 0x80
+    banks, CHAR3 0x40 (56 MB); gunbird2m: CHAR3 0x80 (64M EPROM pair).  Verified: reproduces the stock values."""
+    a = struct.unpack('>I', bytes(img.data[0x40:0x44]))[0] - 0x26080000
+    off = 0
+    for i in range(16):
+        r = a + 8 * i
+        cnt = struct.unpack('>H', bytes(img.data[r:r + 2]))[0]
+        if cnt == 0: break
+        if cnt & 0x8000:
+            s = int(np.frombuffer(snd, np.uint8).sum(dtype=np.uint64)) & 0xFFFF
+            img.data[r + 2:r + 8] = struct.pack('>3H', 0, 0, s)
+            print(f'  ROM test SOUND sum {s:04x}')
+            continue
+        if i == 3: cnt = (len(g) - off) // 0x20000                # last gfx record: to the end of the set's gfx
+        w = np.frombuffer(bytes(g[off:off + cnt * 0x20000]), '<u4')
+        lo = int((w & 0xFFFF).sum(dtype=np.uint64)) & 0xFFFF; hi = int((w >> 16).sum(dtype=np.uint64)) & 0xFFFF
+        img.data[r:r + 8] = struct.pack('>4H', cnt, lo, hi, (lo + hi) & 0xFFFF)
+        print(f'  ROM test CHAR{i} {cnt:#x} banks: {lo:04x} {hi:04x} {(lo + hi) & 0xFFFF:04x}')
+        off += cnt * 0x20000
+
+
+def gfx_chips(setname='gunbird2', g=None):
+    """apply out/gfx/place.json to the gfx image and return modified chip files.
+    gunbird2: stock layout (0x3800000, bank 3 = 2 x 32M).  gunbird2m: bank 3 = 2 x 64M EPROMs (U6/U13), gfx up to
+    0x4000000 - same PS5 board, the sockets take 64M parts (see MORRIGAN_BACKPORT_PLAN.md 0.1)."""
+    if g is None: g = gfx_image(setname)
+    chips = {}
     names = [('0l.u3', '0h.u10'), ('1l.u4', '1h.u11'), ('2l.u5', '2h.u12'),
              ('3l_m.u6', '3h_m.u13') if setname == 'gunbird2m' else ('3l.u6', '3h.u13')]
     for bank, (lo, hi) in enumerate(names):
@@ -123,6 +153,11 @@ def gfx_chips(setname='gunbird2'):
 def split_and_write(img, setname):
     d = OUT + '/roms/' + setname
     os.makedirs(d, exist_ok=True)
+    g = gfx_image(setname)
+    z = zipfile.ZipFile(ROOT + '/mame_roms/gunbird2.zip')
+    sndf = OUT + '/snd/sound.u9'                             # tools/port_sound.py (Morrigan's samples)
+    snd = open(sndf, 'rb').read() if os.path.exists(sndf) else z.read('sound.u9')
+    rom_checksums(img, g, snd, setname)                      # before the data ROM is split
     p = img.prog
     H, L = bytearray(0x80000), bytearray(0x80000)
     for i in range(0, 0x80000, 2):
@@ -130,14 +165,12 @@ def split_and_write(img, setname):
         L[i:i + 2] = p[2 * i + 2:2 * i + 4][::-1]
     dd = bytearray(img.data); dd[0::2], dd[1::2] = dd[1::2], dd[0::2]
     files = {'1_prog_h.u17': bytes(H), '2_prog_l.u16': bytes(L), '3_pdata.u1': bytes(dd)}
-    z = zipfile.ZipFile(ROOT + '/mame_roms/gunbird2.zip')
     for n in z.namelist():
         if n not in files: files[n] = z.read(n)
     if setname == 'gunbird2m':
         for n in ('3l.u6', '3h.u13'): files.pop(n, None)
-    snd = OUT + '/snd/sound.u9'                              # tools/port_sound.py (Morrigan's samples)
-    if os.path.exists(snd): files['sound.u9'] = open(snd, 'rb').read()
-    files.update(gfx_chips(setname))
+    files['sound.u9'] = snd
+    files.update(gfx_chips(setname, g))
     for n, b in files.items():
         open(f'{d}/{n}', 'wb').write(b)
     return {n: (f'{zlib.crc32(b):08x}', hashlib.sha1(b).hexdigest(), len(b)) for n, b in files.items()}
