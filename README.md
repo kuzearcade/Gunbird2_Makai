@@ -176,17 +176,17 @@ depend on the compiler.
 
 | File | Size | CRC32 | SHA-1 |
 |---|---:|---|---|
-| `1_prog_h.u17` | 524288 | `c404424a` | `f17d85053fda1f10eac50dbd493098aa0290bc8a` |
-| `2_prog_l.u16` | 524288 | `9e8c5f1f` | `76935c6803cececba762b7df4c102fa5d6bee52e` |
-| `3_pdata.u1` | 524288 | `45f2b368` | `13cfe77da3a3e8c0ad9d00fcfe8a22bbeb3c9315` |
+| `1_prog_h.u17` | 524288 | `458464aa` | `504232488d4df50e74a3a90b3ac5b60304e1a6e2` |
+| `2_prog_l.u16` | 524288 | `112cde30` | `bf2a5ee73a6ec1df5d833b3aacac9e7dbd84ff35` |
+| `3_pdata.u1` | 524288 | `2875a289` | `07d7bd9bd5f983a9d1e8ca6603ac8c54310939c7` |
 | `0l.u3` | 8388608 | `5c826bc8` | `74fb6b242b4c5fe5365cfcc3029ed6da4cf3a621` |
 | `0h.u10` | 8388608 | `3df0cb6c` | `271d276fa0f63d84e458223316a9517865fc2255` |
 | `1l.u4` | 8388608 | `1558358d` | `e3b9c3da4e9b29ffa9568b57d14fe2b600aead68` |
 | `1h.u11` | 8388608 | `4ee0103b` | `29bbe0162dda39919fcd188ea4a6b7b5f20366ff` |
 | `2l.u5` | 8388608 | `e1c7a7b8` | `b5f6e5d53e21928197773df7dde0e7c83f4082af` |
 | `2h.u12` | 8388608 | `bc8a41df` | `90460b11eea778f17cf8be67430e2ab149680686` |
-| `3l_m.u6` | 8388608 | `9f9dfa18` | `fb48032dac506367138a9becaf0c70ff7e95601a` |
-| `3h_m.u13` | 8388608 | `51bbb806` | `4ce6a3c70b4e161c53a960b4960f8fcab41e30e0` |
+| `3l_m.u6` | 8388608 | `659d652c` | `252139bdbc791b7b9aa5c150bb81e7a334745d73` |
+| `3h_m.u13` | 8388608 | `300b7547` | `d5fe55805f8cffe60f13f158c9581a3f24f50061` |
 | `sound.u9` | 4194304 | `ba917b65` | `b5128356b99ef7b8da3e85b1e52631ae95ace0f5` |
 | `eeprom-gunbird2.bin` | 256 | `7ac38846` | `c5f4b05a94211f3c96b8c472adbe634f2e77d753` |
 
@@ -221,6 +221,7 @@ select-screen inputs (about 2 minutes).
 | `tools/mame/regress_sound.py <eeprom> --set gunbird2m` | Sound-chip register writes for all 6 characters, including bombs, charges and continues |
 | `tools/mame/check_stagedemo.py regress\|morrigan <eeprom>` | Original stage demos unchanged; contact sheets of all Morrigan scenes |
 | `tools/trace_compare.py` | Morrigan vs the Dreamcast: speed, hitboxes, per-hit damage, time to kill |
+| `tools/mame/check_endings.py` | All six Morrigan endings (Stage Select, Ending Demo) in English and Japanese: each plays to its end, the backdrop palette is loaded, contact sheets for a visual check |
 | `tools/mame/check_palette.py` | Morrigan's in-game colours (palette lines `0x1C–0x1F`, `0x2C–0x2F`) stay intact through 13 whole games, and the original's lines around them unchanged: 1P, and 2P with each partner on either side |
 | `tools/mame/palcensus.py` | Which palette lines the original game writes in each game state, over whole games |
 | `tools/mame/paldraw.py` | Which palette lines the original game draws with in each game state (screen hashes with lines repainted) |

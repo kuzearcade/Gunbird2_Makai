@@ -18,6 +18,8 @@
 #define VIDREG4         V32(0x2405FFF0)
 #define PrintJP         FN(s16, 0x06029352, (const void *, int, int))
 #define PrintEN         FN(s16, 0x06029288, (const char *, int, int))
+#define PltBlockSet     FN(void, 0x0602847C, (int, u32))     /* palette lines from a line table, queued for vblank */
+#define BACKDROP_PAL    0x260B7A78    /* bank 0xF0 of the stock ending setup 0x0ACAF0: the scrolling backdrop map 0x0ACB78 */
 
 extern int gb2_demo_slot(int count, int last);
 extern void gb2_pal_save_ending(void);
@@ -89,6 +91,10 @@ static void load_ending(int slot)
     const struct end_pal *p;
     gfx_copy((void *)END_BLOB_BASE, END_BLOB_GFX, END_BLOB_SIZE);
     gb2_pal_save_ending();                          /* lines 0x10-0x3F, put back after the ending (palette.c) */
+    /* the backdrop map her END60 / END61 scenes show (DC 0x8C3E5918 -> arcade 0x0ACB78) draws with bank 0xF0; the
+     * stock endings load it in their setup 0x0ACAF0, which hers (the DC setup, ported) does not run - without this
+     * the backdrop showed whatever bank 0xF0 held (white after Stage Select, stage colours after a real game) */
+    PltBlockSet(0xF0, BACKDROP_PAL);
     for (p = end_pals; p->slot >= 0; p++) {
         if (p->slot != slot) continue;
         gfx_copy((void *)p->pal, p->gfx, 256 * 4);
