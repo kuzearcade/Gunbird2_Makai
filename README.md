@@ -6,8 +6,7 @@ backports her from the Dreamcast release to the arcade game: her sprites, shots,
 endings and ranking animation. It targets the real PS5 board's limits, so the result could run on real hardware as
 well as in MAME.
 
-The name comes from **Makai** (魔界), the demon realm Morrigan comes from. In *Darkstalkers* she is a succubus and
-the heir of the Aensland family, one of Makai's ruling noble houses.
+The name comes from **Makai** (魔界), the demon realm Morrigan comes from.
 
 No game data is included. Everything is extracted from your own copies of the arcade ROMs and the Dreamcast disc,
 then converted and patched in by the tools here.
