@@ -4,7 +4,7 @@ set and on the patched set.  Pass = the YMF278B register write sequence (timelin
 -wavwrite recordings are compared for information only: any change in executed CPU cycles (patched code, or even a
 different menu path on the unmodified ROM) moves the phase of the 9-cycle vblank wait loop (0x06028918), so the
 same writes land up to 8 cycles earlier/later and MAME's YMF278B output differs slightly at some note onsets
-(see re/NOTES.md "Sound").  Random()'s idle-time entropy is neutralised as in regress_select.py.
+(see docs/NOTES.md "Sound").  Random()'s idle-time entropy is neutralised as in regress_select.py.
 usage: regress_sound.py <eeprom> [--set gunbird2m] [--chars 0,1,2,3,4,5] [--stage 1] [--frames 3000]"""
 import os, sys, subprocess, argparse, wave, tempfile
 from concurrent.futures import ThreadPoolExecutor

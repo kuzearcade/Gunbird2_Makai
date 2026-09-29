@@ -5,10 +5,10 @@ Morrigan's sprite colours stay on palette lines <= 0xFF: the real PS5 does not r
 0x1000+ that MAME's palette RAM has (her sprites there rendered wrong on hardware), and the original game draws with
 nearly every line <= 0xFF somewhere (tools/mame/sprlog.py, paldraw.py): lines 0x10-0x3F are the damage-flash (white
 0x10, red 0x20) and shadow (black 0x30) banks, drawn with any sprite's pens.  So (src/palette.c):
-  game    two 4-line windows the original leaves (almost) alone during play: the black tails of the flash banks,
-          colr 0x1C and 0x2C with pens 1-63 each (config 'game_banks').  Her 99 colours are split between them by
-          sprite block (every OBJDT entry's cells in one set, tools/port_morrigan.py picks the entry's bank from
-          out/gfx/game_sets.json); low pens keep her shadow (bank 0x30) black and a flash (0x10 / 0x20) right.
+  game    her 99 colours split by sprite block into sets (config 'game_sets': a colr and the pens it may use; every
+          OBJDT entry's cells in one set, tools/port_morrigan.py picks the entry's bank from out/gfx/game_sets.json):
+          colr 0x20 pens 1-63 = lines 0x20-0x23, freed by moving the red flash bank to 0x24 (src/patches.txt), and
+          colr 0x00 on 38 entries of the text lines that no original sprite can draw.  Lossless.
   select  colr 0x10, pens 1.. -> lines 0x10-0x1F, not drawn on the select screen (saved and restored around it)
 Story portraits, ranking animation and endings use their own 256-colour banks on standard lines.
 
@@ -28,8 +28,11 @@ CFG = json.load(open(ROOT + '/src/morrigan_layout.json'))['gfx']
 FS = ROOT + '/assets/dc/US/fs/'
 D = Space('dc_US')
 os.makedirs(ROOT + '/out/gfx', exist_ok=True)
-GAME_BANKS = CFG['game_banks']      # in-game group: one colr per colour set, pens PEN0..PEN0 + GAME_PENS - 1
-GAME_PENS = 63
+def _pens(v):
+    if isinstance(v, str): a, b = v.split('-'); return list(range(int(a), int(b) + 1))
+    return list(v)
+GAME_SETS = [(s['colr'], _pens(s['pens'])) for s in CFG['game_sets']]   # in-game group: (colr, allowed pens) per set
+GAME_BANKS = [c for c, _ in GAME_SETS]
 SEL_COLR = CFG['select_colr']       # select-screen group
 PEN0 = CFG['index_start']
 LINES = {'select': (SEL_COLR, CFG['select_lines'])}
@@ -172,13 +175,22 @@ def build_game(cells, extras, tnum_base):
     units = {}
     for i in range(len(cells)): units.setdefault(find(i), []).append(i)
     ucols = {u: frozenset().union(*(ccols[i] for i in m)) for u, m in units.items()}
-    sets = [set() for _ in GAME_BANKS]
-    which = {}
-    for u in sorted(units, key=lambda u: -len(ucols[u])):
-        fit = [k for k in range(len(sets)) if len(sets[k] | ucols[u]) <= GAME_PENS]
-        assert fit, ('in-game colours do not fit', [len(x) for x in sets], len(ucols[u]))
-        k = min(fit, key=lambda k: (len(ucols[u] - sets[k]), len(sets[k])))
-        sets[k] |= ucols[u]; which[u] = k
+    caps = [len(p) for _, p in GAME_SETS]
+    def pack(order):
+        sets, which = [set() for _ in caps], {}
+        for u in order:
+            fit = [k for k in range(len(sets)) if len(sets[k] | ucols[u]) <= caps[k]]
+            if not fit: return None
+            k = min(fit, key=lambda k: (len(ucols[u] - sets[k]), len(sets[k]) - caps[k]))
+            sets[k] |= ucols[u]; which[u] = k
+        return sets, which
+    import random
+    for seed in range(1000):                  # largest units first; ties / near-ties shuffled until a packing fits
+        r = random.Random(seed)
+        res = pack(sorted(units, key=lambda u: -len(ucols[u]) + (r.random() * 4 if seed else 0)))
+        if res: break
+    assert res, ('in-game colours do not fit the sets', caps)
+    sets, which = res
     cell_set = [which[find(i)] for i in range(len(cells))]
     counts = {}
     for c in cells:
@@ -186,15 +198,17 @@ def build_game(cells, extras, tnum_base):
         for a, b in zip(u.tolist(), n.tolist()): counts[a] = counts.get(a, 0) + b
     pals, cols = [], []
     for k, st in enumerate(sets):
-        order = sorted(st, key=lambda c: -counts[c])
-        pals.append({c: PEN0 + i for i, c in enumerate(order)})
+        order = sorted(st, key=lambda c: -counts[c])          # most used colours on the lowest allowed pens
+        pens = GAME_SETS[k][1]
+        pals.append({c: pens[i] for i, c in enumerate(order)})
         cols.append([gfxconv.rgb888(c) for c in order])
     tiles = b''.join(gfxconv.cells_to_tiles([c], pals[k]) for c, k in zip(cells, cell_set))
     open(ROOT + '/out/gfx/game.tiles', 'wb').write(tiles)
     json.dump({'banks': GAME_BANKS, 'cell_set': cell_set}, open(ROOT + '/out/gfx/game_sets.json', 'w'))
     print(f'game: {len(cells)} tiles @ tnum {tnum_base:#x}, {len(counts)} colours -> sets of ' +
           ', '.join(f'{len(st)} (colr {b:#x})' for st, b in zip(sets, GAME_BANKS)))
-    return dict(tiles=len(cells), sets=cols, cell_set=cell_set, frames={}, base=tnum_base, pen0=PEN0,
+    return dict(tiles=len(cells), sets=cols, set_pens=[p[:len(c)] for (_, p), c in zip(GAME_SETS, cols)],
+                cell_set=cell_set, frames={}, base=tnum_base, pen0=PEN0,
                 extras=[(n, k) for n, k in extras], colr=None)
 
 
@@ -242,7 +256,7 @@ def main():
     place, c, h = {}, ['/* generated by tools/make_gfx.py - do not edit */', '#include "arcade.h"',
                        '#include "gen_gfx.h"', ''], \
         ['/* generated by tools/make_gfx.py - do not edit */', '#ifndef GEN_GFX_H', '#define GEN_GFX_H',
-         '/* in-game sprites: colour sets pal_game<k> on colr MORRIGAN_COLR<k> (tools/make_gfx.py build_game) */',
+         '/* in-game sprites: colour sets pal_game<k> on colr MORRIGAN_COLR<k>, pens pal_game<k>_pens (make_gfx.py) */',
          *[f'#define MORRIGAN_COLR{k} 0x{b:02X}' for k, b in enumerate(GAME_BANKS)],
          f'#define MORRIGAN_SEL_COLR 0x{SEL_COLR:02X}  /* select-screen art */', f'#define MORRIGAN_PEN0 {PEN0}',
          f'#define MORRIGAN_TNUM_BASE 0x{CFG["tnum_base"]:X}',
@@ -253,6 +267,9 @@ def main():
             c.append(f'const u32 pal_{pn}[{len(cols)}] = {{' + ', '.join(f'0x{v:08X}' for v in cols) + '};')
             c.append(f'const u16 pal_{pn}_count = {len(cols)};')
             h.append(f'extern const u32 pal_{pn}[]; extern const u16 pal_{pn}_count;')
+        for k, pens in enumerate(g.get('set_pens', [])):
+            c.append(f'const u8 pal_{gname}{k}_pens[{len(pens)}] = {{' + ', '.join(str(p) for p in pens) + '};')
+            h.append(f'extern const u8 pal_{gname}{k}_pens[];   /* pen of each colour of pal_{gname}{k} */')
         for ename, k in g['extras']:
             h.append(f'#define TNUM_{ename.upper()} 0x{g["base"] + k:X}')
             if 'cell_set' in g: h.append(f'#define COLR_{ename.upper()} MORRIGAN_COLR{g["cell_set"][k]}')

@@ -9,8 +9,9 @@ the line is drawn.
           reported per GameLoop state (9 = select screen, 10 = play)
   game    whole games (regress_game.py cases), all candidate lines at once, reported per GameLoop state
 usage: paldraw.py select [--lines 1c-1f,2c-3f]
-       paldraw.py game [--lines 30-36[/24-2b...]] [--cases 1P1,...] [--frames 100000]
-          (game: '/' separates line groups, each poisoned in a run of its own against one shared clean run)"""
+       paldraw.py game [--lines 30-36[/24-2b...]] [--cases 1P1,...] [--frames 100000] [--set gunbird2m]
+          (game: '/' separates line groups, each poisoned in a run of its own against one shared clean run; a group
+          'e:200-23f+10+5d-5e' lists palette entries instead of lines)"""
 import os, sys, subprocess, tempfile, argparse, shutil, itertools
 from concurrent.futures import ThreadPoolExecutor
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -26,13 +27,16 @@ def parse_lines(s):
     return out
 
 
+SET = 'gunbird2'                          # --set gunbird2m: the patched build (out/roms)
+
+
 def run_tl(tl_lines, work, tag, eep):
     """screen hashes of one run (phash lines: frame hash stage 1P 2P GameLoop)"""
-    nv = f'{work}/nv_{tag}/gunbird2'; shutil.rmtree(os.path.dirname(nv), ignore_errors=True); os.makedirs(nv)
+    nv = f'{work}/nv_{tag}/{SET}'; shutil.rmtree(os.path.dirname(nv), ignore_errors=True); os.makedirs(nv)
     shutil.copy(eep, nv + '/eeprom')
     open(f'{work}/{tag}.tl', 'w').write('\n'.join(tl_lines) + '\n')
-    subprocess.run([ROOT + '/tools/mame/run.sh', RS.ORIG, f'{work}/{tag}.tl'], capture_output=True,
-                   env=dict(os.environ, GB2_NVRAM=os.path.dirname(nv), GB2_SET='gunbird2'))
+    subprocess.run([ROOT + '/tools/mame/run.sh', RS.ORIG if SET == 'gunbird2' else ROOT + '/out/roms',
+                    f'{work}/{tag}.tl'], capture_output=True, env=dict(os.environ, GB2_NVRAM=os.path.dirname(nv), GB2_SET=SET))
     return [l.split()[1] for l in open(f'{work}/{tag}.hash')] if os.path.exists(f'{work}/{tag}.hash') else []
 
 
@@ -57,7 +61,10 @@ def main():
     ap.add_argument('mode', choices=['select', 'game']); ap.add_argument('--lines')
     ap.add_argument('--cases'); ap.add_argument('--frames', type=int, default=100000)
     ap.add_argument('--jobs', type=int, default=os.cpu_count() or 4)
+    ap.add_argument('--set', default='gunbird2', choices=['gunbird2', 'gunbird2m'])
     a = ap.parse_args()
+    global SET
+    SET = a.set
     eep = ROOT + '/out/tmp/eeprom_regress.bin'
     work = tempfile.mkdtemp(prefix='paldraw_')
     if a.mode == 'select':
@@ -75,9 +82,14 @@ def main():
             print(f'{name}: not drawn: ' + ' '.join(f'{l:02x}' for l in lines if l not in per.get(st, ())))
     else:
         import regress_game as RG
-        groups = [parse_lines(g) for g in (a.lines or '30-36').split('/')]
+        def entry_ranges(g):                     # -> [(first entry, last entry)]
+            if g.startswith('e:'):
+                return [(int(x.split('-')[0], 16), int(x.split('-')[-1], 16)) for x in g[2:].split('+')]
+            return [(16 * l, 16 * l + 15) for l in parse_lines(g)]
+        specs = (a.lines or '30-36').split('/')
+        groups = [entry_ranges(g) for g in specs]
         cases = a.cases.split(',') if a.cases else [f'1P{c}' for c in range(1, 7)] + ['2P1-2', '2P3-4', '2P5-6']
-        def gname(g): return f'{min(g):02x}-{max(g):02x}'
+        def gname(g): return f'{g[0][0]:03x}-{g[-1][1]:03x}' + (f'+{len(g) - 1}' if len(g) > 1 else '')
         def one(job):
             case, g = job
             ga = argparse.Namespace(frames=a.frames, every=1)
@@ -85,8 +97,8 @@ def main():
             if g is None:
                 return case, None, run_tl(base + [f'2 phash 4 {work}/{case}_c.hash'], work, f'{case}_c', eep)
             tag = f'{case}_{gname(g)}'
-            return case, g, run_tl(base + [f'2 phash 4 {work}/{tag}.hash',
-                                          f'2 palpoison {16 * min(g):x} {16 * max(g) + 15:x} {POISON}'], work, tag, eep)
+            return case, g, run_tl(base + [f'2 phash 4 {work}/{tag}.hash'] +
+                                   [f'2 palpoison {e0:x} {e1:x} {POISON}' for e0, e1 in g], work, tag, eep)
         names = {'2': 'attract', '3': 'ending', '4': 'name entry/ranking', '5': 'game start', '8': 'stage demo',
                  '9': 'select/2P join', '10': 'play'}
         res = {}

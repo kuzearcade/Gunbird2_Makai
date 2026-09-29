@@ -7,6 +7,7 @@
 --   sprlog <lo> <hi> <file>   every frame, walk the sprite list and record each distinct sprite (colr, tile
 --                              number, 8bpp, cells) with lo <= colr <= hi (hex); at exit one line per sprite:
 --                              "<colr> <tnum> <d8> <cells> <first frame> <frames> <GameLoop states>" (tools/mame/sprlog.py)
+--   banktap <lo> <hi> <colr,...>  count sprite RAM writes of a bank byte in the list, per caller (PR); at exit
 --   pixdump <file>             save the screen bitmap phash hashes, raw ("<w> <h>" line, then 32-bit pixels)
 --   dumpram <file.bin>         dump main RAM 0x06000000-0x060FFFFF
 --   poke8/poke16/poke32 <addr> <value>   write memory (hex)
@@ -24,7 +25,8 @@
 --                              "<frame> <time us> <addr> <data> <mask>" (register/data write sequence and timing)
 --   trace <file> <player x> <player hit ptr> <hit objs> <hit list> <hit count>   per-frame trace, same format as
 --                              tools/flycast/timeline.lua: F <frame> <x> <y> P <rects> T <task>:<hp>:<type> ...
---   palpoison <e0> <e1> <v>    write value v to palette entries e0..e1 (hex) after every frame (draw census)
+--   palpoison <e0> <e1> <v>    write value v to palette entries e0..e1 (hex) after every frame (draw census);
+--                              repeat the op for more ranges
 --   palcensus <file>           log palette RAM writes (0x04040000-0x04044FFF) per 16-entry line: at exit
 --                              "c|w <line> <first>-<last>,..." frame ranges; c = non-zero (a colour), w = any write
 --                              (tools/mame/palcensus.py)
@@ -58,6 +60,7 @@ local ph = nil      -- phash
 local pc = nil      -- palcensus
 local poison = nil  -- palpoison
 local spl = nil     -- sprlog
+local bank = nil    -- banktap
 local sndt = nil     -- sndtrace: slot -> last pending value
 local gate = nil     -- active "until" command
 local shift = 0      -- frames the timeline has been paused
@@ -142,6 +145,24 @@ local function run(cmd)
                           cpu.state["R4"].value, cpu.state["R5"].value, cpu.state["R12"].value))
       return data
     end)
+  elseif op == "banktap" then
+    -- banktap <lo> <hi> <colr,...> (hex): sprite RAM writes (a..b, word +8 of each 16-byte sprite) whose palette
+    -- bank byte (colr) is one of the given values; distinct (colr, PR = the drawing routine's caller) printed at
+    -- exit as "BANKTAP <colr> <pr> <first frame> <count>"
+    local a, b, list = args:match("^(%x+)%s+(%x+)%s+(%S+)$")
+    a = tonumber(a, 16); b = tonumber(b, 16)
+    local want = {}
+    for v in list:gmatch("%x+") do want[tonumber(v, 16)] = true end
+    local cpu = manager.machine.devices[":maincpu"]
+    bank = bank or {}
+    taps[#taps + 1] = space:install_write_tap(a, b, "banktap" .. #taps, function(offset, data, mask)
+      if (offset & 0xc) == 8 and (mask & 0xff000000) ~= 0 and want[(data >> 24) & 0xff] then
+        local k = string.format("%02x %08x", (data >> 24) & 0xff, cpu.state["PR"].value)
+        local v = bank[k]
+        if v then v[2] = v[2] + 1 else bank[k] = { frame, 1 } end
+      end
+      return data
+    end)
   elseif op == "usage" then
     local a, b = args:match("^(%x+)%s+(%x+)$")
     a = tonumber(a, 16); b = tonumber(b, 16)
@@ -178,7 +199,8 @@ local function run(cmd)
     -- palpoison <first entry> <last entry> <RGBx value> (hex): rewrite those palette entries every frame, so any
     -- pixel drawn with them changes colour (which palette lines a screen really draws with)
     local a, b, v = args:match("^(%x+)%s+(%x+)%s+(%x+)$")
-    poison = { a = tonumber(a, 16), b = tonumber(b, 16), v = tonumber(v, 16) }
+    poison = poison or {}
+    poison[#poison + 1] = { a = tonumber(a, 16), b = tonumber(b, 16), v = tonumber(v, 16) }
   elseif op == "palcensus" then
     -- per palette line (16 entries), the frames in which it was written; at exit: "<line> <first>-<last>,..."
     pc = { file = args, lines = {}, any = {} }
@@ -216,6 +238,9 @@ local function run(cmd)
     if ymffh then ymffh:close() end
     if tr then tr.fh:close() end
     if ph then ph.fh:close() end
+    if bank then
+      for k, v in pairs(bank) do print(string.format("BANKTAP %s %d %d", k, v[1], v[2])) end
+    end
     if spl then
       local fh = io.open(spl.file, "w")
       for k, v in pairs(spl.seen) do
@@ -334,7 +359,9 @@ emu.register_frame_done(function()
   if tr then trace_frame() end
   if weak then weaken_frame() end
   if poison then
-    for e = poison.a, poison.b do space:write_u32(0x04040000 + 4 * e, poison.v) end
+    for _, r in ipairs(poison) do
+      for e = r.a, r.b do space:write_u32(0x04040000 + 4 * e, r.v) end
+    end
   end
   if ph and frame % ph.n == 0 then phash_frame() end
   if spl then sprlog_frame() end

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Check that Morrigan's sprite colours stay intact through whole games on the patched set (gunbird2m).
 
-Her in-game colours are two sets, pal_game0 / pal_game1 on colr MORRIGAN_COLR0 / 1 (lines 0x1C-0x1F, 0x2C-0x2F; see
-tools/make_gfx.py and src/palette.c): the real PS5 does not reach the entries 0x1000+ MAME emulates.  Each run plays
+Her in-game colours are two sets, pal_game0 / pal_game1 on colr MORRIGAN_COLR0 / 1 at the pens pal_game<k>_pens
+(lines 0x20-0x23 and free text-line entries; see tools/make_gfx.py and src/palette.c): the real PS5 does not reach
+the entries 0x1000+ MAME emulates.  Each run plays
 the whole game with her (Stage Select Full Play: both loops from stage 1, stage demos, endings, the all-clear tally),
 invincible, enemy HP capped, and every 60 frames reads palette lines 0x00-0x3F and the game state.  Pass = whenever
 she is in play (GameLoop in game / stage demo / 2P join) both sets are exactly as gb2_morrigan_pal_init writes them
@@ -19,11 +20,11 @@ PLAY = {'8', '9', '10'}                   # stage demo, 2P join, in game
 def expected():
     """{palette entry: RGBx} of her in-game colour sets"""
     src, h = open(ROOT + '/src/gen_gfx.c').read(), open(ROOT + '/src/gen_gfx.h').read()
-    pen0 = int(re.search(r'MORRIGAN_PEN0 (\d+)', h).group(1))
     exp = {}
     for k, colr in re.findall(r'MORRIGAN_COLR(\d) (0x[0-9A-F]+)', h):
         vals = [int(x, 16) for x in re.search(rf'pal_game{k}\[\d+\] = \{{([^}}]*)\}}', src).group(1).split(',')]
-        exp.update({int(colr, 16) * 16 + pen0 + i: v for i, v in enumerate(vals)})
+        pens = [int(x) for x in re.search(rf'pal_game{k}_pens\[\d+\] = \{{([^}}]*)\}}', src).group(1).split(',')]
+        exp.update({int(colr, 16) * 16 + p: v for p, v in zip(pens, vals)})
     return exp
 
 

@@ -3,14 +3,14 @@
  * entries 0x1000+ (lines 0x100+) that MAME emulates and her sprites used before.  The original game draws with nearly
  * every line <= 0xFF somewhere (tools/mame/paldraw.py, even lines it keeps black, e.g. the select screen's icon
  * shadows with bank 0x30), so each group gets lines the original does not draw while that group is shown:
- *  - in-game sprites: two colour sets, pal_game0 on colr 0x1C and pal_game1 on colr 0x2C, pens 1-63 each (lines
- *    0x1C-0x1F, 0x2C-0x2F).  Lines 0x10-0x3F are the original's damage-flash (white 0x10, red 0x20) and shadow
- *    (black 0x30) banks, drawn with any sprite's own pens; lines 0x1C-0x1F / 0x2C-0x2F are their black tails, reached
- *    only by pens 0xC0-0xFF and in play almost never drawn (tools/mame/sprlog.py: 0x1C / 0x2C never, 0x1D-0x1F /
- *    0x2D-0x2F on a few hundred frames in nine whole games, where a flashing enemy's darkest pixels would show her
- *    colours instead of black).  Her pens stay below 0x40, so her own shadow and flash stay right.  The select screen
- *    and every game start write these lines (PltBlockSet(0x20, 0x260B6318)), so the sets are (re)loaded whenever
- *    play (GameLoop state 10) starts, and at G_Ranking.
+ *  - in-game sprites: her colours in two sets, each on one bank with its own pen list (tools/make_gfx.py):
+ *    pal_game0 on colr 0x20, pens 1-63 = lines 0x20-0x23; pal_game1 on colr 0x00, 38 scattered entries of the text
+ *    lines 0x01-0x0C.  Lines 0x10-0x3F are the original's damage-flash (white 0x10, red 0x20) and shadow (black 0x30)
+ *    banks, drawn with any sprite's own pens (pens 0xC0-0xFF of a flashing sprite reach the black lines 0x1C-0x1F /
+ *    0x2C-0x2F, which her colours used first).  The red bank now starts at 0x24 (src/patches.txt), its black part
+ *    lying on the shadow lines 0x30-0x33, so lines 0x20-0x23 are drawn by nothing else; the text entries are ones no
+ *    original sprite or font can reach (docs/NOTES.md).  The select screen and every game start write these lines, so
+ *    the sets are (re)loaded whenever play (GameLoop state 10) starts, and at G_Ranking.
  *  - select-screen art (pal_select): colr 0x10, lines 0x10-0x1F.  Not drawn on the select screen, but lines
  *    0x10-0x1B hold colours the select screen loads for later (drawn in play), so they are saved before the art is
  *    loaded and restored after it (src/select.c).
@@ -33,6 +33,13 @@ void gb2_pal_copy(volatile u32 *dst, const volatile u32 *src, u16 count)
 void gb2_pal_load_group(const u32 *pal, u16 count, u16 colr)
 {
     gb2_pal_copy(PAL_RAM + colr * 16 + MORRIGAN_PEN0, pal, count);
+}
+
+/* write a colour set to the pens listed for it in bank colr */
+static void load_set(const u32 *pal, const u8 *pens, u16 count, u16 colr)
+{
+    u16 i;
+    for (i = 0; i < count; i++) PAL_RAM[colr * 16 + pens[i]] = pal[i];
 }
 
 /* One save buffer for the two things that cover lines the original game needs later (never both at once):
@@ -70,8 +77,8 @@ static void restore_ending(void)
  * into the in-game state (gb2_play_wrap) */
 void gb2_morrigan_pal_init(void)
 {
-    gb2_pal_load_group(pal_game0, pal_game0_count, MORRIGAN_COLR0);
-    gb2_pal_load_group(pal_game1, pal_game1_count, MORRIGAN_COLR1);
+    load_set(pal_game0, pal_game0_pens, pal_game0_count, MORRIGAN_COLR0);
+    load_set(pal_game1, pal_game1_pens, pal_game1_count, MORRIGAN_COLR1);
 }
 
 /* G_Ranking entry (src/ranking_entry.s): after her last ending, and her life icon in the ranking list even when she
@@ -86,9 +93,9 @@ void gb2_ranking_pal(void)
 #define CHARNO(p)   VU8(0x06055058 + (p) * 0xB0)
 
 /* GameLoop's in-game state (state 10, handler 0x0601EFA2 via literal 0x0601CDCC, src/patches.txt), entered once per
- * stage: game start rewrites lines 0x20-0x2F after PlayerSet, and her endings (after loop 1) load their own banks,
- * so the lines under her ending are put back and her sprite colours (re)loaded here; nothing else writes those
- * lines during play (tools/mame/check_palette.py) */
+ * stage: the select screen (text lines) and game start (lines 0x20-0x2F) rewrite her lines after PlayerSet, and her
+ * endings (after loop 1) load their own banks, so the lines under her ending are put back and her sprite colours
+ * (re)loaded here; nothing else writes those lines during play (tools/mame/check_palette.py) */
 int gb2_play_wrap(void)
 {
     restore_ending();

@@ -21,7 +21,7 @@ then converted and patched in by the tools here.
   - data ROM 512 KB;
   - sound ROM 4 MB (the YMF278B limit);
   - graphics ROM bank 3 filled with 64M EPROMs, the sockets' capacity.
-  See `MORRIGAN_BACKPORT_PLAN.md` §0.1.
+  See `docs/MORRIGAN_BACKPORT_PLAN.md` §0.1.
 - **The original game is left untouched.** With Morrigan locked, the patched set plays exactly like the original.
   This is checked by whole-game regression runs for every character and every two-player pairing.
 - **English and Japanese.** Her story text is present for both regions (region jumper / MAME "Region" setting).
@@ -48,7 +48,7 @@ then converted and patched in by the tools here.
 ## Using the result
 
 - **ROM set:** `gunbird2m`, a clone of `gunbird2`. It's the same PS5 board, but graphics bank 3 uses 64M EPROMs:
-  - `3l_m.u6` and `3h_m.u13`, 8 MB each, instead of 4 MB.
+  - `3l.u6` and `3h.u13`, 8 MB each, instead of 4 MB.
   - A MAME driver entry for it is in `tools/mame/gunbird2m_driver.patch`; MAME lists it as "Gunbird 2 Makai
     (Morrigan Backport)".
 - **Unlocking Morrigan:**
@@ -176,17 +176,17 @@ depend on the compiler.
 
 | File | Size | CRC32 | SHA-1 |
 |---|---:|---|---|
-| `1_prog_h.u17` | 524288 | `458464aa` | `504232488d4df50e74a3a90b3ac5b60304e1a6e2` |
-| `2_prog_l.u16` | 524288 | `112cde30` | `bf2a5ee73a6ec1df5d833b3aacac9e7dbd84ff35` |
-| `3_pdata.u1` | 524288 | `2875a289` | `07d7bd9bd5f983a9d1e8ca6603ac8c54310939c7` |
+| `1_prog_h.u17` | 524288 | `b8145f4e` | `626afb589005187fe63efe9846bf049a9928097f` |
+| `2_prog_l.u16` | 524288 | `36a9f1ff` | `41f603176f05630b961f264ceaa80cfe19484b4f` |
+| `3_pdata.u1` | 524288 | `3a399067` | `616a31683082b8e6dc37970fd3176aceb10a5a37` |
 | `0l.u3` | 8388608 | `5c826bc8` | `74fb6b242b4c5fe5365cfcc3029ed6da4cf3a621` |
 | `0h.u10` | 8388608 | `3df0cb6c` | `271d276fa0f63d84e458223316a9517865fc2255` |
 | `1l.u4` | 8388608 | `1558358d` | `e3b9c3da4e9b29ffa9568b57d14fe2b600aead68` |
 | `1h.u11` | 8388608 | `4ee0103b` | `29bbe0162dda39919fcd188ea4a6b7b5f20366ff` |
 | `2l.u5` | 8388608 | `e1c7a7b8` | `b5f6e5d53e21928197773df7dde0e7c83f4082af` |
 | `2h.u12` | 8388608 | `bc8a41df` | `90460b11eea778f17cf8be67430e2ab149680686` |
-| `3l_m.u6` | 8388608 | `659d652c` | `252139bdbc791b7b9aa5c150bb81e7a334745d73` |
-| `3h_m.u13` | 8388608 | `300b7547` | `d5fe55805f8cffe60f13f158c9581a3f24f50061` |
+| `3l.u6` | 8388608 | `0edaa6cd` | `5b97740b3fe9ed868c4d22e2b26db8548b0b626e` |
+| `3h.u13` | 8388608 | `49586bad` | `3247c5af42cede6b1817f20b3b2999971a444521` |
 | `sound.u9` | 4194304 | `ba917b65` | `b5128356b99ef7b8da3e85b1e52631ae95ace0f5` |
 | `eeprom-gunbird2.bin` | 256 | `7ac38846` | `c5f4b05a94211f3c96b8c472adbe634f2e77d753` |
 
@@ -203,9 +203,10 @@ ROMs, run step 6 to update the driver entry (and these tables).
 | `tools/` | Extractors, converters and porters, disassemblers (`seqdis.py`, SH-2 via `tools/bin/sh-objdump`), `build.py` |
 | `tools/mame/` | MAME timeline harness (`timeline.lua`, `run.sh`), Stage Select / code helpers, regression tests, driver patch |
 | `tools/flycast/` | Dreamcast reference harness (Flycast + Lua) |
-| `re/` | Reverse-engineering notes (`NOTES.md`), symbol maps, DC↔arcade object and function maps, sequence-VM opcode data, Ghidra scripts |
-| `MORRIGAN_BACKPORT_PLAN.md` | Original plan and hardware-capacity study |
-| `PORT_TODO.md` | Detailed task list with status |
+| `re/` | Symbol maps, DC↔arcade object and function maps, sequence-VM opcode data, Ghidra scripts |
+| `docs/NOTES.md` | Reverse-engineering notes: the technical findings behind each part |
+| `docs/MORRIGAN_BACKPORT_PLAN.md` | Original plan and hardware-capacity study |
+| `docs/PORT_TODO.md` | Detailed task list with status |
 
 ## Testing
 
@@ -222,12 +223,12 @@ select-screen inputs (about 2 minutes).
 | `tools/mame/check_stagedemo.py regress\|morrigan <eeprom>` | Original stage demos unchanged; contact sheets of all Morrigan scenes |
 | `tools/trace_compare.py` | Morrigan vs the Dreamcast: speed, hitboxes, per-hit damage, time to kill |
 | `tools/mame/check_endings.py` | All six Morrigan endings (Stage Select, Ending Demo) in English and Japanese: each plays to its end, the backdrop palette is loaded, contact sheets for a visual check |
-| `tools/mame/check_palette.py` | Morrigan's in-game colours (palette lines `0x1C–0x1F`, `0x2C–0x2F`) stay intact through 13 whole games, and the original's lines around them unchanged: 1P, and 2P with each partner on either side |
+| `tools/mame/check_palette.py` | Morrigan's in-game colours (palette lines `0x20–0x23` and free text-line entries) stay intact through 13 whole games, and the original's lines around them unchanged: 1P, and 2P with each partner on either side |
 | `tools/mame/palcensus.py` | Which palette lines the original game writes in each game state, over whole games |
 | `tools/mame/paldraw.py` | Which palette lines the original game draws with in each game state (screen hashes with lines repainted) |
 | `tools/mame/sprlog.py` | Which palette lines the original game's sprites can draw with in each game state, exactly, over whole games; the basis for choosing her lines |
 
-The regression EEPROM has Aine unlocked and Morrigan locked; `tools/mame/regress_setup.py` and `re/NOTES.md`
+The regression EEPROM has Aine unlocked and Morrigan locked; `tools/mame/regress_setup.py` and `docs/NOTES.md`
 ("Whole-game regression") describe its layout. With Morrigan unlocked, the `?` slot on the select screen draws from a larger random range, so the game
 legitimately takes a different course from the original.
 
@@ -235,14 +236,14 @@ legitimately takes a different course from the original.
 
 - **Real-PCB re-test (open).** Her sprite and select-screen colours first used palette entries `0x1000+`, which MAME
   has but the real PS5 does not render. They now use palette lines the original game does not draw with while hers are shown:
-  `0x1C–0x1F` and `0x2C–0x2F` in game (the black ends of the damage-flash banks; all 99 colours kept), `0x10–0x1F`
-  on the select screen, saved and restored around it (`tools/mame/sprlog.py`; `tools/mame/check_palette.py` checks
+  `0x20–0x23` (freed by moving the red damage-flash bank down four lines) plus unused text-palette entries in game
+  (all 99 colours kept), `0x10–0x1F` on the select screen, saved and restored around it (`tools/mame/sprlog.py`; `tools/mame/check_palette.py` checks
   her colours through whole games).
   This build still needs a run on a real board, as does the 64M bank-3 EPROM pair.
 - **Not planned (Dreamcast-only):** stage-demo and ending voices (no sound ROM space), and the staff-roll movie (no
   video playback on the board).
 
-See `PORT_TODO.md` for the full, itemised status and `re/NOTES.md` for the technical findings behind each part.
+See `docs/PORT_TODO.md` for the full, itemised status and `docs/NOTES.md` for the technical findings behind each part.
 
 ## Legal
 

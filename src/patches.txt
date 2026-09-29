@@ -38,3 +38,17 @@ sym32 06031A4C gb2_seq_putobjwork  # seq handler table 0x060318B0 [0x67] (was th
 # becomes 'w1 >= 5 -> gb2_rank_chain' (Aine as before, w1 == 6 Morrigan, else End)
 000AC4AE 0540                      # JumpCompare condition 0x100 (==) -> 0x500 (>=)
 sym32 000AC4B6 gb2_rank_chain
+# red damage-flash bank 0x20 -> 0x24 (docs/NOTES.md "Flash banks"): its gradient moves to lines 0x24-0x2F and its black
+# tail (pens 0xC0-0xFF) onto the all-black shadow lines 0x30-0x33, freeing lines 0x20-0x23 for Morrigan's colours.
+# Same instruction count everywhere: games without her stay frame-identical.
+060B6318 26080088 26080088 26080088 26080088  # PltBlockSet table of line 0x20 (select open, game start, attract):
+060B6328 26080108 26080148 26080188 260801C8  #   0x20-0x23 black, 0x24-0x2F the red gradient (was 0x20-0x2B,
+060B6338 26080208 26080248 26080288 260802C8  #   then 4 black lines)
+060B6348 26080308 26080348 26080388 260803C8
+06024382 E924                      # ExShotInawake: r9 = red flash bank 0x24 (was 0x20, also the flag mask) ...
+06024574 C820                      #   ... so the flash-flag tests use an immediate: tst #0x20,r0 (was tst r9,r0)
+060245A2 C820
+060BA220 2480                      # OBJDT 0x260BA218 / 0x260BA224: the two entries with their own bank 0x20
+060BA22C 2480
+06016B0E E727                      # red debris particles (dc_8c070302 colour): line 0x23 -> 0x27, its new place
+06016C26 E727

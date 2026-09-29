@@ -1,11 +1,15 @@
 {
  "gfx": {
   "tnum_base": 218215,
-  "game_banks": [28, 44],
+  "game_sets": [
+   {"colr": 32, "pens": "1-63", "_doc": "lines 0x20-0x23, freed by moving the red flash bank to 0x24 (src/patches.txt)"},
+   {"colr": 0, "pens": [16, 32, 48, 64, 80, 93, 94, 96, 109, 110, 112, 123, 124, 128, 139, 140, 144, 155, 156, 160, 166, 167, 168, 169, 170, 171, 172, 176, 192, 199, 200, 201, 202, 203, 204, 205, 206, 240],
+    "_doc": "text lines 0x01-0x0C: entries no original sprite can draw - not used by any OBJDT entry with bank <= 0x0F, not a font pen (fonts use pens 0-5 and 15, so pen 15 is out), never drawn in play / stage demo / 2P join / game start / ending / ranking (tools/mame/sprlog.py); lines 0x0D-0x0E are rewritten in play"}
+  ],
   "index_start": 1,
   "select_colr": 16,
   "select_lines": [16, 31],
-  "_doc": "Morrigan's sprite colours. In game: two colour sets on colr 0x1C and 0x2C (game_banks), pens 1-63 each (palette lines 0x1C-0x1F, 0x2C-0x2F: the black tails of the original's white / red damage-flash banks, almost never drawn), split by sprite block (tools/make_gfx.py). Select-screen art: colr 0x10 (select_colr), pens 1.. (lines 0x10-0x1F, not drawn on the select screen, saved and restored around it). The PS5 does not render sprite colours from entries 0x1000+ (lines 0x100+) that MAME emulates, so everything stays on lines <= 0xFF (src/palette.c).",
+  "_doc": "Morrigan's sprite colours (tools/make_gfx.py, src/palette.c). In game: her 99 colours split by sprite block into game_sets, each a palette bank (colr) and the pens it may use: lines 0x20-0x23 and 38 free entries of the text lines. Select-screen art: colr 0x10 (select_colr), pens 1.. (lines 0x10-0x1F, not drawn on the select screen, saved and restored around it). Everything stays on lines <= 0xFF: the PS5 does not render sprite colours from entries 0x1000+ (lines 0x100+) that MAME emulates.",
   "extra_cells": [
    [
     "SYSTEM.CHR",

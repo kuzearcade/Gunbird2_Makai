@@ -138,11 +138,10 @@ def rom_checksums(img, g, snd, setname):
 def gfx_chips(setname='gunbird2', g=None):
     """apply out/gfx/place.json to the gfx image and return modified chip files.
     gunbird2: stock layout (0x3800000, bank 3 = 2 x 32M).  gunbird2m: bank 3 = 2 x 64M EPROMs (U6/U13), gfx up to
-    0x4000000 - same PS5 board, the sockets take 64M parts (see MORRIGAN_BACKPORT_PLAN.md 0.1)."""
+    0x4000000 - same PS5 board, the sockets take 64M parts (see docs/MORRIGAN_BACKPORT_PLAN.md 0.1)."""
     if g is None: g = gfx_image(setname)
     chips = {}
-    names = [('0l.u3', '0h.u10'), ('1l.u4', '1h.u11'), ('2l.u5', '2h.u12'),
-             ('3l_m.u6', '3h_m.u13') if setname == 'gunbird2m' else ('3l.u6', '3h.u13')]
+    names = [('0l.u3', '0h.u10'), ('1l.u4', '1h.u11'), ('2l.u5', '2h.u12'), ('3l.u6', '3h.u13')]
     for bank, (lo, hi) in enumerate(names):
         seg = g[bank * 0x1000000:(bank + 1) * 0x1000000]
         w = np.frombuffer(bytes(seg), dtype='>u2')
