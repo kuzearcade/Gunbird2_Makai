@@ -1,4 +1,4 @@
-# Gunbird 2 - Makai Edition
+# Gunbird 2 Makai (Morrigan Backport)
 
 Morrigan Aensland was added to the Dreamcast release of Psikyo's *Gunbird 2* as a Capcom guest character. The
 original arcade game (Psikyo PS5 board, MAME set `gunbird2`) never had her. This project (`Gunbird2_Makai`)
@@ -50,8 +50,8 @@ then converted and patched in by the tools here.
 
 - **ROM set:** `gunbird2m`, a clone of `gunbird2`. It's the same PS5 board, but graphics bank 3 uses 64M EPROMs:
   - `3l_m.u6` and `3h_m.u13`, 8 MB each, instead of 4 MB.
-  - A MAME driver entry for it is in `tools/mame/gunbird2m_driver.patch`; MAME lists it as "Gunbird 2 - Makai Edition
-    (Morrigan backport)".
+  - A MAME driver entry for it is in `tools/mame/gunbird2m_driver.patch`; MAME lists it as "Gunbird 2 Makai
+    (Morrigan Backport)".
 - **Unlocking Morrigan:**
   1. Enter Test Mode (Service switch, F2 in MAME).
   2. Choose **Maintenance Code** (fifth item).

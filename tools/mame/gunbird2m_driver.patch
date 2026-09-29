@@ -11,7 +11,7 @@ index f6b031f4526..bf3d80fc9aa 100644
  s1945ii
  s1945iii
 diff --git a/src/mame/psikyo/psikyosh.cpp b/src/mame/psikyo/psikyosh.cpp
-index 55fca667f07..95cf0dcab40 100644
+index 55fca667f07..db0c78b1e0e 100644
 --- a/src/mame/psikyo/psikyosh.cpp
 +++ b/src/mame/psikyo/psikyosh.cpp
 @@ -1122,6 +1122,34 @@ ROM_START( gunbird2a ) /* Internal date string shows Oct 08 17:02 - No specific
@@ -19,7 +19,7 @@ index 55fca667f07..95cf0dcab40 100644
  ROM_END
  
 +/*
-+Gunbird 2 - Makai Edition: Morrigan backported from the Dreamcast (~/Gunbird2_Makai).  Same PS5 board; bank 3 uses 64M EPROMs
++Gunbird 2 Makai (Morrigan Backport): Morrigan backported from the Dreamcast (~/Gunbird2_Makai).  Same PS5 board; bank 3 uses 64M EPROMs
 +(U6/U13, 8 MB each) as the sockets allow.  Checksums are placeholders: the ROMs are rebuilt by the project.
 +*/
 +ROM_START( gunbird2m )
@@ -53,7 +53,7 @@ index 55fca667f07..95cf0dcab40 100644
  /* ps5 */
  GAME( 1998, gunbird2,   0,        psikyo5,         gunbird2,  psikyosh_state, init_ps5,        ROT270, "Psikyo",  "Gunbird 2 (set 1)",                                                    MACHINE_NO_COCKTAIL | MACHINE_SUPPORTS_SAVE )
  GAME( 1998, gunbird2a,  gunbird2, psikyo5,         gunbird2,  psikyosh_state, init_ps5,        ROT270, "Psikyo",  "Gunbird 2 (set 2)",                                                    MACHINE_NO_COCKTAIL | MACHINE_SUPPORTS_SAVE )
-+GAME( 1998, gunbird2m,  gunbird2, psikyo5,         gunbird2,  psikyosh_state, init_ps5,        ROT270, "hack",    "Gunbird 2 - Makai Edition (Morrigan backport)", MACHINE_NO_COCKTAIL | MACHINE_SUPPORTS_SAVE )
++GAME( 1998, gunbird2m,  gunbird2, psikyo5,         gunbird2,  psikyosh_state, init_ps5,        ROT270, "hack",    "Gunbird 2 Makai (Morrigan Backport)", MACHINE_NO_COCKTAIL | MACHINE_SUPPORTS_SAVE )
  GAME( 1999, s1945iii,   0,        psikyo5,         s1945iii,  psikyosh_state, init_ps5,        ROT270, "Psikyo",  "Strikers 1945 III (World) / Strikers 1999 (Japan)",                    MACHINE_NO_COCKTAIL | MACHINE_SUPPORTS_SAVE )
  GAME( 1999, s1945iiibl, s1945iii, s1945iiibl,      s1945iii,  psikyosh_state, init_s1945iiibl, ROT270, "bootleg", "Strikers 1945 III (World) / Strikers 1999 (Japan) (bootleg, set 1)",   MACHINE_NOT_WORKING | MACHINE_NO_COCKTAIL | MACHINE_SUPPORTS_SAVE ) // sprites don't show up if MAME is started without debugger active
  GAME( 1999, s1945iiibla,s1945iii, s1945iiibla,     s1945iii,  psikyosh_state, init_s1945iiibl, ROT270, "bootleg", "Strikers 1945 III (World) / Strikers 1999 (Japan) (bootleg, set 2)",   MACHINE_NOT_WORKING | MACHINE_NO_COCKTAIL | MACHINE_SUPPORTS_SAVE ) // sprites don't show up if MAME is started without debugger active
