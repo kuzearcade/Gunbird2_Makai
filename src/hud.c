@@ -10,5 +10,5 @@ const u16 gb2_life_icons[7][6] = {
     { 0x03F8, 0x07F8, 0, 0, 0x4080, 0x1C95 },
     { 0x03F9, 0x07F8, 0, 0, 0x4080, 0x1C96 },
     { 0x03F8, 0x07F8, 0, 0, 0x4080, 0x1C97 },
-    { 0x03F8, 0x07F8, 0, 0, (MORRIGAN_COLR << 8) | 0x80 | (TNUM_LIFE_ICON >> 16), TNUM_LIFE_ICON & 0xFFFF },
+    { 0x03F8, 0x07F8, 0, 0, (COLR_LIFE_ICON << 8) | 0x80 | (TNUM_LIFE_ICON >> 16), TNUM_LIFE_ICON & 0xFFFF },
 };

@@ -20,6 +20,7 @@
 #define PrintEN         FN(s16, 0x06029288, (const char *, int, int))
 
 extern int gb2_demo_slot(int count, int last);
+extern void gb2_pal_save_ending(void);
 
 struct text_line { s16 x, y; const void *s; };
 struct text_desc { u32 magic; u16 n_en, n_jp; struct text_line l[1]; };
@@ -87,6 +88,7 @@ static void load_ending(int slot)
 {
     const struct end_pal *p;
     gfx_copy((void *)END_BLOB_BASE, END_BLOB_GFX, END_BLOB_SIZE);
+    gb2_pal_save_ending();                          /* lines 0x10-0x3F, put back after the ending (palette.c) */
     for (p = end_pals; p->slot >= 0; p++) {
         if (p->slot != slot) continue;
         gfx_copy((void *)p->pal, p->gfx, 256 * 4);

@@ -4,6 +4,10 @@
 --   release <field name...>    release it
 --   tap <n> <field name...>    press for n frames
 --   snap <file.png>            save a screenshot of the screen
+--   sprlog <lo> <hi> <file>   every frame, walk the sprite list and record each distinct sprite (colr, tile
+--                              number, 8bpp, cells) with lo <= colr <= hi (hex); at exit one line per sprite:
+--                              "<colr> <tnum> <d8> <cells> <first frame> <frames> <GameLoop states>" (tools/mame/sprlog.py)
+--   pixdump <file>             save the screen bitmap phash hashes, raw ("<w> <h>" line, then 32-bit pixels)
 --   dumpram <file.bin>         dump main RAM 0x06000000-0x060FFFFF
 --   poke8/poke16/poke32 <addr> <value>   write memory (hex)
 --   peek <addr> <len>          print bytes (hex) to stdout
@@ -20,6 +24,10 @@
 --                              "<frame> <time us> <addr> <data> <mask>" (register/data write sequence and timing)
 --   trace <file> <player x> <player hit ptr> <hit objs> <hit list> <hit count>   per-frame trace, same format as
 --                              tools/flycast/timeline.lua: F <frame> <x> <y> P <rects> T <task>:<hp>:<type> ...
+--   palpoison <e0> <e1> <v>    write value v to palette entries e0..e1 (hex) after every frame (draw census)
+--   palcensus <file>           log palette RAM writes (0x04040000-0x04044FFF) per 16-entry line: at exit
+--                              "c|w <line> <first>-<last>,..." frame ranges; c = non-zero (a colour), w = any write
+--                              (tools/mame/palcensus.py)
 --   phash <n> <file>           every n frames: "<frame> <screen hash> <stage counter> <1P score> <2P score> <GameLoop state>"
 --                              (whole-game regression: tools/mame/regress_game.py)
 --   pc                         print the main CPU's program counter ("PC <frame> <pc>")
@@ -47,6 +55,9 @@ local ymffh = nil
 local tr = nil      -- trace
 local weak = nil    -- weaken
 local ph = nil      -- phash
+local pc = nil      -- palcensus
+local poison = nil  -- palpoison
+local spl = nil     -- sprlog
 local sndt = nil     -- sndtrace: slot -> last pending value
 local gate = nil     -- active "until" command
 local shift = 0      -- frames the timeline has been paused
@@ -74,6 +85,13 @@ local function run(cmd)
     manager.machine.video:snapshot()
     local scr = manager.machine.screens[":screen"]
     scr:snapshot(args)
+  elseif op == "sprlog" then
+    local lo, hi, file = args:match("^(%x+)%s+(%x+)%s+(.+)$")
+    spl = { lo = tonumber(lo, 16), hi = tonumber(hi, 16), file = file, seen = {} }
+  elseif op == "pixdump" then
+    -- the screen bitmap phash hashes (32-bit pixels), raw: "<width> <height>\n" then the pixels
+    local px, w, h = manager.machine.screens[":screen"]:pixels()
+    local fh = io.open(args, "wb"); fh:write(string.format("%d %d\n", w, h)); fh:write(px); fh:close()
   elseif op == "dumpram" then
     local fh = io.open(args, "wb")
     for a = 0x06000000, 0x060FFFFF, 4 do
@@ -119,8 +137,9 @@ local function run(cmd)
     taps[#taps + 1] = space:install_write_tap(a, b, "wtap" .. #taps, function(offset, data, mask)
       local task = space:read_u32(0x0604005C)                -- seq VM: current task, its script pointer
       local spc = task ~= 0 and space:read_u32(space:read_u32(task + 0x20) + 0x10) or 0
-      print(string.format("WTAP pc=%08x pr=%08x addr=%08x data=%08x mask=%08x frame=%d task=%08x script=%08x",
-                          cpu.state["PC"].value, cpu.state["PR"].value, offset, data, mask, frame, task, spc))
+      print(string.format("WTAP pc=%08x pr=%08x addr=%08x data=%08x mask=%08x frame=%d task=%08x script=%08x r4=%08x r5=%08x r12=%08x",
+                          cpu.state["PC"].value, cpu.state["PR"].value, offset, data, mask, frame, task, spc,
+                          cpu.state["R4"].value, cpu.state["R5"].value, cpu.state["R12"].value))
       return data
     end)
   elseif op == "usage" then
@@ -155,6 +174,27 @@ local function run(cmd)
     local file, px, phit, objs, list, cnt = args:match("^(%S+)%s+(%x+)%s+(%x+)%s+(%x+)%s+(%x+)%s+(%x+)$")
     tr = { fh = io.open(file, "w"), px = tonumber(px, 16), phit = tonumber(phit, 16), objs = tonumber(objs, 16),
            list = tonumber(list, 16), cnt = tonumber(cnt, 16) }
+  elseif op == "palpoison" then
+    -- palpoison <first entry> <last entry> <RGBx value> (hex): rewrite those palette entries every frame, so any
+    -- pixel drawn with them changes colour (which palette lines a screen really draws with)
+    local a, b, v = args:match("^(%x+)%s+(%x+)%s+(%x+)$")
+    poison = { a = tonumber(a, 16), b = tonumber(b, 16), v = tonumber(v, 16) }
+  elseif op == "palcensus" then
+    -- per palette line (16 entries), the frames in which it was written; at exit: "<line> <first>-<last>,..."
+    pc = { file = args, lines = {}, any = {} }
+    local function mark(tab, l)
+      local t = tab[l]
+      if not t then t = {}; tab[l] = t end
+      local last = t[#t]
+      if last and (last[2] == frame or last[2] + 1 == frame) then last[2] = frame
+      else t[#t + 1] = { frame, frame } end
+    end
+    taps[#taps + 1] = space:install_write_tap(0x04040000, 0x04044FFF, "palcensus", function(offset, data, mask)
+      local l = (offset - 0x04040000) // 64
+      mark(pc.any, l)                                          -- any write, clearing to black included
+      if data & mask ~= 0 then mark(pc.lines, l) end           -- a colour
+      return data
+    end)
   elseif op == "phash" then
     local n, file = args:match("^(%d+)%s+(.+)$")
     ph = { n = tonumber(n), fh = io.open(file, "w"), scr = manager.machine.screens[":screen"] }
@@ -176,6 +216,31 @@ local function run(cmd)
     if ymffh then ymffh:close() end
     if tr then tr.fh:close() end
     if ph then ph.fh:close() end
+    if spl then
+      local fh = io.open(spl.file, "w")
+      for k, v in pairs(spl.seen) do
+        local st = {}
+        for x in pairs(v.st) do st[#st + 1] = x end
+        table.sort(st)
+        fh:write(string.format("%s %d %d %s\n", k, v.first, v.n, table.concat(st, ",")))
+      end
+      fh:close()
+    end
+    if pc then
+      local fh = io.open(pc.file, "w")
+      for _, kind in ipairs({ "c", "w" }) do
+        local tab = kind == "c" and pc.lines or pc.any
+        for l = 0, 0x13F do
+          local t = tab[l]
+          if t then
+            local r = {}
+            for _, x in ipairs(t) do r[#r + 1] = x[1] .. "-" .. x[2] end
+            fh:write(string.format("%s %d %s\n", kind, l, table.concat(r, ",")))
+          end
+        end
+      end
+      fh:close()
+    end
     if snd then
       local l = {}
       for id in pairs(snd) do l[#l + 1] = id end
@@ -234,6 +299,25 @@ local function phash_frame()
                             space:read_u32(0x06055030), space:read_u32(0x060550E0), space:read_u32(0x0604C744)))
 end
 
+local function sprlog_frame()
+  local state = space:read_u32(0x0604C744)
+  for k = 0, 0x3FF do
+    local ld = space:read_u16(0x04003800 + 2 * k)
+    local n = 0x04000000 + ((ld & 0x3FF) << 4)
+    local w2 = space:read_u32(n + 8)
+    local colr = w2 >> 24
+    if colr >= spl.lo and colr <= spl.hi then
+      local w1 = space:read_u32(n + 4)
+      local cells = (((w1 >> 24) & 15) + 1) * (((w1 >> 8) & 15) + 1)
+      local key = string.format("%02x %05x %d %d", colr, w2 & 0x7FFFF, (w2 >> 23) & 1, cells)
+      local v = spl.seen[key]
+      if not v then v = { first = frame, n = 0, st = {} }; spl.seen[key] = v end
+      v.n = v.n + 1; v.st[state] = true
+    end
+    if ld & 0x4000 ~= 0 then break end
+  end
+end
+
 local function weaken_frame()
   local n = s16(space:read_u16(weak.cnt))
   for i = 0, n - 1 do
@@ -249,7 +333,11 @@ emu.register_frame_done(function()
   frame = frame + 1
   if tr then trace_frame() end
   if weak then weaken_frame() end
+  if poison then
+    for e = poison.a, poison.b do space:write_u32(0x04040000 + 4 * e, poison.v) end
+  end
   if ph and frame % ph.n == 0 then phash_frame() end
+  if spl then sprlog_frame() end
   if sndt then                   -- a start sets the channel's id (0x06079E08) and its counter (0x06079D90) to 10
     for i = 0x0E, 0x17 do
       local id, cnt = space:read_u16(0x06079E08 + 2 * i), space:read_u8(0x06079D90 + i)

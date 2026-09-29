@@ -20,3 +20,4 @@ SECTIONS
     /DISCARD/ : { *(.comment) *(.note*) *(.eh_frame) }
 }
 ASSERT(SIZEOF(.data) == 0, "no writable initialised data allowed")
+ASSERT(__bss_end <= 0x06034000, ".bss runs into the ending data (tools/port_endings.py BLOB_BASE)")

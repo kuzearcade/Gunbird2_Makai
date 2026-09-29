@@ -3,7 +3,7 @@
 ! routine 0x06022B10 (hooked -> gb2_secret_load; its trampoline ends at 0x06022B1C).
 !   in:  r0 = charNo, r4 = player, r14 = chardef table, r7 = player base; r6 clobbered by the jump's delay slot
 !   out: r3 = charNo, r1 = chardef_table[charNo-1], r6 = (s16)(player * 0xB0) -> original case-5 tail
-! For Morrigan it first loads her in-game palette (entries 0x1000+, never written by the original game): once per
+! For Morrigan it first loads her in-game palette (lines 0x1C-0x1F, 0x2C-0x2F, src/palette.c): once per
 ! game start, nothing added to per-frame paths.
     mov     r0,r3
     shll2   r0

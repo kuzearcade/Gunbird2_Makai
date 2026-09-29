@@ -4,7 +4,7 @@
 06022a4e gb2_secret_save
 06022b10 gb2_secret_load
 0601cdfc gb2_select
-060108f6 gb2_fireinawake      # FireInawake: keep bank 0xFF of Morrigan's objects (life icon in HUD/ranking)
+060108f6 gb2_fireinawake      # FireInawake: keep the bank of Morrigan's own objects (life icon in HUD/ranking)
 06020230 gb2_ranking_entry    # G_Ranking: load Morrigan's palette for her ranking-list icon
 06012ca4 gb2_bomb_start       # bomb start: DC hides Morrigan too (src/playerstate.c)
 06012ce6 gb2_charge_start     # charged-shot start: DC case for Morrigan (hidden during her level-3 attack)

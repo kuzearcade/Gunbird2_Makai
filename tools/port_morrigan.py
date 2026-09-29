@@ -49,6 +49,13 @@ TRANS_CELLS = _trans_cells()
 import gfxconv
 TRANS_CELL0 = len(gfxconv.load_cells(ROOT + '/assets/dc/US/fs/JIKI6.CHR'))
 
+# palette bank of a cell of the gfx 'game' group: her colours are split into sets by sprite block (tools/make_gfx.py)
+_SETS = None
+def game_colr(cell):
+    global _SETS
+    if _SETS is None: _SETS = json.load(open(ROOT + '/out/gfx/game_sets.json'))
+    return _SETS['banks'][_SETS['cell_set'][cell]]
+
 DC_CHARTBL, ARC_CHARTBL = 0x8C40F7F0, 0xCB298
 DC_SUBTBL, ARC_SUBTBL = 0x8C40FE20, 0xCB800
 M = 6                                                          # Morrigan's 0-based character index
@@ -239,7 +246,7 @@ class Porter:
             src = e['attr'] & 0x7F
             if src != 1: self.errors.append(f'objdt {D.name(a)}[{k}] attr {e["attr"]:#x} not JIKI6')
             tnum = g['tnum_base'] + e['idx']
-            attr = (g['colr'] << 8) | 0x80 | ((tnum >> 16) & 7)
+            attr = (game_colr(e['idx']) << 8) | 0x80 | ((tnum >> 16) & 7)
             out += struct.pack('>6H', e['x'], e['y'], D.u16(a + 12 * k + 4), D.u16(a + 12 * k + 6), attr, tnum & 0xFFFF)
         return bytes(out)
 
@@ -275,8 +282,9 @@ class Porter:
             e = entry([D.u16(ptr + 12 * k + 2 * j) for j in range(6)])
             if e['w'] * e['h'] != TRANS_CELLS[start + k][1]:
                 self.errors.append(f'AnimTrans {D.name(ptr)} frame {k}: {e["w"]}x{e["h"]} cells vs image {start + k}')
-            tnum = g['tnum_base'] + TRANS_CELL0 + TRANS_CELLS[start + k][0]
-            attr = (g['colr'] << 8) | 0x80 | ((tnum >> 16) & 7)
+            cell = TRANS_CELL0 + TRANS_CELLS[start + k][0]
+            tnum = g['tnum_base'] + cell
+            attr = (game_colr(cell) << 8) | 0x80 | ((tnum >> 16) & 7)
             out += struct.pack('>6H', e['x'], e['y'], D.u16(ptr + 12 * k + 4), D.u16(ptr + 12 * k + 6), attr, tnum & 0xFFFF)
         return bytes(out)
 

@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 """Generate Morrigan graphics artefacts (tiles in the gfx ROM, palettes and OBJDT frame lists in program ROM).
 
-Palette mode 'high': Morrigan's sprites use colr 0xFF with pens >= 16, i.e. palette entries 0x1000-0x10EF
-(lines 0x100-0x10E), which exist in palette RAM (0x5000 bytes) but are never written by the original game.
-Each *group* (in-game, select screen, ...) owns that whole range while its screen is active, so groups never
-coexist: the in-game group is (re)written with the player palette at stage start, the select group when the
-select screen opens.
+Morrigan's sprite colours stay on palette lines <= 0xFF: the real PS5 does not render sprite colours from the entries
+0x1000+ that MAME's palette RAM has (her sprites there rendered wrong on hardware), and the original game draws with
+nearly every line <= 0xFF somewhere (tools/mame/sprlog.py, paldraw.py): lines 0x10-0x3F are the damage-flash (white
+0x10, red 0x20) and shadow (black 0x30) banks, drawn with any sprite's pens.  So (src/palette.c):
+  game    two 4-line windows the original leaves (almost) alone during play: the black tails of the flash banks,
+          colr 0x1C and 0x2C with pens 1-63 each (config 'game_banks').  Her 99 colours are split between them by
+          sprite block (every OBJDT entry's cells in one set, tools/port_morrigan.py picks the entry's bank from
+          out/gfx/game_sets.json); low pens keep her shadow (bank 0x30) black and a flash (0x10 / 0x20) right.
+  select  colr 0x10, pens 1.. -> lines 0x10-0x1F, not drawn on the select screen (saved and restored around it)
+Story portraits, ranking animation and endings use their own 256-colour banks on standard lines.
 
 Outputs:
   out/gfx/<group>.tiles + out/gfx/place.json     gfx ROM placements
@@ -23,8 +28,11 @@ CFG = json.load(open(ROOT + '/src/morrigan_layout.json'))['gfx']
 FS = ROOT + '/assets/dc/US/fs/'
 D = Space('dc_US')
 os.makedirs(ROOT + '/out/gfx', exist_ok=True)
-COLR = CFG['colr']
+GAME_BANKS = CFG['game_banks']      # in-game group: one colr per colour set, pens PEN0..PEN0 + GAME_PENS - 1
+GAME_PENS = 63
+SEL_COLR = CFG['select_colr']       # select-screen group
 PEN0 = CFG['index_start']
+LINES = {'select': (SEL_COLR, CFG['select_lines'])}
 
 
 def quantize(counts, n):
@@ -121,16 +129,77 @@ def build_group(name, sheet_cells, objects, tnum_base, extra_cells=(), max_cols=
     reps = sorted(set(rep.values()), key=lambda r: -sum(counts[c] for c in rep if rep[c] == r))
     pen = {r: pen0 + i for i, r in enumerate(reps)}
     pal = {c: pen[rep[c]] for c in rep}
+    if name in LINES:                                            # sprite groups on lines of their own
+        colr, (lo, hi) = LINES[name]
+        assert colr >= lo and colr * 16 + pen0 + len(reps) - 1 <= hi * 16 + 15, (name, len(reps), 'outside its lines')
     tiles = gfxconv.cells_to_tiles(cells, pal)
     open(ROOT + f'/out/gfx/{name}.tiles', 'wb').write(tiles)
     cols = [0] * len(reps)
     for r, p in pen.items(): cols[p - pen0] = gfxconv.rgb888(r)
     print(f'{name}: {len(cells)} tiles @ tnum {tnum_base:#x}, {len(counts)} colours -> {len(reps)} pens')
-    return dict(tiles=len(cells), cols=cols, frames=frames_out, extras=extras, base=tnum_base, pen0=pen0)
+    return dict(tiles=len(cells), cols=cols, frames=frames_out, extras=extras, base=tnum_base, pen0=pen0,
+                colr=LINES[name][0] if name in LINES else None)
 
 
-def attr_idx(t, colr=None):
-    return ((COLR if colr is None else colr) << 8) | 0x80 | ((t >> 16) & 7), t & 0xFFFF
+def game_blocks(extras):
+    """cell ranges each drawn by one OBJDT entry (one attr, so one palette bank): her OBJDT frames and AnimTrans
+    frame lists as tools/port_morrigan.py places them, and the extra cells"""
+    import port_morrigan as PM
+    P = PM.Porter()
+    P.discover([(D.u32(PM.DC_CHARTBL + 4 * PM.M), 'chardef'), (D.u32(PM.DC_SUBTBL + 4 * PM.M), 'subshot_tbl')])
+    P.layout()
+    blocks = []
+    for kind, a, size, insns, p in P.place:
+        if kind == 'objdt':
+            blocks += [(e['idx'], e['w'] * e['h']) for e in obj_frames(a, size // 12)]
+        elif kind == 'trans':
+            ptr, start, frames = a
+            blocks += [(PM.TRANS_CELL0 + PM.TRANS_CELLS[start + k][0], PM.TRANS_CELLS[start + k][1]) for k in range(frames)]
+    return blocks + [(k, 1) for _, k in extras]
+
+
+def build_game(cells, extras, tnum_base):
+    """the in-game group: colours split into len(GAME_BANKS) sets of <= GAME_PENS so that every block's cells use
+    one set (lossless: no quantisation); cells joined by a block are one unit, units packed largest first into the
+    set they add the fewest new colours to"""
+    ccols = [frozenset((c[(c & 0x8000) != 0] & 0x7FFF).tolist()) for c in cells]
+    parent = list(range(len(cells)))
+    def find(x):
+        while parent[x] != x: parent[x] = parent[parent[x]]; x = parent[x]
+        return x
+    for i0, n in game_blocks(extras):
+        for j in range(i0 + 1, i0 + n): parent[find(j)] = find(i0)
+    units = {}
+    for i in range(len(cells)): units.setdefault(find(i), []).append(i)
+    ucols = {u: frozenset().union(*(ccols[i] for i in m)) for u, m in units.items()}
+    sets = [set() for _ in GAME_BANKS]
+    which = {}
+    for u in sorted(units, key=lambda u: -len(ucols[u])):
+        fit = [k for k in range(len(sets)) if len(sets[k] | ucols[u]) <= GAME_PENS]
+        assert fit, ('in-game colours do not fit', [len(x) for x in sets], len(ucols[u]))
+        k = min(fit, key=lambda k: (len(ucols[u] - sets[k]), len(sets[k])))
+        sets[k] |= ucols[u]; which[u] = k
+    cell_set = [which[find(i)] for i in range(len(cells))]
+    counts = {}
+    for c in cells:
+        u, n = np.unique(c[(c & 0x8000) != 0] & 0x7FFF, return_counts=True)
+        for a, b in zip(u.tolist(), n.tolist()): counts[a] = counts.get(a, 0) + b
+    pals, cols = [], []
+    for k, st in enumerate(sets):
+        order = sorted(st, key=lambda c: -counts[c])
+        pals.append({c: PEN0 + i for i, c in enumerate(order)})
+        cols.append([gfxconv.rgb888(c) for c in order])
+    tiles = b''.join(gfxconv.cells_to_tiles([c], pals[k]) for c, k in zip(cells, cell_set))
+    open(ROOT + '/out/gfx/game.tiles', 'wb').write(tiles)
+    json.dump({'banks': GAME_BANKS, 'cell_set': cell_set}, open(ROOT + '/out/gfx/game_sets.json', 'w'))
+    print(f'game: {len(cells)} tiles @ tnum {tnum_base:#x}, {len(counts)} colours -> sets of ' +
+          ', '.join(f'{len(st)} (colr {b:#x})' for st, b in zip(sets, GAME_BANKS)))
+    return dict(tiles=len(cells), sets=cols, cell_set=cell_set, frames={}, base=tnum_base, pen0=PEN0,
+                extras=[(n, k) for n, k in extras], colr=None)
+
+
+def attr_idx(t, colr):
+    return (colr << 8) | 0x80 | ((t >> 16) & 7), t & 0xFFFF
 
 
 def main():
@@ -139,14 +208,16 @@ def main():
     # in-game: whole JIKI6.CHR 1:1 (OBJDT idx == cell index), then the JIKI6.001 streamed-animation images (her
     # charged-shot / bomb AnimTrans, tools/port_morrigan.py), then extra icons
     chr_cells = gfxconv.load_cells(FS + 'JIKI6.CHR')
-    g_game = build_group('game', chr_cells + load_trans_cells(), {}, base,
-                         extra_cells=[tuple(x) for x in CFG.get('extra_cells', [])], max_cols=0xBF - PEN0 + 1)
+    cells = chr_cells + load_trans_cells(); extras = []
+    for chrf, idx, ename in CFG.get('extra_cells', []):
+        extras.append((ename, len(cells))); cells.append(gfxconv.load_cells(FS + chrf)[idx])
+    g_game = build_game(cells, extras, base)
     groups.append(('game', g_game))
     base += g_game['tiles']
     # select screen
     sel_objs = {k: tuple(v) for k, v in CFG.get('select_objects', {}).items()}
     for k, v in sel_objs.items(): sel_objs[k] = (int(v[0], 16), v[1], v[2])
-    g_sel = build_group('select', None, sel_objs, base)
+    g_sel = build_group('select', None, sel_objs, base, max_cols=CFG['select_lines'][1] * 16 + 15 - SEL_COLR * 16 - PEN0 + 1)
     groups.append(('select', g_sel))
     base += g_sel['tiles']
     # stage-demo portraits (background layer: palette index must stay below 0x1000, so a normal 256-colour bank,
@@ -171,26 +242,30 @@ def main():
     place, c, h = {}, ['/* generated by tools/make_gfx.py - do not edit */', '#include "arcade.h"',
                        '#include "gen_gfx.h"', ''], \
         ['/* generated by tools/make_gfx.py - do not edit */', '#ifndef GEN_GFX_H', '#define GEN_GFX_H',
-         f'#define MORRIGAN_COLR 0x{COLR:02X}', f'#define MORRIGAN_PEN0 {PEN0}',
+         '/* in-game sprites: colour sets pal_game<k> on colr MORRIGAN_COLR<k> (tools/make_gfx.py build_game) */',
+         *[f'#define MORRIGAN_COLR{k} 0x{b:02X}' for k, b in enumerate(GAME_BANKS)],
+         f'#define MORRIGAN_SEL_COLR 0x{SEL_COLR:02X}  /* select-screen art */', f'#define MORRIGAN_PEN0 {PEN0}',
          f'#define MORRIGAN_TNUM_BASE 0x{CFG["tnum_base"]:X}',
          f'#define MORRIGAN_TRANS_CELL0 {len(chr_cells)}   /* first JIKI6.001 cell in the game group */']
     for gname, g in groups:
         place[f'{g["base"] * 256:08x}'] = f'{gname}.tiles'
-        c.append(f'const u32 pal_{gname}[{len(g["cols"])}] = {{' + ', '.join(f'0x{v:08X}' for v in g['cols']) + '};')
-        c.append(f'const u16 pal_{gname}_count = {len(g["cols"])};')
-        h.append(f'extern const u32 pal_{gname}[]; extern const u16 pal_{gname}_count;')
+        for pn, cols in ([(f'{gname}{k}', v) for k, v in enumerate(g['sets'])] if 'sets' in g else [(gname, g['cols'])]):
+            c.append(f'const u32 pal_{pn}[{len(cols)}] = {{' + ', '.join(f'0x{v:08X}' for v in cols) + '};')
+            c.append(f'const u16 pal_{pn}_count = {len(cols)};')
+            h.append(f'extern const u32 pal_{pn}[]; extern const u16 pal_{pn}_count;')
         for ename, k in g['extras']:
             h.append(f'#define TNUM_{ename.upper()} 0x{g["base"] + k:X}')
+            if 'cell_set' in g: h.append(f'#define COLR_{ename.upper()} MORRIGAN_COLR{g["cell_set"][k]}')
         for oname, lst in g['frames'].items():
-            for colr in g.get('colrs', [None]):
+            for colr in g.get('colrs', [g['colr']]):
                 rows = []
                 for e, k in lst:
                     a, i = attr_idx(g['base'] + k, colr)
                     rows.append(f'{{0x{e["x"]:04X},0x{e["y"]:04X},0x{e["size"] >> 16:04X},0x{e["size"] & 0xFFFF:04X},0x{a:04X},0x{i:04X}}}')
-                on = oname if colr is None else f'{oname}_{colr:02x}'
+                on = oname if 'colrs' not in g else f'{oname}_{colr:02x}'
                 c.append(f'const u16 obj_{on}[{len(lst)}][6] = {{' + ', '.join(rows) + '};')
                 h.append(f'extern const u16 obj_{on}[][6];   /* {len(lst)} frames */')
-        if g.get('pen0') == 1:
+        if 'colrs' in g:
             # full 256-colour bank for PltBlockSet: 16 lines of 16 colours + line pointer table (0-terminated)
             bank = [0] + g['cols'] + [0] * (255 - len(g['cols']))
             c.append(f'const u32 pal_{gname}_bank[256] = {{' + ', '.join(f'0x{v:08X}' for v in bank) + '};')

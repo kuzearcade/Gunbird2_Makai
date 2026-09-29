@@ -1,10 +1,11 @@
 {
  "gfx": {
   "tnum_base": 218215,
-  "colr": 255,
-  "index_start": 16,
-  "palette_mode": "high",
-  "_doc": "palette_mode high: pens 16.. with colr 0xFF -> palette RAM 0x1000+ (lines 0x100-0x13F, never used by the game)",
+  "game_banks": [28, 44],
+  "index_start": 1,
+  "select_colr": 16,
+  "select_lines": [16, 31],
+  "_doc": "Morrigan's sprite colours. In game: two colour sets on colr 0x1C and 0x2C (game_banks), pens 1-63 each (palette lines 0x1C-0x1F, 0x2C-0x2F: the black tails of the original's white / red damage-flash banks, almost never drawn), split by sprite block (tools/make_gfx.py). Select-screen art: colr 0x10 (select_colr), pens 1.. (lines 0x10-0x1F, not drawn on the select screen, saved and restored around it). The PS5 does not render sprite colours from entries 0x1000+ (lines 0x100+) that MAME emulates, so everything stays on lines <= 0xFF (src/palette.c).",
   "extra_cells": [
    [
     "SYSTEM.CHR",

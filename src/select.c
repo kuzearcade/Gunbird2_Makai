@@ -36,7 +36,9 @@
 enum { O_ICON0, O_CUR1, O_CUR2, O_PORT1, O_PORT2, O_TIMEBG, O_TIMEDIG, O_ICON1, O_ICON2, O_ICON3, O_ICON4,
        O_QMARK, O_SHAD0, O_QSHAD = 17 };
 
-extern void gb2_pal_load_group(const u32 *pal, u16 count);
+extern void gb2_pal_load_group(const u32 *pal, u16 count, u16 colr);
+extern void gb2_pal_save(void);
+extern void gb2_pal_restore_select(void);
 
 /* Morrigan entries of the per-character tables (DC: 7th entries) */
 static const s16 anim_morrigan[2] = { 1, 4 };
@@ -97,7 +99,18 @@ static u16 move(u16 s, int d, u16 other, s16 rot)
     return s;
 }
 
+static int select_screen(int *art);
+
+/* her art goes on palette lines 0x10-0x1F, which the select screen does not draw with but whose colours the game
+ * needs later: they are saved before the art is loaded and restored on the way out (src/palette.c) */
 int gb2_select(void)
+{
+    int art = 0, r = select_screen(&art);
+    if (art) gb2_pal_restore_select();
+    return r;
+}
+
+static int select_screen(int *art)
 {
     s16 o[18];
     u16 slot[2], refresh[2], wason[2];
@@ -131,7 +144,11 @@ int gb2_select(void)
     CreateTask(4, V32(hdr8 + 0x4C));
     V16(0x06040016) = 0; V16(0x06040018) = 0; V16(0x060799F4) = 0;
     V16(0x06040014) = 0; V32(0x0604001C) = 0; V16(0x06043600) = 0;
-    if (gb2_morrigan_enabled) gb2_pal_load_group(pal_select, pal_select_count);
+    if (gb2_morrigan_enabled) {
+        gb2_pal_save();
+        gb2_pal_load_group(pal_select, pal_select_count, MORRIGAN_SEL_COLR);
+        *art = 1;
+    }
 
     for (i = 0; i < 6; i++) {
         ObjSetAnim(o[iobj[i]], ix[i], 0x30, GT(ioff[i]), ifr[i][0], ifr[i][1], 0x200);
