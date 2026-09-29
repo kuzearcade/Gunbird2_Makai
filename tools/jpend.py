@@ -46,7 +46,7 @@ if __name__ == '__main__':
     json.dump(res, open(ROOT + '/out/stagedemo/end_jp_codes.json', 'w'))
     from jptranscribe import render
     from PIL import Image
-    S = '/tmp/claude-1000/-home-vboxuser-Gunbird2-DCSH/c52a7969-c7d8-4bc5-bb2f-b4d457f4a87e/scratchpad/'
+    S = ROOT + '/out/tmp/'; os.makedirs(S, exist_ok=True)       # contact sheet of all ending texts (checking)
     ims = [Image.fromarray(render(res[u])) for u in sorted(res)]
     H = sum(i.height + 4 for i in ims); W = max(i.width for i in ims)
     o = Image.new('L', (W, H)); y = 0

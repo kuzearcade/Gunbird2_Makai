@@ -2,7 +2,7 @@
 """Render a composite OBJDT list (all entries drawn at their x/y) for visual comparison.
  dc  <addr> <CHR> out.png [n]            arc <addr> <palette dump> out.png [n]
 x = entry x (sign-extended 10 bits), y = entry y & 0x3FF (sign-extended)"""
-import sys, numpy as np
+import os, sys, numpy as np
 from PIL import Image
 sys.path.insert(0, __file__.rsplit('/', 1)[0])
 from gbres import Space
@@ -14,7 +14,7 @@ mode = sys.argv[1]; addr = int(sys.argv[2], 16)
 sp = Space('dc_US' if mode == 'dc' else 'arcade')
 if mode == 'dc': chr_ = np.fromfile(sys.argv[3], dtype='<u2')
 else:
-    g = np.fromfile('/home/vboxuser/Gunbird2_DCSH/assets/arcade/gfx.bin', dtype=np.uint8)
+    g = np.fromfile(os.path.dirname(os.path.abspath(__file__)) + '/../assets/arcade/gfx.bin', dtype=np.uint8)
     pal = np.fromfile(sys.argv[3], dtype='>u4')
 outp = sys.argv[4]; n = int(sys.argv[5]) if len(sys.argv) > 5 else 16
 MORTON = len(sys.argv) > 6 and sys.argv[6] == 'morton'

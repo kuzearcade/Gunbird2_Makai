@@ -1,9 +1,13 @@
-# Gunbird 2 – Morrigan backport (Dreamcast → arcade)
+# Gunbird 2 - Makai Edition
 
 Morrigan Aensland was added to the Dreamcast release of Psikyo's *Gunbird 2* as a Capcom guest character. The
-original arcade game (Psikyo PS5 board, MAME set `gunbird2`) never had her. This project backports her from the
-Dreamcast release to the arcade game: her sprites, shots, bombs, sounds, story scenes, endings and ranking animation.
-It targets the real PS5 board's limits, so the result could run on real hardware as well as in MAME.
+original arcade game (Psikyo PS5 board, MAME set `gunbird2`) never had her. This project (`Gunbird2_Makai`)
+backports her from the Dreamcast release to the arcade game: her sprites, shots, bombs, sounds, story scenes,
+endings and ranking animation. It targets the real PS5 board's limits, so the result could run on real hardware as
+well as in MAME.
+
+The name comes from **Makai** (魔界), the demon realm Morrigan comes from. In *Darkstalkers* she is a succubus and
+the heir of the Aensland family, one of Makai's ruling noble houses.
 
 No game data is included. Everything is extracted from your own copies of the arcade ROMs and the Dreamcast disc,
 then converted and patched in by the tools here.
@@ -46,7 +50,8 @@ then converted and patched in by the tools here.
 
 - **ROM set:** `gunbird2m`, a clone of `gunbird2`. It's the same PS5 board, but graphics bank 3 uses 64M EPROMs:
   - `3l_m.u6` and `3h_m.u13`, 8 MB each, instead of 4 MB.
-  - A MAME driver entry for it is in `tools/mame/gunbird2m_driver.patch`.
+  - A MAME driver entry for it is in `tools/mame/gunbird2m_driver.patch`; MAME lists it as "Gunbird 2 - Makai Edition
+    (Morrigan backport)".
 - **Unlocking Morrigan:**
   1. Enter Test Mode (Service switch, F2 in MAME).
   2. Choose **Maintenance Code** (fifth item).
