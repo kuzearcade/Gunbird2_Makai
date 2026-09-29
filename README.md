@@ -99,6 +99,8 @@ python3 tools/stagedemo_extract.py # -> out/stagedemo/scenes.json (+ img/)
 python3 tools/endextract.py        # -> out/stagedemo/endings.json
 python3 tools/jptranscribe.py      # -> out/stagedemo/jp_codes.json
 python3 tools/jpend.py             # -> out/stagedemo/end_jp_codes.json
+python3 tools/story_text.py        # story text read back from the DC images (glyph table re/story_glyphs.json)
+                                   #    -> out/stagedemo/stagedemo_text.json, ending_text.json
 
 # 4. generate Morrigan's data (order matters)
 python3 tools/port_sound.py        # sound ROM + her sound IDs      -> out/snd/, src/gen_sound.*
@@ -118,8 +120,10 @@ python3 tools/build.py --set gunbird2m                        # -> out/roms/gunb
 Converted game data is never committed: `src/gen_*`, `out/gfx`, `out/res`, `out/end`, `out/snd`, `out/obj` and the
 generated `out/stagedemo` JSON are git-ignored and recreated by steps 3-4 (after that, code-only changes need step 5
 only).  A fresh clone plus the ignored inputs builds bit-identical ROMs.  Kept in git are hand-made inputs: layout
-and patch lists in `src/`, the transcribed story text (`src/story/*.json`), research maps in `re/` and three address
-maps in `out/stagedemo/` (`end_text_owner`, `end_text_pairs`, `engine_match`). `build.py --set gunbird2` (the stock 56 MB layout) stops
+and patch lists in `src/`, research maps in `re/`, three address maps in `out/stagedemo/` (`end_text_owner`,
+`end_text_pairs`, `engine_match`) and `re/story_glyphs.json`, the glyph-hash table `story_text.py` uses to read the
+story text from the Dreamcast images (no text and no pixels; `story_text.py --learn --from <dir>` rebuilds it from
+transcriptions). `build.py --set gunbird2` (the stock 56 MB layout) stops
 with a graphics overflow, because the ending tiles need bank 3's second half.
 
 ## Repository layout

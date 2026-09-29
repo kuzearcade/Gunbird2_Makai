@@ -39,3 +39,7 @@ src/gen_*
 src/res_syms.ld
 __pycache__/
 .claude/
+# story text, read back from the DC images by tools/story_text.py
+src/story/
+out/stagedemo/stagedemo_text.json
+out/stagedemo/ending_text.json

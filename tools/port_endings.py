@@ -205,7 +205,7 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
             B.u16(w[0]); B.u16(w[1]); B.u16(w[2]); B.u16(w[3])
             B.u16((comp_bank[v] << 8) | 0x80 | ((t >> 16) & 7)); B.u16(t & 0xFFFF)
     # ---- text descriptors -------------------------------------------------------------------------------------
-    txt = json.load(open(ROOT + '/src/story/ending_text.json'))
+    txt = json.load(open(ROOT + '/out/stagedemo/ending_text.json'))
     pairs = json.load(open(ROOT + '/out/stagedemo/end_text_pairs.json'))
     owner_f = json.load(open(ROOT + '/out/stagedemo/end_text_owner.json'))
     fslot = {f: s for s, f in FILES.items()}
@@ -330,7 +330,8 @@ def rev32(b):
 
 
 def generate(only):
-    place = json.load(open(ROOT + '/out/gfx/place.json'))
+    place = {o: f for o, f in json.load(open(ROOT + '/out/gfx/place.json')).items()
+             if f not in ('ending.tiles', 'ending.data')}           # a re-run replaces its own previous placement
     end_off = max(int(o, 16) + os.path.getsize(ROOT + '/out/gfx/' + f) for o, f in place.items())
     tnum_base = (end_off + 255) // 256
     meta = build(only, tnum_base)
