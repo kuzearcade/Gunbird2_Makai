@@ -11,7 +11,7 @@ index f6b031f4526..bf3d80fc9aa 100644
  s1945ii
  s1945iii
 diff --git a/src/mame/psikyo/psikyosh.cpp b/src/mame/psikyo/psikyosh.cpp
-index 55fca667f07..db0c78b1e0e 100644
+index 55fca667f07..7810b51616c 100644
 --- a/src/mame/psikyo/psikyosh.cpp
 +++ b/src/mame/psikyo/psikyosh.cpp
 @@ -1122,6 +1122,34 @@ ROM_START( gunbird2a ) /* Internal date string shows Oct 08 17:02 - No specific
@@ -20,13 +20,13 @@ index 55fca667f07..db0c78b1e0e 100644
  
 +/*
 +Gunbird 2 Makai (Morrigan Backport): Morrigan backported from the Dreamcast (~/Gunbird2_Makai).  Same PS5 board; bank 3 uses 64M EPROMs
-+(U6/U13, 8 MB each) as the sockets allow.  Checksums are placeholders: the ROMs are rebuilt by the project.
++(U6/U13, 8 MB each) as the sockets allow.  Checksums: the project build, written by tools/mame/sync_driver_crcs.py.
 +*/
 +ROM_START( gunbird2m )
 +	ROM_REGION( 0x180000, "maincpu", 0 )
-+	ROM_LOAD32_WORD_SWAP( "2_prog_l.u16", 0x000002, 0x080000, BAD_DUMP CRC(00000000) SHA1(0000000000000000000000000000000000000000) )
-+	ROM_LOAD32_WORD_SWAP( "1_prog_h.u17", 0x000000, 0x080000, BAD_DUMP CRC(00000000) SHA1(0000000000000000000000000000000000000000) )
-+	ROM_LOAD16_WORD_SWAP( "3_pdata.u1",   0x100000, 0x080000, BAD_DUMP CRC(00000000) SHA1(0000000000000000000000000000000000000000) )
++	ROM_LOAD32_WORD_SWAP( "2_prog_l.u16", 0x000002, 0x080000, CRC(6df5eab9) SHA1(bac346a49cd57e72e7171563c461e037a773e8c0) )
++	ROM_LOAD32_WORD_SWAP( "1_prog_h.u17", 0x000000, 0x080000, CRC(4b426396) SHA1(2670d4ca9252d752e2f0686bb174478fd030836c) )
++	ROM_LOAD16_WORD_SWAP( "3_pdata.u1",   0x100000, 0x080000, CRC(59e702c2) SHA1(165e515410b633ea7a18dbaec22f1e78d5bb0287) )
 +
 +	ROM_REGION( 0x4000000, "gfx", 0 )
 +	ROM_LOAD32_WORD( "0l.u3",  0x0000000, 0x800000, CRC(5c826bc8) SHA1(74fb6b242b4c5fe5365cfcc3029ed6da4cf3a621) )
@@ -35,11 +35,11 @@ index 55fca667f07..db0c78b1e0e 100644
 +	ROM_LOAD32_WORD( "1h.u11", 0x1000002, 0x800000, CRC(4ee0103b) SHA1(29bbe0162dda39919fcd188ea4a6b7b5f20366ff) )
 +	ROM_LOAD32_WORD( "2l.u5",  0x2000000, 0x800000, CRC(e1c7a7b8) SHA1(b5f6e5d53e21928197773df7dde0e7c83f4082af) )
 +	ROM_LOAD32_WORD( "2h.u12", 0x2000002, 0x800000, CRC(bc8a41df) SHA1(90460b11eea778f17cf8be67430e2ab149680686) )
-+	ROM_LOAD32_WORD( "3l_m.u6",  0x3000000, 0x800000, BAD_DUMP CRC(00000000) SHA1(0000000000000000000000000000000000000000) )
-+	ROM_LOAD32_WORD( "3h_m.u13", 0x3000002, 0x800000, BAD_DUMP CRC(00000000) SHA1(0000000000000000000000000000000000000000) )
++	ROM_LOAD32_WORD( "3l_m.u6",  0x3000000, 0x800000, CRC(21bec42f) SHA1(20ef3142aa7cf48786440e96bde2a0b76986f4ed) )
++	ROM_LOAD32_WORD( "3h_m.u13", 0x3000002, 0x800000, CRC(2f7cbfd4) SHA1(e3b758959640321f0a8ef04eac3e5bcec1e6d4cc) )
 +
 +	ROM_REGION( 0x400000, "ymf", 0 ) /* Samples */
-+	ROM_LOAD( "sound.u9", 0x000000, 0x400000, BAD_DUMP CRC(00000000) SHA1(0000000000000000000000000000000000000000) )
++	ROM_LOAD( "sound.u9", 0x000000, 0x400000, CRC(ba917b65) SHA1(b5128356b99ef7b8da3e85b1e52631ae95ace0f5) )
 +
 +	ROM_REGION( 0x100, "eeprom", 0 )
 +	ROM_LOAD( "eeprom-gunbird2.bin", 0x0000, 0x0100, CRC(7ac38846) SHA1(c5f4b05a94211f3c96b8c472adbe634f2e77d753) )

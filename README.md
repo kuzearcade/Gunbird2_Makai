@@ -117,6 +117,10 @@ python3 tools/port_ranking.py      # ranking animation             -> src/gen_ra
 # 5. compile the C/asm patches, apply hooks and patches, write the ROM set
 python3 tools/build.py --set gunbird2m                        # -> out/roms/gunbird2m/ (+ gunbird2m.crc.json)
 
+# 6. only if the ROMs changed: put their checksums into the MAME driver, rebuild MAME, verify
+python3 tools/mame/sync_driver_crcs.py                        # ~/mame gunbird2m entry + gunbird2m_driver.patch
+(cd ~/mame && make -j16) && ~/mame/mame -verifyroms gunbird2m -rompath out/roms
+
 # play
 ~/mame/mame gunbird2m -rompath out/roms
 ```
@@ -187,7 +191,9 @@ depend on the compiler.
 | `eeprom-gunbird2.bin` | 256 | `7ac38846` | `c5f4b05a94211f3c96b8c472adbe634f2e77d753` |
 
 Banks 0-2 and the EEPROM image are the original files, unchanged. `build.py` also writes these values to
-`out/roms/gunbird2m.crc.json`; compare against it after a build.
+`out/roms/gunbird2m.crc.json`, and the `gunbird2m` entry in `tools/mame/gunbird2m_driver.patch` carries the same
+checksums, so `mame -verifyroms gunbird2m -rompath out/roms` reports the set as good. After a change that alters the
+ROMs, run step 6 to update the driver entry (and these tables).
 
 ## Repository layout
 
