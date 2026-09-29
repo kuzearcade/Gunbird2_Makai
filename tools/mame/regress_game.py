@@ -17,6 +17,8 @@ ROOT = os.path.abspath(os.path.dirname(__file__) + '/../..')
 ORIG, PATCHED = ROOT + '/mame_roms', ROOT + '/out/roms'
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from select_paths import select_lines
+if not os.path.exists(ROOT + '/out/tmp/select_paths.json'):
+    sys.exit('out/tmp/select_paths.json missing: run tools/mame/regress_setup.py')
 PATHS = json.load(open(ROOT + '/out/tmp/select_paths.json'))
 
 

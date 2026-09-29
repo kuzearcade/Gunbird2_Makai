@@ -136,7 +136,10 @@ with a graphics overflow, because the ending tiles need bank 3's second half.
 
 ## Testing
 
-All test tools compare the patched set with the original in MAME, or with the Dreamcast in Flycast:
+All test tools compare the patched set with the original in MAME, or with the Dreamcast in Flycast.  First create
+their inputs (git-ignored, in `out/tmp/`) with `python3 tools/mame/regress_setup.py` after building gunbird2m: the
+regression EEPROM, the Morrigan-unlocked EEPROM, both built from the ROM set's default EEPROM, and the verified
+select-screen inputs (about 2 minutes).
 
 | Command | What it checks |
 |---|---|
@@ -146,8 +149,8 @@ All test tools compare the patched set with the original in MAME, or with the Dr
 | `tools/mame/check_stagedemo.py regress\|morrigan <eeprom>` | Original stage demos unchanged; contact sheets of all Morrigan scenes |
 | `tools/trace_compare.py` | Morrigan vs the Dreamcast: speed, hitboxes, per-hit damage, time to kill |
 
-The regression EEPROM has Aine unlocked and Morrigan locked; `re/NOTES.md` ("Whole-game regression") describes its
-layout. With Morrigan unlocked, the `?` slot on the select screen draws from a larger random range, so the game
+The regression EEPROM has Aine unlocked and Morrigan locked; `tools/mame/regress_setup.py` and `re/NOTES.md`
+("Whole-game regression") describe its layout. With Morrigan unlocked, the `?` slot on the select screen draws from a larger random range, so the game
 legitimately takes a different course from the original.
 
 ## To do
@@ -156,8 +159,6 @@ legitimately takes a different course from the original.
   - Palette lines `0x100+`: her in-game palette uses palette RAM that the original game never writes. It works in
     MAME but hasn't been verified on a PS5 board.
   - The 64M bank-3 EPROM pair also needs a check on real hardware.
-- **Reproducibility (nice to have).** Script the creation of `out/tmp/eeprom_regress.bin` and
-  `out/tmp/select_paths.json`, which live in the git-ignored `out/tmp/`.
 - **Not planned (Dreamcast-only):** stage-demo and ending voices (no sound ROM space), and the staff-roll movie (no
   video playback on the board).
 

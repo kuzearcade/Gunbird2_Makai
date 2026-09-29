@@ -72,6 +72,7 @@ def main():
     missing += [f'1P{a}' for a in range(1, 7) if f'1P{a}' not in res]
     json.dump(res, open(ROOT + '/out/tmp/select_paths.json', 'w'), indent=1)
     print(f'{len(res)} paths found; missing: {missing or "none"}')
+    sys.exit(1 if missing else 0)
 
 
 if __name__ == '__main__':
