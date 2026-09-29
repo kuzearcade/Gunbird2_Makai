@@ -2,8 +2,8 @@
  * secret added: with the cursor on '?' (slot 5), Up picks Morrigan (character 7) once she is unlocked
  * (maintenance code 5-1-9-9-4), just as Down picks Aine when the Aine flag is 2.
  *
- * Everything not Morrigan-related follows the arcade code (re/port/select_arcade.c / .ann); the Morrigan parts
- * follow the DC code (re/port/select_dc.c):
+ * Everything not Morrigan-related follows the arcade function 0x0601CDFC; the Morrigan parts follow the DC function
+ * 0x8C039CC0 (study them in the local, git-ignored Ghidra export re/export/ - tools/reexport.sh):
  *  - '?' shows character rot/3, rot advancing every frame; a matched secret pins rot to 0xF (Aine) / 0x12
  *    (Morrigan); matching one secret cancels the other
  *  - rot range: /3 <= 4 without the Aine flag, 5 with it, 6 with Aine flag + Morrigan; in 2P, when rot hits the
