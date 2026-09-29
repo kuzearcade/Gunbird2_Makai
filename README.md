@@ -94,7 +94,13 @@ python3 tools/arcade_images.py mame_roms/gunbird2.zip
 python3 tools/gdi_extract.py "<disc>/track03.bin" assets/dc/US/fs
 cp assets/dc/US/fs/1ST_READ.BIN re/1st_read_US.bin          # same for JP -> assets/dc/JP/fs, re/1st_read_JP.bin
 
-# 3. generate Morrigan's data (order matters)
+# 3. extract the Dreamcast story data (scene lists, ending scripts, Japanese text as arcade font codes)
+python3 tools/stagedemo_extract.py # -> out/stagedemo/scenes.json (+ img/)
+python3 tools/endextract.py        # -> out/stagedemo/endings.json
+python3 tools/jptranscribe.py      # -> out/stagedemo/jp_codes.json
+python3 tools/jpend.py             # -> out/stagedemo/end_jp_codes.json
+
+# 4. generate Morrigan's data (order matters)
 python3 tools/port_sound.py        # sound ROM + her sound IDs      -> out/snd/, src/gen_sound.*
 python3 tools/make_gfx.py          # sprite / select / portrait / ranking tiles + palettes -> out/gfx/, src/gen_gfx.*
 python3 tools/port_morrigan.py     # her scripts, sprite frames, hit data  -> out/res/morrigan.json
@@ -102,15 +108,18 @@ python3 tools/port_stagedemo.py    # story scenes                  -> src/gen_st
 python3 tools/port_endings.py      # endings (after make_gfx: appends to out/gfx/place.json) -> src/gen_endings.*
 python3 tools/port_ranking.py      # ranking animation             -> src/gen_ranking.c
 
-# 4. compile the C/asm patches, apply hooks and patches, write the ROM set
+# 5. compile the C/asm patches, apply hooks and patches, write the ROM set
 python3 tools/build.py --set gunbird2m                        # -> out/roms/gunbird2m/ (+ gunbird2m.crc.json)
 
 # play
 ~/mame/mame gunbird2m -rompath out/roms
 ```
 
-The generated `src/gen_*` files and `out/` artefacts are committed, so for code-only changes step 4 is enough. The
-full chain above reproduces the committed ROMs bit for bit. `build.py --set gunbird2` (the stock 56 MB layout) stops
+Converted game data is never committed: `src/gen_*`, `out/gfx`, `out/res`, `out/end`, `out/snd`, `out/obj` and the
+generated `out/stagedemo` JSON are git-ignored and recreated by steps 3-4 (after that, code-only changes need step 5
+only).  A fresh clone plus the ignored inputs builds bit-identical ROMs.  Kept in git are hand-made inputs: layout
+and patch lists in `src/`, the transcribed story text (`src/story/*.json`), research maps in `re/` and three address
+maps in `out/stagedemo/` (`end_text_owner`, `end_text_pairs`, `engine_match`). `build.py --set gunbird2` (the stock 56 MB layout) stops
 with a graphics overflow, because the ending tiles need bank 3's second half.
 
 ## Repository layout
