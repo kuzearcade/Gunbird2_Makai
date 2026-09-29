@@ -1,0 +1,59 @@
+diff --git a/src/mame/mame.lst b/src/mame/mame.lst
+index f6b031f4526..bf3d80fc9aa 100644
+--- a/src/mame/mame.lst
++++ b/src/mame/mame.lst
+@@ -39947,6 +39947,7 @@ dragnblz
+ gnbarich
+ gunbird2
+ gunbird2a
++gunbird2m
+ mjgtaste
+ s1945ii
+ s1945iii
+diff --git a/src/mame/psikyo/psikyosh.cpp b/src/mame/psikyo/psikyosh.cpp
+index 55fca667f07..2d81370a53e 100644
+--- a/src/mame/psikyo/psikyosh.cpp
++++ b/src/mame/psikyo/psikyosh.cpp
+@@ -1122,6 +1122,34 @@ ROM_START( gunbird2a ) /* Internal date string shows Oct 08 17:02 - No specific
+ 	ROM_LOAD( "eeprom-gunbird2.bin", 0x0000, 0x0100, CRC(7ac38846) SHA1(c5f4b05a94211f3c96b8c472adbe634f2e77d753) )
+ ROM_END
+ 
++/*
++Gunbird 2 with Morrigan (Dreamcast character backport, ~/Gunbird2_DCSH).  Same PS5 board; bank 3 uses 64M EPROMs
++(U6/U13, 8 MB each) as the sockets allow.  Checksums are placeholders: the ROMs are rebuilt by the project.
++*/
++ROM_START( gunbird2m )
++	ROM_REGION( 0x180000, "maincpu", 0 )
++	ROM_LOAD32_WORD_SWAP( "2_prog_l.u16", 0x000002, 0x080000, BAD_DUMP CRC(00000000) SHA1(0000000000000000000000000000000000000000) )
++	ROM_LOAD32_WORD_SWAP( "1_prog_h.u17", 0x000000, 0x080000, BAD_DUMP CRC(00000000) SHA1(0000000000000000000000000000000000000000) )
++	ROM_LOAD16_WORD_SWAP( "3_pdata.u1",   0x100000, 0x080000, BAD_DUMP CRC(00000000) SHA1(0000000000000000000000000000000000000000) )
++
++	ROM_REGION( 0x4000000, "gfx", 0 )
++	ROM_LOAD32_WORD( "0l.u3",  0x0000000, 0x800000, CRC(5c826bc8) SHA1(74fb6b242b4c5fe5365cfcc3029ed6da4cf3a621) )
++	ROM_LOAD32_WORD( "0h.u10", 0x0000002, 0x800000, CRC(3df0cb6c) SHA1(271d276fa0f63d84e458223316a9517865fc2255) )
++	ROM_LOAD32_WORD( "1l.u4",  0x1000000, 0x800000, CRC(1558358d) SHA1(e3b9c3da4e9b29ffa9568b57d14fe2b600aead68) )
++	ROM_LOAD32_WORD( "1h.u11", 0x1000002, 0x800000, CRC(4ee0103b) SHA1(29bbe0162dda39919fcd188ea4a6b7b5f20366ff) )
++	ROM_LOAD32_WORD( "2l.u5",  0x2000000, 0x800000, CRC(e1c7a7b8) SHA1(b5f6e5d53e21928197773df7dde0e7c83f4082af) )
++	ROM_LOAD32_WORD( "2h.u12", 0x2000002, 0x800000, CRC(bc8a41df) SHA1(90460b11eea778f17cf8be67430e2ab149680686) )
++	ROM_LOAD32_WORD( "3l_m.u6",  0x3000000, 0x800000, BAD_DUMP CRC(00000000) SHA1(0000000000000000000000000000000000000000) )
++	ROM_LOAD32_WORD( "3h_m.u13", 0x3000002, 0x800000, BAD_DUMP CRC(00000000) SHA1(0000000000000000000000000000000000000000) )
++
++	ROM_REGION( 0x400000, "ymf", 0 ) /* Samples */
++	ROM_LOAD( "sound.u9", 0x000000, 0x400000, BAD_DUMP CRC(00000000) SHA1(0000000000000000000000000000000000000000) )
++
++	ROM_REGION( 0x100, "eeprom", 0 )
++	ROM_LOAD( "eeprom-gunbird2.bin", 0x0000, 0x0100, CRC(7ac38846) SHA1(c5f4b05a94211f3c96b8c472adbe634f2e77d753) )
++ROM_END
++
++
+ ROM_START( s1945iii )
+ 	ROM_REGION( 0x180000, "maincpu", 0 )
+ 	ROM_LOAD32_WORD_SWAP( "2_progl.u16", 0x000002, 0x080000, CRC(5d5d385f) SHA1(67b3bcabd71cf084bcea7a59939281a8d6257059) )
+@@ -1410,6 +1438,7 @@ GAME( 1998, sbombera,   sbomber,  psikyo3v1,       sbomber,   psikyosh_state, in
+ /* ps5 */
+ GAME( 1998, gunbird2,   0,        psikyo5,         gunbird2,  psikyosh_state, init_ps5,        ROT270, "Psikyo",  "Gunbird 2 (set 1)",                                                    MACHINE_NO_COCKTAIL | MACHINE_SUPPORTS_SAVE )
+ GAME( 1998, gunbird2a,  gunbird2, psikyo5,         gunbird2,  psikyosh_state, init_ps5,        ROT270, "Psikyo",  "Gunbird 2 (set 2)",                                                    MACHINE_NO_COCKTAIL | MACHINE_SUPPORTS_SAVE )
++GAME( 1998, gunbird2m,  gunbird2, psikyo5,         gunbird2,  psikyosh_state, init_ps5,        ROT270, "hack",    "Gunbird 2 (Morrigan backport)", MACHINE_NO_COCKTAIL | MACHINE_SUPPORTS_SAVE )
+ GAME( 1999, s1945iii,   0,        psikyo5,         s1945iii,  psikyosh_state, init_ps5,        ROT270, "Psikyo",  "Strikers 1945 III (World) / Strikers 1999 (Japan)",                    MACHINE_NO_COCKTAIL | MACHINE_SUPPORTS_SAVE )
+ GAME( 1999, s1945iiibl, s1945iii, s1945iiibl,      s1945iii,  psikyosh_state, init_s1945iiibl, ROT270, "bootleg", "Strikers 1945 III (World) / Strikers 1999 (Japan) (bootleg, set 1)",   MACHINE_NOT_WORKING | MACHINE_NO_COCKTAIL | MACHINE_SUPPORTS_SAVE ) // sprites don't show up if MAME is started without debugger active
+ GAME( 1999, s1945iiibla,s1945iii, s1945iiibla,     s1945iii,  psikyosh_state, init_s1945iiibl, ROT270, "bootleg", "Strikers 1945 III (World) / Strikers 1999 (Japan) (bootleg, set 2)",   MACHINE_NOT_WORKING | MACHINE_NO_COCKTAIL | MACHINE_SUPPORTS_SAVE ) // sprites don't show up if MAME is started without debugger active
