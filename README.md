@@ -22,8 +22,10 @@ then converted and patched in by the tools here.
   - sound ROM 4 MB (the YMF278B limit);
   - graphics ROM bank 3 filled with 64M EPROMs, the sockets' capacity.
   See `docs/MORRIGAN_BACKPORT_PLAN.md` §0.1.
-- **The original game is left untouched.** With Morrigan locked, the patched set plays exactly like the original.
-  This is checked by whole-game regression runs for every character and every two-player pairing.
+- **The original game is left untouched.** With Morrigan locked, the patched set plays and looks exactly like the
+  original. This is checked by whole-game regression runs for every character and every two-player pairing. The one
+  change to the original's own palette use, moving the red damage-flash bank down four lines to make room for her
+  colours, renders identically.
 - **English and Japanese.** Her story text is present for both regions (region jumper / MAME "Region" setting).
 - **Arcade-style unlock.** Morrigan is unlocked with a maintenance code, like the arcade's own Aine secret.
 
@@ -33,9 +35,10 @@ then converted and patched in by the tools here.
   full-screen level-3 attack), bomb, death, respawn and continue.
 - **Character select:** after unlocking, move to `?` and press **Up** to pick her. Her portraits, slot icon and select
   voice follow the Dreamcast's random-pick rules.
-- **Sound:** her voices and effects from the Dreamcast sound banks (20 sound IDs, 17 samples), resampled for the arcade's YMF278B. Levels and
-  pitch are fitted to the Dreamcast, and her item-pickup voices are included. To make room, 27 samples that the
-  original game never plays were removed; they are kept locally in `unused_arcade_samples_removed/`.
+- **Sound:** her voices and effects from the Dreamcast sound banks (20 sound IDs, 17 samples), resampled for the
+  arcade's YMF278B. Levels and pitch are fitted to the Dreamcast, and her item-pickup voices are included. To make
+  room, 27 samples that the original game never plays were removed; they are kept locally in
+  `unused_arcade_samples_removed/`.
 - **Story:** all 36 of her stage-demo scenes (every stage, alone or with each partner), with portraits and English
   and Japanese text.
 - **Endings:** her solo ending and every pair ending, converted to 8-bit colour tiles.
@@ -82,7 +85,7 @@ Tools:
 - Optional, only for research and reference checks:
   - Ghidra 12 with a JDK 21 (`tools/ghidra_headless.sh`, `re/ghidra_scripts/`);
   - Flycast with the Lua screenshot binding (`tools/flycast/`), plus a Dreamcast BIOS in `~/Downloads/dc_bios`;
-  - `ffmpeg`.
+  - `ffmpeg`, only to inspect the Dreamcast staff-roll movie.
 
 ## Build
 
@@ -199,7 +202,7 @@ ROMs, run step 6 to update the driver entry (and these tables).
 
 | Path | Contents |
 |---|---|
-| `src/` | Arcade-side code: C replacements and additions, asm hooks (`hooks.txt`), raw/pointer patches (`patches.txt`), generated tables (`gen_*`), layout config (`morrigan_layout.json`) |
+| `src/` | Arcade-side code: C replacements and additions, asm hooks (`hooks.txt`), raw/pointer patches (`patches.txt`), layout config (`morrigan_layout.json`); the generated tables (`gen_*`) are git-ignored |
 | `tools/` | Extractors, converters and porters, disassemblers (`seqdis.py`, SH-2 via `tools/bin/sh-objdump`), `build.py` |
 | `tools/mame/` | MAME timeline harness (`timeline.lua`, `run.sh`), Stage Select / code helpers, regression tests, driver patch |
 | `tools/flycast/` | Dreamcast reference harness (Flycast + Lua) |
@@ -242,17 +245,25 @@ select-screen inputs (about 2 minutes).
 | `tools/mame/sprlog.py` | Which palette lines the original game's sprites can draw with in each game state, exactly, over whole games; the basis for choosing her lines |
 
 The regression EEPROM has Aine unlocked and Morrigan locked; `tools/mame/regress_setup.py` and `docs/NOTES.md`
-("Whole-game regression") describe its layout. With Morrigan unlocked, the `?` slot on the select screen draws from a larger random range, so the game
-legitimately takes a different course from the original.
+("Whole-game regression") describe its layout. With Morrigan unlocked, the `?` slot on the select screen draws from a
+larger random range, so the game legitimately takes a different course from the original.
+
+Some whole-game runs are not reproducible even on the original set: a few two-player cases take different courses
+from run to run, and under heavy load (many MAME processes at once) a scripted input can land a frame off. Rerun a
+failing case on its own with `--cases <case> --jobs 2`, and compare it against more than one original run before
+blaming a patch (`docs/NOTES.md` has examples).
 
 ## To do
 
-- **Real-PCB re-test (open).** Her sprite and select-screen colours first used palette entries `0x1000+`, which MAME
-  has but the real PS5 does not render. They now use palette lines the original game does not draw with while hers are shown:
-  `0x20–0x23` (freed by moving the red damage-flash bank down four lines) plus unused text-palette entries in game
-  (all 99 colours kept), `0x10–0x1F` on the select screen, saved and restored around it (`tools/mame/sprlog.py`; `tools/mame/check_palette.py` checks
-  her colours through whole games).
-  This build still needs a run on a real board, as does the 64M bank-3 EPROM pair.
+- **Real-PCB re-test (open).** On a real board, the 64M bank-3 EPROM pair works: all six endings ran from it.
+  Still to check on the board with this build:
+  - Her sprite and select-screen colours. They first used palette entries `0x1000+`, which MAME has but the real PS5
+    does not render. They now use palette lines the original game does not draw with while hers are shown:
+    `0x20–0x23` (freed by moving the red damage-flash bank down four lines) plus unused text-palette entries in game
+    (all 99 colours kept), and `0x10–0x1F` on the select screen, saved and restored around it
+    (`tools/mame/sprlog.py`; `tools/mame/check_palette.py` checks her colours through whole games).
+  - Enemy hit flashes and red debris after the red-bank move.
+  - The ending fixes: the Jiki6 + Jiki1 backdrop and the Jiki6 + Jiki4 Japanese text.
 - **Not planned (Dreamcast-only):** stage-demo and ending voices (no sound ROM space), and the staff-roll movie (no
   video playback on the board).
 
