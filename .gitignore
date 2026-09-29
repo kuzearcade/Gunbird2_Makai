@@ -22,3 +22,6 @@ out/trace_compare/nv_*/
 out/trace_compare/noise/
 out/trace_compare/*.png
 out/trace_compare/run.log
+# screenshots / images of game art (MAME snapshots, DC dialogue renders)
+out/snap/
+out/stagedemo/img/
