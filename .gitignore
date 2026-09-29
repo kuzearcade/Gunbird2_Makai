@@ -45,3 +45,6 @@ out/stagedemo/stagedemo_text.json
 out/stagedemo/ending_text.json
 # disassembly / decompilation of the game programs (local study copies only)
 re/port/
+out/tl/
+out/trace/
+out/trace_compare/report.md

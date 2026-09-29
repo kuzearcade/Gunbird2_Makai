@@ -182,8 +182,8 @@ def apply_fixes(res, fixes):
 
 
 def sources():
-    owner = json.load(open(SD + '/end_text_owner.json'))
-    pairs = json.load(open(SD + '/end_text_pairs.json'))
+    owner = json.load(open(ROOT + '/re/end_text_owner.json'))
+    pairs = json.load(open(ROOT + '/re/end_text_pairs.json'))
     keys_demo = list(json.load(open(SD + '/jp_codes.json')))
     US, JP = seqdis.Image('dc_US'), seqdis.Image('dc_JP')
     raw = {'en_demo': {k: demo_lines(k) for k in keys_demo},

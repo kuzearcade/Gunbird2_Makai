@@ -35,8 +35,8 @@ def codes(fn, addr, img):
 
 if __name__ == '__main__':
     ROOT = os.path.dirname(os.path.abspath(__file__)) + '/..'
-    pairs = json.load(open(ROOT + '/out/stagedemo/end_text_pairs.json'))
-    owner = json.load(open(ROOT + '/out/stagedemo/end_text_owner.json'))
+    pairs = json.load(open(ROOT + '/re/end_text_pairs.json'))
+    owner = json.load(open(ROOT + '/re/end_text_owner.json'))
     img = seqdis.Image('dc_JP')
     res = {}
     for u, j in pairs.items():

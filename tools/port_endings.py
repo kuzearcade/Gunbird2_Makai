@@ -206,8 +206,8 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
             B.u16((comp_bank[v] << 8) | 0x80 | ((t >> 16) & 7)); B.u16(t & 0xFFFF)
     # ---- text descriptors -------------------------------------------------------------------------------------
     txt = json.load(open(ROOT + '/out/stagedemo/ending_text.json'))
-    pairs = json.load(open(ROOT + '/out/stagedemo/end_text_pairs.json'))
-    owner_f = json.load(open(ROOT + '/out/stagedemo/end_text_owner.json'))
+    pairs = json.load(open(ROOT + '/re/end_text_pairs.json'))
+    owner_f = json.load(open(ROOT + '/re/end_text_owner.json'))
     fslot = {f: s for s, f in FILES.items()}
     textowner = {k: fslot[f] for k, f in owner_f.items()}
     JI = seqdis.Image('dc_JP')
