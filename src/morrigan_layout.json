@@ -454,5 +454,15 @@
  "force_translate": {
   "_doc": "DC address -> reason; translated as Morrigan data although MAP pairs it with an arcade object",
   "8c41a7a4": "P1 sub-shot SetDt descriptor (her sub-shot script 0x8C41A828). On the DC it is also Aine's chardef+0x7C; the arcade Aine object (0x0D2CEC) is a C sub-shot table, not a SetDt descriptor: P1 darts were invisible and did no damage (found by tools/trace_compare.py)"
+ },
+ "shade_slots": {
+  "_doc": "DC shade (alpha) slot -> arcade slot, for ChangeShadeObj and FncCall 0x18 (FncShadeRegSet). Her charged shots use DC slots 8-10 (alpha 0x0F/0x1F/0x2F by w13), which the DC added; the PS5 has 8 slots and FncShadeRegSet(8..) writes the sprite priority registers (all sprites vanished after her level-3 charged shot). Slot 6 is the only one never set during play (full two-loop run, write-tapped; the arcade uses it in the ending script only)",
+  "8": 6,
+  "9": 6,
+  "10": 6
+ },
+ "shade_values": {
+  "_doc": "value written to a remapped arcade slot (one slot stands for several DC ones): the middle DC level",
+  "6": 31
  }
 }

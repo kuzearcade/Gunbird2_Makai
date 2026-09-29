@@ -9,6 +9,7 @@
 --   peek <addr> <len>          print bytes (hex) to stdout
 --   dbg <debugger command...>  run a debugger command (needs -debug)
 --   rtap <start> <end>         log each distinct PC that reads [start,end] (hex; print "RTAP pc addr data")
+--   wtap <start> <end>         print every write to [start,end] (hex): "WTAP pc pr addr data mask frame"
 --   usage <start> <end>        record every byte read/written in [start,end] (needs -nodrc: RAM is DRC fastram);
 --                              printed at exit as "USAGE r|w <addr> <pc,pc,...>"
 --   field <value> <name...>   set any input field (all ports), e.g. "1 field 0 Region" (0 = Japan)
@@ -19,6 +20,7 @@
 --                              "<frame> <time us> <addr> <data> <mask>" (register/data write sequence and timing)
 --   trace <file> <player x> <player hit ptr> <hit objs> <hit list> <hit count>   per-frame trace, same format as
 --                              tools/flycast/timeline.lua: F <frame> <x> <y> P <rects> T <task>:<hp>:<type> ...
+--   pc                         print the main CPU's program counter ("PC <frame> <pc>")
 --   weaken <hit objs> <hit list> <hit count> <hp>   every frame, cap the HP (s32 16.16 at task + 0x54) of every
 --                              task owning an active hit object at <hp> (hex): stages clear fast (test runs only)
 --   exit
@@ -107,6 +109,17 @@ local function run(cmd)
       if not seen[k] then seen[k] = true; print(string.format("RTAP pc=%08x addr=%08x data=%08x frame=%d", pc, offset, data, frame)) end
       return data
     end)
+  elseif op == "wtap" then
+    local a, b = args:match("^(%x+)%s+(%x+)$")
+    a = tonumber(a, 16); b = tonumber(b, 16)
+    local cpu = manager.machine.devices[":maincpu"]
+    taps[#taps + 1] = space:install_write_tap(a, b, "wtap" .. #taps, function(offset, data, mask)
+      local task = space:read_u32(0x0604005C)                -- seq VM: current task, its script pointer
+      local spc = task ~= 0 and space:read_u32(space:read_u32(task + 0x20) + 0x10) or 0
+      print(string.format("WTAP pc=%08x pr=%08x addr=%08x data=%08x mask=%08x frame=%d task=%08x script=%08x",
+                          cpu.state["PC"].value, cpu.state["PR"].value, offset, data, mask, frame, task, spc))
+      return data
+    end)
   elseif op == "usage" then
     local a, b = args:match("^(%x+)%s+(%x+)$")
     a = tonumber(a, 16); b = tonumber(b, 16)
@@ -139,6 +152,8 @@ local function run(cmd)
     local file, px, phit, objs, list, cnt = args:match("^(%S+)%s+(%x+)%s+(%x+)%s+(%x+)%s+(%x+)%s+(%x+)$")
     tr = { fh = io.open(file, "w"), px = tonumber(px, 16), phit = tonumber(phit, 16), objs = tonumber(objs, 16),
            list = tonumber(list, 16), cnt = tonumber(cnt, 16) }
+  elseif op == "pc" then
+    print(string.format("PC %d %08x", frame, manager.machine.devices[":maincpu"].state["PC"].value))
   elseif op == "weaken" then
     local objs, list, cnt, hp = args:match("^(%x+)%s+(%x+)%s+(%x+)%s+(%x+)$")
     weak = { objs = tonumber(objs, 16), list = tonumber(list, 16), cnt = tonumber(cnt, 16), hp = tonumber(hp, 16) }

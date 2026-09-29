@@ -21,16 +21,33 @@ from dcchr import entry
 D, A = Space('dc_US'), Space('arcade')
 DI, AI = seqdis.Image('dc_US'), seqdis.Image('arcade')
 DC_ONLY = {o['op'] for o in seqdis.OPS.values() if o.get('tag') == 'DC-ONLY'}
+ANIMTRANS = 0x0C          # DC-only streamed animation (JIKI6.001 images): ported as AnimObj + 2 NOPs (same 16 bytes)
+DROP = DC_ONLY - {ANIMTRANS}
 TYPES = json.load(open(ROOT + '/re/seq_types.json'))
 MAP = {int(k, 16): int(v[0], 16) for k, v in json.load(open(ROOT + '/re/map_dc2arc.json')).items()}
 if os.path.exists(ROOT + '/re/map_extra.json'):
     MAP.update({int(k, 16): int(v, 16) for k, v in json.load(open(ROOT + '/re/map_extra.json')).items()})
 CFG = json.load(open(ROOT + '/src/morrigan_layout.json'))
+# shade (alpha) slots: the DC has 12+, the PS5 8 (video registers 0x0405FFE0-7; 8+ are the priority registers)
+SHADE_SLOT = {int(k): v for k, v in CFG.get('shade_slots', {}).items() if not k.startswith('_')}
+SHADE_VALUE = {int(k): v for k, v in CFG.get('shade_values', {}).items() if not k.startswith('_')}
 # DC objects that exist on the arcade too (MAP) but must be translated anyway: the arcade object has another format
 FORCE = {int(k, 16) for k in CFG.get('force_translate', {}) if not k.startswith('_')}
 # Morrigan's DC sound IDs -> arcade IDs (tools/port_sound.py): Effect <id> operands are remapped
 SND = {int(k, 16): v for k, v in json.load(open(ROOT + '/out/snd/remap.json')).items()} \
     if os.path.exists(ROOT + '/out/snd/remap.json') else {}
+
+# JIKI6.001 images (AnimTrans): [(first cell within the .001 cells, cell count)]; their tiles follow the
+# JIKI6.CHR cells (TRANS_CELL0 = CHR cell count) in the gfx 'game' group
+def _trans_cells():
+    d = open(ROOT + '/assets/dc/US/fs/JIKI6.001', 'rb').read()
+    ent = [struct.unpack('<IHH', d[8 * i:8 * i + 8]) for i in range(struct.unpack('<I', d[:4])[0] // 8)]
+    out, c = [], 0
+    for _, _, n in ent: out.append((c, n)); c += n
+    return out
+TRANS_CELLS = _trans_cells()
+import gfxconv
+TRANS_CELL0 = len(gfxconv.load_cells(ROOT + '/assets/dc/US/fs/JIKI6.CHR'))
 
 DC_CHARTBL, ARC_CHARTBL = 0x8C40F7F0, 0xCB298
 DC_SUBTBL, ARC_SUBTBL = 0x8C40FE20, 0xCB800
@@ -136,29 +153,38 @@ class Porter:
         self.script_regions = regs
         placement = []
         for s, e, insns in regs:
-            size = sum(self.script_insns[x][0] for x in insns if self.script_insns[x][1] not in DC_ONLY)
+            size = sum(self.script_insns[x][0] for x in insns if self.script_insns[x][1] not in DROP)
             placement.append(('script', s, size, insns))
         for a, k in sorted(self.objs.items()):
             if k == 'script': continue
             if k == 'objdt': placement.append(('objdt', a, dc_size(a), None))
             elif k in CFG['typed']: placement.append((k, a, CFG['typed'][k].get('size') or dc_size(a), None))
             else: self.errors.append(f'untyped object {D.name(a)} kind {k} size {dc_size(a):#x}')
+        # AnimTrans frame lists (synthetic OBJDT: the DC object's shapes, tiles of the streamed images)
+        self.trans = {}
+        for x, (ln, op) in sorted(self.script_insns.items()):
+            if op != ANIMTRANS or (x in MAP and x not in self.objs): continue
+            ptr, frames, start = DI.l(x + 2), DI.w(x + 6), DI.w(x + 12)
+            if (ptr, start, frames) not in self.trans:
+                self.trans[(ptr, start, frames)] = None
+                placement.append(('trans', (ptr, start, frames), frames * 12, None))
         # allocate: objdt -> OBJ area, others -> DATA area
         pos = {'objdt': CFG['objdt_area'][0], 'data': CFG['data_area'][0]}
         lim = {'objdt': CFG['objdt_area'][1], 'data': CFG['data_area'][1]}
         self.place = []
         for kind, a, size, insns in placement:
-            area = 'objdt' if kind == 'objdt' else 'data'
+            area = 'objdt' if kind in ('objdt', 'trans') else 'data'
             p = (pos[area] + 3) & ~3
             if p + size > lim[area]: self.errors.append(f'area {area} full at {D.name(a)}'); continue
             pos[area] = p + size
             self.place.append((kind, a, size, insns, p))
+            if kind == 'trans': self.trans[a] = p; continue
             self.new[a] = p
             if kind == 'script':
                 q = p
                 for x in insns:
                     self.new[x] = q
-                    if self.script_insns[x][1] not in DC_ONLY: q += self.script_insns[x][0]
+                    if self.script_insns[x][1] not in DROP: q += self.script_insns[x][0]
         self.used = pos
 
     # ---- translation -------------------------------------------------------------------------------
@@ -181,7 +207,8 @@ class Porter:
         out = bytearray()
         for x in insns:
             ln, op = self.script_insns[x]
-            if op in DC_ONLY: continue
+            if op in DROP: continue
+            if op == ANIMTRANS: out += self.tr_animtrans(x); continue
             out += struct.pack('>H', DI.w(x))
             if op in (None, 0): continue
             n = (ln - 2) // 2
@@ -194,7 +221,14 @@ class Porter:
                 elif t[i] in ('b4',): out += D.raw(y, 4); i += 2
                 elif t[i] == 'b2': out += D.raw(y, 2); i += 1
                 elif op == 0x34 and i == 0: out += struct.pack('>H', SND.get(DI.w(y), DI.w(y))); i += 1
+                elif op == 0x71 and i == 0: out += struct.pack('>H', SHADE_SLOT.get(DI.w(y), DI.w(y))); i += 1
                 else: out += struct.pack('>H', DI.w(y)); i += 1
+            if op == 0x1A and DI.w(x + 2) == 0x18 and DI.w(x + 6) & 0x8000 == 0:
+                # FncShadeRegSet(slot << 16 | value): DC slots 8-10 do not exist on the PS5 (the byte lands in the
+                # sprite priority register) -> SHADE_SLOT, value fixed per arcade slot (one slot for several DC ones)
+                slot = DI.w(x + 6); ns = SHADE_SLOT.get(slot, slot)
+                val = SHADE_VALUE.get(ns, DI.w(x + 4)) if ns != slot else DI.w(x + 4)
+                out[-4:] = struct.pack('>HH', ns, val)
         return bytes(out)
 
     def tr_objdt(self, a, size):
@@ -227,8 +261,28 @@ class Porter:
             else: out += struct.pack('>H', remap.get(off, {}).get(D.u16(a + off), D.u16(a + off))); off += 2
         return bytes(out)
 
+    def tr_animtrans(self, x):
+        # AnimTrans ptr, frames, delay, mode, start image, file -> AnimObj ptr', frames, delay, mode; Nop; Nop
+        ptr, frames, delay, mode, start = DI.l(x + 2), DI.w(x + 6), DI.w(x + 8), DI.w(x + 10), DI.w(x + 12)
+        return struct.pack('>HIHHHHH', 0x61, self.trans[(ptr, start, frames)], frames, delay, mode, 0, 0)
+
+    def tr_trans(self, key):
+        # frame k: shape of the DC object's entry k, tiles = image start + k of JIKI6.001 (appended after the
+        # JIKI6.CHR cells in the gfx 'game' group, tools/make_gfx.py)
+        ptr, start, frames = key
+        g = CFG['gfx']; out = bytearray()
+        for k in range(frames):
+            e = entry([D.u16(ptr + 12 * k + 2 * j) for j in range(6)])
+            if e['w'] * e['h'] != TRANS_CELLS[start + k][1]:
+                self.errors.append(f'AnimTrans {D.name(ptr)} frame {k}: {e["w"]}x{e["h"]} cells vs image {start + k}')
+            tnum = g['tnum_base'] + TRANS_CELL0 + TRANS_CELLS[start + k][0]
+            attr = (g['colr'] << 8) | 0x80 | ((tnum >> 16) & 7)
+            out += struct.pack('>6H', e['x'], e['y'], D.u16(ptr + 12 * k + 4), D.u16(ptr + 12 * k + 6), attr, tnum & 0xFFFF)
+        return bytes(out)
+
     def translate(self):
         for kind, a, size, insns, p in self.place:
+            if kind == 'trans': self.blobs.append((p, self.tr_trans(a), 'objdt', f'trans {D.name(a[0])} @{a[1]}')); continue
             if kind == 'script': b = self.tr_script(insns)
             elif kind == 'objdt': b = self.tr_objdt(a, size)
             else: b = self.tr_typed(kind, a, size)
