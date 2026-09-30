@@ -11,7 +11,8 @@ docs/NOTES.md "Sound").
 
 IDs: the DC gives Morrigan IDs 0x150-0x162 (arcade IDs with other samples) and her own 0x84 (shared with Marion on the
 DC via per-player banks); they become free arcade IDs 0x16A+ (SE table ROM 0x40300 + 6*id: wave, volume, 0, group,
-note).  Outputs:
+note).  The unlock voice "Morrigan" (UNLOCK_*: cut from her stage-demo stream S_16_1.P04) follows as the next
+ID, SND_M_UNLOCK (src/maint.c plays it on the unlock screen).  Outputs:
   out/snd/sound.u9                  new sound ROM (build.py uses it)
   out/snd/remap.json                DC id -> arcade id (port_morrigan.py remaps Effect operands)
   src/gen_sound.[ch], src/gen_sound_patches.txt   SE entries, Morrigan's voice-table entries (build.py)"""

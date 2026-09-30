@@ -38,7 +38,8 @@ then converted and patched in by the tools here.
 - **Sound:** her voices and effects from the Dreamcast sound banks (20 sound IDs, 17 samples), resampled for the
   arcade's YMF278B. Levels and pitch are fitted to the Dreamcast, and her item-pickup voices are included. To make
   room, 27 samples that the original game never plays were removed; they are kept locally in
-  `unused_arcade_samples_removed/`.
+  `unused_arcade_samples_removed/`. The unlock screen plays her saying "Morrigan", cut from one of her Dreamcast
+  stage-demo lines (`S_16_1.P04`) and added as a new sound (ID 0x17E).
 - **Story:** all 36 of her stage-demo scenes (every stage, alone or with each partner), with portraits and English
   and Japanese text.
 - **Endings:** her solo ending and every pair ending, converted to 8-bit colour tiles.
@@ -111,6 +112,9 @@ python3 tools/story_text.py        # story text read back from the DC images (gl
 
 # 4. generate Morrigan's data (order matters)
 python3 tools/port_sound.py        # sound ROM + her sound IDs      -> out/snd/, src/gen_sound.*
+                                   #    (her 20 in-game sounds from MAIN_O.OSB / P6_O.OSB, and the unlock voice
+                                   #    "Morrigan" cut from S_16_1.P04 as ID 0x17E = SND_M_UNLOCK for src/maint.c;
+                                   #    all read from assets/dc/US/fs/, extracted in step 2)
 python3 tools/make_gfx.py          # sprite / select / portrait / ranking tiles + palettes -> out/gfx/, src/gen_gfx.*
 python3 tools/port_morrigan.py     # her scripts, sprite frames, hit data  -> out/res/morrigan.json
 python3 tools/port_stagedemo.py    # story scenes                  -> src/gen_story.*
