@@ -101,12 +101,12 @@ def main():
 import numpy as np, hashlib
 import dcend, gfxconv, jpcodes
 from make_gfx import quantize
+from dcchr import untwiddle
 
 BLOB_BASE, BLOB_END = 0x06034000, 0x06040000
 FILES = {26: 'END6.CHR', 6: 'END60.CHR', 12: 'END61.CHR', 17: 'END62.CHR', 21: 'END63.CHR', 24: 'END64.CHR'}
 COMMON_FILE = 'END6.CHR'            # engine/common UI composites (identical cells in every END file)
-COMMON_BANK = 0xE0                  # bank 0xF0 stays free: the DC engine's BG map 0x8C3E5918 (arcade 0x0ACB78, used by
-                                    # END60/END61) draws with palette bank 0xF0 as loaded by the arcade
+COMMON_BANK = 0xE0                  # bank 0xF0 is not used (the BG backdrop is baked in, see BACKDROP)
 MAX_OWN_BANKS = 12                  # per ending: 12 own banks 0x10-0xC0 + 1 shared bank 0xD0 for the smaller composites
 TEXT_MAGIC = 0x54585431             # 'TXT1'
 DC_PUTOBJWORK = 0x67
@@ -149,6 +149,56 @@ def owners(refs):
     return own
 
 
+# The END60 / END61 close-ups (Morrigan "Soul fist!!", Marion "Morrigan! You!!") are transparent pictures over the DC
+# engine's backdrop map 0x8C3E5918 (ENDBG speed lines).  On the arcade that map is a BG layer, whose priority against
+# sprites differs between MAME and the real PS5 (on the board it covered the pictures), and the arcade map 0x0ACB78 is
+# different art.  So the backdrop is baked into the transparent pixels of the two pictures instead, and their tasks do
+# not show the BG layer (SHOWBG_OFF).  Placement, from DC Ending Demo captures (a scratch alignment of the picture and
+# the map against the frame): the map pixel under picture-rect pixel (y, x) - the picture turned by np.rot90(.., ROT) -
+# is np.rot90(map, MROT)[y - oy, x - ox].
+BACKDROP_MAP = 0x8C327770                  # sub-map of 0x8C3E5918: u16 0, 16, W, H, then u32 entries (cell << 16)
+BACKDROP = {0x8C38C9B8: (-132, -287), 0x8C38C85C: (-144, -272)}      # composite -> (ox, oy)
+ROT, MROT = 1, 3
+SHOWBG_OFF = {0x8C3E5DAA, 0x8C3E5E4A}      # ShowBg of the backdrop tasks 0x8C3E5D90 (END60) / 0x8C3E5E30 (END61)
+_bdmap = []
+
+
+def backdrop_map():
+    """the DC backdrop map as ARGB1555 pixels (0 = no cell), from ENDBG.CHR / ENDBG.PAL"""
+    if not _bdmap:
+        _, _, W, H = struct.unpack('<4H', D.raw(BACKDROP_MAP, 8))
+        ent = struct.unpack(f'<{W * H}I', D.raw(BACKDROP_MAP + 8, 4 * W * H))
+        fs = ROOT + '/assets/dc/US/fs/'
+        chr_ = np.fromfile(fs + 'ENDBG.CHR', np.uint8); pal = np.fromfile(fs + 'ENDBG.PAL', '<u2').astype(int)
+        m = np.zeros((H * 16, W * 16), int)
+        for i, e in enumerate(ent):
+            if e >> 16 == 0: continue
+            c = np.asarray(untwiddle(chr_[(e >> 16) * 256:((e >> 16) + 1) * 256], 16, 16)).reshape(16, 16)
+            y, x = divmod(i, W)
+            m[y * 16:y * 16 + 16, x * 16:x * 16 + 16] = np.where(c != 0, pal[np.minimum(c, len(pal) - 1)] | 0x8000, 0)
+        _bdmap.append(m)
+    return _bdmap[0]
+
+
+def part_cells(v, p, cs):
+    """the cells of part p of composite v; the backdrop composites get the DC backdrop in their transparent pixels"""
+    cells = [cs[p['idx'] + j] for j in range(p['W'] * p['H'])]
+    if v not in BACKDROP: return cells
+    W, H = p['W'], p['H']
+    K = np.zeros((H * 16, W * 16), int)
+    for j, c in enumerate(cells):
+        y, x = divmod(j, W); K[y * 16:y * 16 + 16, x * 16:x * 16 + 16] = np.asarray(c).reshape(16, 16)
+    ox, oy = BACKDROP[v]
+    kr = np.rot90(K, ROT); h, w = kr.shape
+    bd = np.rot90(backdrop_map(), MROT)[-oy:h - oy, -ox:w - ox]
+    assert bd.shape == kr.shape and (bd & 0x8000).all(), hex(v)
+    kr = np.where(kr & 0x8000, kr, bd)
+    K = np.rot90(kr, -ROT)
+    shape = np.asarray(cells[0]).shape
+    return [K[y * 16:y * 16 + 16, x * 16:x * 16 + 16].reshape(shape).astype(np.asarray(cells[0]).dtype)
+            for y in range(H) for x in range(W)]
+
+
 def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
     """only: iterable of ending slots to include (others keep their arcade scripts) - used while the gfx space for
     all six endings is not available.  tnum_base: first gfx tile (256-byte units)."""
@@ -175,8 +225,8 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
         for v in comps:
             comp_bank[v] = bank; cs = dcend.cells('US', cfile[v])
             for p in all_parts(v):
-                for j in range(p['W'] * p['H']):
-                    c = cs[p['idx'] + j]; vv = c[(c & 0x8000) != 0] & 0x7FFF
+                for c in part_cells(v, p, cs):
+                    vv = c[(c & 0x8000) != 0] & 0x7FFF
                     u, n = np.unique(vv, return_counts=True)
                     for a, b in zip(u.tolist(), n.tolist()): counts[a] = counts.get(a, 0) + b
         rep = quantize(counts, 191)            # pens 1-0xBF: 0xC0-0xFF are per-pen alpha when a layer uses alphamap
@@ -189,7 +239,7 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
         for v in comps:
             cs = dcend.cells('US', cfile[v])
             for p in all_parts(v):
-                cells = [cs[p['idx'] + j] for j in range(p['W'] * p['H'])]
+                cells = part_cells(v, p, cs)
                 t = gfxconv.cells_to_tiles(cells, pal)
                 k = (bank, e, hashlib.md5(t).hexdigest())
                 if k not in part_tiles:
@@ -249,6 +299,8 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
         ln, op, t = keep[x]
         if op in PM.DC_ONLY and op != DC_PUTOBJWORK: continue
         assert B.here() == newa[x]
+        if x in SHOWBG_OFF:
+            assert DI.w(x) == 0x0080 and ln == 2; B.u16(0); continue            # ShowBg -> Nop
         B.u16(DI.w(x))
         if op in (None, 0): continue
         n = (ln - 2) // 2

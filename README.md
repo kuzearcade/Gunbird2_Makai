@@ -179,17 +179,17 @@ depend on the compiler.
 
 | File | Size | CRC32 | SHA-1 |
 |---|---:|---|---|
-| `1_prog_h.u17` | 524288 | `b8145f4e` | `626afb589005187fe63efe9846bf049a9928097f` |
-| `2_prog_l.u16` | 524288 | `36a9f1ff` | `41f603176f05630b961f264ceaa80cfe19484b4f` |
-| `3_pdata.u1` | 524288 | `3a399067` | `616a31683082b8e6dc37970fd3176aceb10a5a37` |
+| `1_prog_h.u17` | 524288 | `d9177e55` | `4cc56d877995a924a9300585811ddfe04df07c90` |
+| `2_prog_l.u16` | 524288 | `31592676` | `be7ddc5780f505bf8a5b64a62d7a5c1a07d3e2e8` |
+| `3_pdata.u1` | 524288 | `8a15c5ec` | `e0cb9774ebbf12e9203e30779cfef994094af10c` |
 | `0l.u3` | 8388608 | `5c826bc8` | `74fb6b242b4c5fe5365cfcc3029ed6da4cf3a621` |
 | `0h.u10` | 8388608 | `3df0cb6c` | `271d276fa0f63d84e458223316a9517865fc2255` |
 | `1l.u4` | 8388608 | `1558358d` | `e3b9c3da4e9b29ffa9568b57d14fe2b600aead68` |
 | `1h.u11` | 8388608 | `4ee0103b` | `29bbe0162dda39919fcd188ea4a6b7b5f20366ff` |
 | `2l.u5` | 8388608 | `e1c7a7b8` | `b5f6e5d53e21928197773df7dde0e7c83f4082af` |
 | `2h.u12` | 8388608 | `bc8a41df` | `90460b11eea778f17cf8be67430e2ab149680686` |
-| `3l.u6` | 8388608 | `0edaa6cd` | `5b97740b3fe9ed868c4d22e2b26db8548b0b626e` |
-| `3h.u13` | 8388608 | `49586bad` | `3247c5af42cede6b1817f20b3b2999971a444521` |
+| `3l.u6` | 8388608 | `3e61cd73` | `820dbcb96f0b7fc4b9d70b9bd2e483c7c5f318be` |
+| `3h.u13` | 8388608 | `d0a2a56d` | `56890910c1f18b0ca375d8da0b108062482cacd2` |
 | `sound.u9` | 4194304 | `ba917b65` | `b5128356b99ef7b8da3e85b1e52631ae95ace0f5` |
 | `eeprom-gunbird2.bin` | 256 | `7ac38846` | `c5f4b05a94211f3c96b8c472adbe634f2e77d753` |
 
@@ -238,7 +238,7 @@ select-screen inputs (about 2 minutes).
 | `tools/mame/regress_sound.py <eeprom> --set gunbird2m` | Sound-chip register writes for all 6 characters, including bombs, charges and continues |
 | `tools/mame/check_stagedemo.py regress\|morrigan <eeprom>` | Original stage demos unchanged; contact sheets of all Morrigan scenes |
 | `tools/trace_compare.py` | Morrigan vs the Dreamcast: speed, hitboxes, per-hit damage, time to kill |
-| `tools/mame/check_endings.py` | All six Morrigan endings (Stage Select, Ending Demo) in English and Japanese: each plays to its end, the backdrop palette is loaded, contact sheets for a visual check |
+| `tools/mame/check_endings.py` | All six Morrigan endings (Stage Select, Ending Demo) in English and Japanese: each plays to its end with no background layer on (the close-up backdrops are baked into the pictures), contact sheets for a visual check |
 | `tools/mame/check_palette.py` | Morrigan's in-game colours (palette lines `0x20–0x23` and free text-line entries) stay intact through 13 whole games, and the original's lines around them unchanged: 1P, and 2P with each partner on either side |
 | `tools/mame/palcensus.py` | Which palette lines the original game writes in each game state, over whole games |
 | `tools/mame/paldraw.py` | Which palette lines the original game draws with in each game state (screen hashes with lines repainted) |
@@ -257,8 +257,9 @@ blaming a patch (`docs/NOTES.md` has examples).
 
 - **Real-PCB re-test (open).** Confirmed on a real board: her palette (select-screen art and in-game sprites),
   enemy hit flashes and red debris after the red-bank move, the Jiki6 + Jiki4 Japanese ending text, and the 64M
-  bank-3 EPROM pair (all six endings ran from it). Still open: the Jiki6 + Jiki1 ending shows wrongly on the board
-  (fine in MAME), under investigation.
+  bank-3 EPROM pair (all six endings ran from it). To re-test: the Jiki6 + Jiki1 and Jiki6 + Jiki0 endings, whose
+  close-ups ("Morrigan! You!!", "Soul Fist!!") now carry the Dreamcast backdrop inside the pictures instead of a
+  background layer (the layer covered the pictures on the board and turned the text blue).
 - **Not planned (Dreamcast-only):** stage-demo and ending voices (no sound ROM space), and the staff-roll movie (no
   video playback on the board).
 
