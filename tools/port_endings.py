@@ -23,6 +23,7 @@ FRAMES = {}                                                  # composite -> anim
 
 def all_parts(v):
     """parts of every animation frame of composite v (frames are stored back to back)"""
+    if v in BD_OBJ: return all_parts(BD_OBJ[v])
     out, a = [], v
     for _ in range(FRAMES.get(v, 1)):
         ps = dcend.parts(DI, a); out += ps; a += 12 * len(ps)
@@ -106,7 +107,7 @@ from dcchr import untwiddle
 BLOB_BASE, BLOB_END = 0x06034000, 0x06040000
 FILES = {26: 'END6.CHR', 6: 'END60.CHR', 12: 'END61.CHR', 17: 'END62.CHR', 21: 'END63.CHR', 24: 'END64.CHR'}
 COMMON_FILE = 'END6.CHR'            # engine/common UI composites (identical cells in every END file)
-COMMON_BANK = 0xE0                  # bank 0xF0 is not used (the BG backdrop is baked in, see BACKDROP)
+COMMON_BANK = 0xE0                  # bank 0xF0 is not used (the BG backdrop is a sprite object, see BACKDROP)
 MAX_OWN_BANKS = 12                  # per ending: 12 own banks 0x10-0xC0 + 1 shared bank 0xD0 for the smaller composites
 TEXT_MAGIC = 0x54585431             # 'TXT1'
 DC_PUTOBJWORK = 0x67
@@ -150,16 +151,27 @@ def owners(refs):
 
 
 # The END60 / END61 close-ups (Morrigan "Soul fist!!", Marion "Morrigan! You!!") are transparent pictures over the DC
-# engine's backdrop map 0x8C3E5918 (ENDBG speed lines).  On the arcade that map is a BG layer, whose priority against
-# sprites differs between MAME and the real PS5 (on the board it covered the pictures), and the arcade map 0x0ACB78 is
-# different art.  So the backdrop is baked into the transparent pixels of the two pictures instead, and their tasks do
-# not show the BG layer (SHOWBG_OFF).  Placement, from DC Ending Demo captures (a scratch alignment of the picture and
-# the map against the frame): the map pixel under picture-rect pixel (y, x) - the picture turned by np.rot90(.., ROT) -
-# is np.rot90(map, MROT)[y - oy, x - ox].
+# engine's backdrop map 0x8C3E5918 (ENDBG speed lines), shown by the tasks 0x8C3E5D90 / 0x8C3E5E30 as a BG layer: it
+# covers the previous picture, then the close-up slides in over it.  On the arcade a BG layer's priority against sprites
+# differs between MAME and the real PS5 (on the board it covered the pictures) and the arcade map 0x0ACB78 is different
+# art, so the backdrop is a sprite object instead: a synthetic composite (BD_OBJ) with the close-up's window geometry,
+# drawn with the DC ENDBG pixels.  The backdrop tasks are type 0x0400 (no object of their own), so their BG setup
+# (MapSetP .. ShowBg, 28 bytes) becomes SetNewAct 0x0200 of a synthetic task (DeathSyncOn: it ends with the backdrop
+# task, where the DC hides the BG; the close-up tasks' object setup, BD_PRIO; PutObj of the backdrop) + Nops.
+# Placement, from DC Ending
+# Demo captures (a scratch alignment of the picture and the map against the frame): the map pixel under picture-rect
+# pixel (y, x) - the picture turned by np.rot90(.., ROT) - is np.rot90(map, MROT)[y - oy, x - ox].
 BACKDROP_MAP = 0x8C327770                  # sub-map of 0x8C3E5918: u16 0, 16, W, H, then u32 entries (cell << 16)
-BACKDROP = {0x8C38C9B8: (-132, -287), 0x8C38C85C: (-144, -272)}      # composite -> (ox, oy)
+BACKDROP = {0x8C38C9B8: (-132, -287), 0x8C38C85C: (-144, -272)}      # close-up composite -> (ox, oy)
 ROT, MROT = 1, 3
-SHOWBG_OFF = {0x8C3E5DAA, 0x8C3E5E4A}      # ShowBg of the backdrop tasks 0x8C3E5D90 (END60) / 0x8C3E5E30 (END61)
+BD_OBJ = {0x7F000000 | (c & 0xFFFFFF): c for c in BACKDROP}        # synthetic backdrop composite -> its close-up
+BD_TASKS = {0x8C3E5D90: 0x8C38C85C, 0x8C3E5E30: 0x8C38C9B8}          # backdrop task -> close-up
+BD_SETUP = 28                              # MapSetP 14 + BgPriority 4 + BgCfd 4 + BgFullScreenSet 4 + ShowBg 2
+BD_PRIO = 0x0E                             # ObjPriority (higher = on top): over the pictures (0x0C / 0x0D), under
+CLOSEUP_PRIO = 0x0F                        # the close-up, which the DC leaves at 0x0A (0x8C3E623C) since its BG hides
+CLOSEUP_CALLS = {0x8C3F22B8, 0x8C3F320C}   # the rest; masks 0x1E / 0x1F, text 0x7F.  Their Call 623c -> CLOSEUP_PRIO
+OP_RET = 0x06
+OP_SLEEP, OP_SETNEWACT, OP_DEATHSYNC, OP_HARDPRIO, OP_PRIO, OP_MOVEPOS, OP_PUTOBJ = 0x02, 0x20, 0x2C, 0x75, 0x74, 0x44, 0x60
 _bdmap = []
 
 
@@ -181,14 +193,13 @@ def backdrop_map():
 
 
 def part_cells(v, p, cs):
-    """the cells of part p of composite v; the backdrop composites get the DC backdrop in their transparent pixels"""
+    """the cells of part p of composite v; a synthetic backdrop composite (BD_OBJ) is the DC backdrop under its
+    close-up's window"""
     cells = [cs[p['idx'] + j] for j in range(p['W'] * p['H'])]
-    if v not in BACKDROP: return cells
+    if v not in BD_OBJ: return cells
     W, H = p['W'], p['H']
     K = np.zeros((H * 16, W * 16), int)
-    for j, c in enumerate(cells):
-        y, x = divmod(j, W); K[y * 16:y * 16 + 16, x * 16:x * 16 + 16] = np.asarray(c).reshape(16, 16)
-    ox, oy = BACKDROP[v]
+    ox, oy = BACKDROP[BD_OBJ[v]]
     kr = np.rot90(K, ROT); h, w = kr.shape
     bd = np.rot90(backdrop_map(), MROT)[-oy:h - oy, -ox:w - ox]
     assert bd.shape == kr.shape and (bd & 0x8000).all(), hex(v)
@@ -207,16 +218,19 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
     insns, refs = crawl(sorted(only))
     own = owners(refs)
     use = {v: e for v, e in own.items() if e is None or e in only}
+    use.update({b: use[c] for b, c in BD_OBJ.items() if c in use})
     # ---- tiles + palettes ------------------------------------------------------------------------------------
     groups = collections.defaultdict(list)                   # (ending|None, bank) -> [composite]
     for e in sorted({e for e in use.values()}, key=lambda x: (x is None, x)):
-        comps = sorted([v for v, o in use.items() if o == e],
+        comps = sorted([v for v, o in use.items() if o == e and v not in BD_OBJ],
                        key=lambda v: -sum(p['W'] * p['H'] for p in all_parts(v)))
         if e is None:
             groups[(None, COMMON_BANK)] = comps; continue
         big = comps[:MAX_OWN_BANKS]; small = comps[MAX_OWN_BANKS:]
         for i, v in enumerate(big): groups[(e, 0x10 + 0x10 * i)].append(v)
         if small: groups[(e, 0x10 + 0x10 * len(big))] += small
+    for b, c in BD_OBJ.items():                              # the backdrop shares its close-up's bank
+        if b in use: [g.append(b) for g in groups.values() if c in g]
     tiles, tile_of_part, pal_of_group, comp_bank = bytearray(), {}, {}, {}
     part_tiles = {}                                          # content hash -> tnum offset
     for (e, bank), comps in groups.items():
@@ -276,6 +290,17 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
         for (x, y), s in zip(lj, jp):
             B.u16(x); B.u16(y); B.ref(('str', len(strings)))
             strings.append(b''.join(struct.pack('>H', c) for c in jpcodes.encode(s)))
+    # ---- synthetic backdrop tasks (see BACKDROP) -----------------------------------------------------------------
+    bd_task = {}
+    B.align(); closeup_sub = B.here()                        # 0x8C3E623C with the close-up's priority
+    B.u16(OP_DEATHSYNC); B.u16(OP_HARDPRIO); B.u16(0); B.u16(OP_PRIO); B.u16(CLOSEUP_PRIO); B.u16(OP_RET)
+    for t, c in BD_TASKS.items():
+        b = {c: b for b, c in BD_OBJ.items()}[c]
+        if b not in addr: continue
+        B.align(); bd_task[t] = B.here()
+        B.u16(OP_DEATHSYNC); B.u16(OP_MOVEPOS); B.u16(0); B.u32(0); B.u32(0x70)   # MovePosition 0, 0x70 (as the close-ups)
+        B.u16(OP_PUTOBJ); B.u32(addr[b])
+        B.u16(OP_HARDPRIO); B.u16(0); B.u16(OP_PRIO); B.u16(BD_PRIO); B.u16(OP_SLEEP)
     # ---- scripts ----------------------------------------------------------------------------------------------
     MAPx = PM.MAP
     keep = {x: v for x, v in insns.items() if x not in MAPx}
@@ -298,9 +323,16 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
     for x in order:
         ln, op, t = keep[x]
         if op in PM.DC_ONLY and op != DC_PUTOBJWORK: continue
+        if any(0 < x - t < BD_SETUP for t in BD_TASKS): continue              # rest of the replaced BG setup
         assert B.here() == newa[x]
-        if x in SHOWBG_OFF:
-            assert DI.w(x) == 0x0080 and ln == 2; B.u16(0); continue            # ShowBg -> Nop
+        if x in CLOSEUP_CALLS:
+            assert DI.l(x + 2) == 0x8C3E623C and ln == 6; B.u16(DI.w(x)); B.u32(closeup_sub); continue
+        if x in BD_TASKS:                                    # BG setup -> backdrop object (see BACKDROP)
+            assert sum(keep[y][0] for y in keep if x <= y < x + BD_SETUP) == BD_SETUP and DI.w(x + BD_SETUP - 2) == 0x80
+            B.u16(OP_SETNEWACT); B.u16(0x0200); B.u32(bd_task[x])
+            for _ in range((BD_SETUP - 8) // 2): B.u16(0)
+            assert B.here() == newa[x] + BD_SETUP
+            continue
         B.u16(DI.w(x))
         if op in (None, 0): continue
         n = (ln - 2) // 2
@@ -341,7 +373,8 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
         for s in (only if e is None else [e]): pal_sets[s].append((bank, cols))
     meta = {'blob_base': BLOB_BASE, 'blob_size': len(B.data), 'tiles': len(tiles) // 256, 'tnum_base': tnum_base,
             'scripts': {str(s): a for s, a in scripts.items()},
-            'palettes': {str(s): [(b, c) for b, c in v] for s, v in pal_sets.items()}, 'errors': errors}
+            'palettes': {str(s): [(b, c) for b, c in v] for s, v in pal_sets.items()}, 'errors': errors,
+            'objects': {f'{v:08x}': a for v, a in sorted(addr.items())}}
     json.dump(meta, open(out + '/meta.json', 'w'))
     print(f'blob {len(B.data):#x} bytes, tiles {len(tiles) // 256}, errors {len(errors)}')
     for e in errors[:20]: print('  ', e)
@@ -351,15 +384,17 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
 def line_positions(img, addr, nlines, reg='US', fn=None):
     """text line origins (hardware = text printer coordinates, relative to the composite origin) in reading order.
     Text runs along hardware x; lines stack along y with the screen's top at the highest y.  A part of W columns
-    holds W lines: column W-1 is the first.  Blank lines (columns without pixels) are skipped."""
+    holds W lines: column W-1 is the first; row r is the 16-pixel cell at x + 16 r.  Blank lines (columns without
+    pixels) are skipped, and a line starts at its first non-blank cell (the DC bakes indents into the bitmap, e.g. the
+    solo ending's choice 0x8C38C7A8: the two options start 2 cells in, right of the cursor)."""
     cs = dcend.cells(reg, fn) if fn else None
     ls = []
     for p in dcend.parts(img, addr):
         for c in range(p['W']):
-            if cs is not None and not any((cs[p['idx'] + r * p['W'] + c] & 0x8000).any()
-                                          for r in range(p['H']) if p['idx'] + r * p['W'] + c < len(cs)):
-                continue
-            ls.append((-(p['y'] + 16 * c), p['x']))
+            ink = [r for r in range(p['H']) if p['idx'] + r * p['W'] + c < len(cs)
+                   and (cs[p['idx'] + r * p['W'] + c] & 0x8000).any()] if cs is not None else [0]
+            if not ink: continue
+            ls.append((-(p['y'] + 16 * c), p['x'] + 16 * ink[0]))
     ls.sort()
     out = [(x, -ny) for ny, x in ls]
     if len(out) != nlines:

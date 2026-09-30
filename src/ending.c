@@ -16,6 +16,7 @@
 #define PAL_RAM         ((volatile u32 *)0x24040000)
 #define GFX_WIN         0x24060000
 #define VIDREG4         V32(0x2405FFF0)
+#define SEQ_GLOBAL(i)   V32(0x0605CAE0 + 4 * (i))   /* seq VM global work (JumpCompare / CalcWork kind 5) */
 #define PrintJP         FN(s16, 0x06029352, (const void *, int, int))
 #define PrintEN         FN(s16, 0x06029288, (const char *, int, int))
 
@@ -89,6 +90,10 @@ static void load_ending(int slot)
     const struct end_pal *p;
     gfx_copy((void *)END_BLOB_BASE, END_BLOB_GFX, END_BLOB_SIZE);
     gb2_pal_save_ending();                          /* lines 0x10-0x3F, put back after the ending (palette.c) */
+    /* global 0x0E: the DC sets it to 1 at game start and in Stage Select (0x8C03DB48, 0x8C073900); the solo ending's
+     * choice ("The medicine." / "None.") picks its text layout and cursor step from it.  The arcade clears the globals
+     * at game start and never uses 0x0E, so it read 0 here: 32-pixel lines instead of the DC's 16 */
+    SEQ_GLOBAL(0x0E) = 1;
     for (p = end_pals; p->slot >= 0; p++) {
         if (p->slot != slot) continue;
         gfx_copy((void *)p->pal, p->gfx, 256 * 4);

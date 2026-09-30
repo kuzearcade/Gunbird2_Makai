@@ -4,7 +4,7 @@ Demo' (1P Jiki6, 2P NoUse = solo / Jiki0-Jiki4 = the pair endings; Aine + Morrig
 and Japanese.  Pass per run:
   - the ending plays (GameLoop state 3) and finishes (the state leaves 3 again) within the frame budget;
   - no background layer is ever on (video register 0x1C, tilemap 0 enabled): the DC backdrop of the END60 / END61
-    close-ups is baked into those pictures (tools/port_endings.py BACKDROP), since the BG-vs-sprite priority of the
+    close-ups is a sprite object (tools/port_endings.py BACKDROP), since the BG-vs-sprite priority of the
     real PS5 differs from MAME's (on the board the BG layer covered the pictures);
   - a contact sheet (a frame every 30) is written to out/tmp/endings/<run>.png for a visual check.
 usage: check_endings.py [--runs solo,0,1,2,3,4] [--lang en,jp] [--frames 3000] [--jobs N]"""
