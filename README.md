@@ -195,16 +195,22 @@ depend on the compiler.
 | `sound.u9` | 4194304 | `610aad01` | `82b153b1edb2a164e75601fc240eee80a54a1d5d` |
 | `eeprom-gunbird2.bin` | 256 | `7ac38846` | `c5f4b05a94211f3c96b8c472adbe634f2e77d753` |
 
-**MiSTer:** copy `out/roms/gunbird2m.zip` to the MiSTer's `games/mame/` folder and
-`mra/_alternatives/_Gunbird 2/Gunbird 2 Makai (Morrigan Backport).mra` into `_Arcade/_alternatives/_Gunbird 2/` (the
-`PsikyoSH2` core's folder for the Gunbird 2 alternatives).  The core's PS5 memory map has 60 MB
-for graphics (the sound ROM follows at 0x3C00000), so the MRA loads only the first 6 MB of each bank-3 chip; the rest
-is empty (the build's MRA step checks this).  Not yet tested on a MiSTer.
-
 Banks 0-2 and the EEPROM image are the original files, unchanged. `build.py` also writes these values to
 `out/roms/gunbird2m.crc.json`, and the `gunbird2m` entry in `tools/mame/gunbird2m_driver.patch` carries the same
 checksums, so `mame -verifyroms gunbird2m -rompath out/roms` reports the set as good. After a change that alters the
 ROMs, run step 6 to update the driver entry (and these tables).
+
+**MiSTer:** copy `out/roms/gunbird2m.zip` to the MiSTer's `games/mame/` folder and
+`mra/_alternatives/_Gunbird 2/Gunbird 2 Makai (Morrigan Backport).mra` into `_Arcade/_alternatives/_Gunbird 2/` (the
+`PsikyoSH2` core's folder for the Gunbird 2 alternatives).  The core's PS5 memory map has 60 MB
+for graphics (the sound ROM follows at 0x3C00000), so the MRA loads only the first 6 MB of each bank-3 chip; the rest
+is empty (the build's MRA step checks this).
+
+**Tested and working on a MiSTer** (2026-09-30, core `PsikyoSH2_20260817.rbf`), despite the 60 MB graphics limit:
+the set boots, Morrigan unlocks with her maintenance code, all six of her endings play correctly from Stage Select
+(their graphics are the highest data in the ROM, so they are the ones that would break), and she plays normally.
+High scores work too: with the core's "Autosave NVRAM" option on, a score as Morrigan is saved and shows with her
+icon on the ranking after the core is reloaded, and the Morrigan unlock is kept.
 
 ## Repository layout
 
