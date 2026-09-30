@@ -29,8 +29,8 @@
 		</interleave>
 		<!-- bank 3: 2 x 64M EPROMs; the core's gfx space ends at 0x3C00000, the first 0x600000 bytes of each are used -->
 		<interleave output="64">
-			<part crc="ce92163f" name="3l.u6" map="125600" length="0x600000" />
-			<part crc="e905b54d" name="3h.u13" map="1256" length="0x600000" />
+			<part crc="c5284f2a" name="3l.u6" map="125600" length="0x600000" />
+			<part crc="2bdd50ac" name="3h.u13" map="1256" length="0x600000" />
 		</interleave>
 		<interleave output="64">
 			<part crc="0e6b24f5" name="sound.u9" map="12345678" />
@@ -38,12 +38,12 @@
 
 		<part repeat="0x800000">00</part>
 		<interleave output="64">
-			<part crc="c6dae7c4" name="2_prog_l.u16" map="2165" />
-			<part crc="00338a5f" name="1_prog_h.u17" map="216500" />
+			<part crc="91d960c4" name="2_prog_l.u16" map="2165" />
+			<part crc="b5e9396a" name="1_prog_h.u17" map="216500" />
 		</interleave>
 		<part repeat="0x100000">00</part>
 		<interleave output="64">
-			<part crc="e27d2f07" name="3_pdata.u1" map="21436587" />
+			<part crc="f54fe66d" name="3_pdata.u1" map="21436587" />
 		</interleave>
 		<part repeat="0x180000">00</part>
 		<interleave output="64">

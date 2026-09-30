@@ -177,6 +177,18 @@ OP_SLEEP, OP_SETNEWACT, OP_DEATHSYNC, OP_HARDPRIO, OP_PRIO, OP_MOVEPOS, OP_PUTOB
 # the board the plate stayed solid through its fade), so src/ending.c replaces a partly transparent plate by tinting
 # the ending's palette banks toward white by the same amount.
 WHITE_PLATE = 0x8C38A3D8
+# picture cross-fades: the ending engine fades a new picture in over the old one with sprite alpha (w0C task, shade
+# slot 2, w0F from 0x3F to 0), which the PS5 does not do for 8bpp sprites (see the white plate above) - on the board
+# the new picture would just cut in.  The two long ones (60 and 118 frames; the others take 9 frames, a cut is fine)
+# get DISSOLVE_STEPS - 1 pre-blended pictures sharing one 191-colour palette in a free bank of that ending; src/ending.c
+# draws the one matching the current alpha instead of the new picture.  (slot, old, new, part of new over old);
+# Hei-Cob's pictures are 2-frame animations switched in step by the script (old frame i under new frame i), one pair
+# per frame.  The pairs of an ending share the palette.
+DISSOLVES = [(21, 0x8C38CC4C, 0x8C38CC58, 0),          # Jiki6 + Jiki3: "No, mother, I didn't..." -> the night town
+             (24, 0x8C38CD30, 0x8C38CD48, 0),          # Jiki6 + Jiki4: Hei-Cob before -> after, frame 1
+             (24, 0x8C38CD3C, 0x8C38CD54, 0)]          #   frame 2
+DISSOLVE_STEPS = 16
+
 _bdmap = []
 
 
@@ -264,6 +276,43 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
                 if k not in part_tiles:
                     part_tiles[k] = len(tiles) // 256; tiles += t
                 tile_of_part[(v, p['idx'], e)] = part_tiles[k]
+    # ---- pre-blended cross-fade pictures (see DISSOLVES) ----------------------------------------------------------
+    rgb = lambda cl: np.stack([(np.asarray(c) >> s) & 31 for c in cl for s in (10, 5, 0)]).reshape(len(cl), 3, 16, 16).astype(float)
+    dis_tiles, dis_bank = {}, {}                             # pair index -> [tile offset per step]; slot -> bank
+    for e in sorted({d[0] for d in DISSOLVES} & only):
+        pairs = [i for i, d in enumerate(DISSOLVES) if d[0] == e]
+        bank = dis_bank[e] = 0x10 + max(b for (ee, b) in groups if ee == e)
+        assert bank < COMMON_BANK, f'no free palette bank for the cross-fades of ending {e}'
+        cs = dcend.cells('US', FILES[e])
+        steps = {}
+        for i in pairs:
+            _, va, vb, bp = DISSOLVES[i]
+            assert use.get(va) == e and use.get(vb) == e, (hex(va), hex(vb))
+            pa, = dcend.parts(DI, va)
+            pb = dcend.parts(DI, vb)[bp]
+            assert (pa['W'], pa['H']) == (pb['W'], pb['H'])
+            ca, cb = part_cells(va, pa, cs), part_cells(vb, pb, cs)
+            assert all(((np.asarray(c) & 0x8000) != 0).all() for c in ca + cb), 'cross-fade pictures must be opaque'
+            A, Bc = rgb(ca), rgb(cb)
+            for k in range(1, DISSOLVE_STEPS):
+                m = np.rint(A + (Bc - A) * (k / DISSOLVE_STEPS)).astype(int)
+                steps[(i, k)] = [0x8000 | (m[j, 0] << 10) | (m[j, 1] << 5) | m[j, 2] for j in range(len(ca))]
+        counts = {}
+        for cl in steps.values():
+            for c in cl:
+                u, n = np.unique(c & 0x7FFF, return_counts=True)
+                for a, b in zip(u.tolist(), n.tolist()): counts[a] = counts.get(a, 0) + b
+        rep = quantize(counts, 191)
+        reps = sorted(set(rep.values()), key=lambda r: -sum(counts[c] for c in rep if rep[c] == r))
+        pen = {r: 1 + j for j, r in enumerate(reps)}
+        pal = {c: pen[rep[c]] for c in rep}
+        cols = [0] * 256
+        for r, q in pen.items(): cols[q] = int(gfxconv.rgb888(int(r)))
+        pal_of_group[(e, bank)] = cols
+        for i in pairs:
+            dis_tiles[i] = []
+            for k in range(1, DISSOLVE_STEPS):
+                dis_tiles[i].append(len(tiles) // 256); tiles += gfxconv.cells_to_tiles(steps[(i, k)], pal)
     open(out + '/tiles.bin', 'wb').write(tiles)
     # ---- blob: objdt composites -------------------------------------------------------------------------------
     B = Blob(BLOB_BASE); addr = {}
@@ -273,6 +322,16 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
             w = p['raw']; t = tnum_base + tile_of_part[(v, p['idx'], e)]
             B.u16(w[0]); B.u16(w[1]); B.u16(w[2]); B.u16(w[3])
             B.u16((comp_bank[v] << 8) | 0x80 | ((t >> 16) & 7)); B.u16(t & 0xFFFF)
+    dissolves = []                                           # (slot, new picture, first step, stride)
+    for i, tts in sorted(dis_tiles.items()):
+        e, va, vb, bp = DISSOLVES[i]
+        B.align(); first = B.here(); ps = dcend.parts(DI, vb)
+        for tt in tts:
+            for j, p in enumerate(ps):
+                w = p['raw']; B.u16(w[0]); B.u16(w[1]); B.u16(w[2]); B.u16(w[3])
+                bank, tn = (dis_bank[e], tnum_base + tt) if j == bp else (comp_bank[vb], tnum_base + tile_of_part[(vb, p['idx'], e)])
+                B.u16((bank << 8) | 0x80 | ((tn >> 16) & 7)); B.u16(tn & 0xFFFF)
+        dissolves.append((e, addr[vb], first, 12 * len(ps)))
     # ---- text descriptors -------------------------------------------------------------------------------------
     txt = json.load(open(ROOT + '/out/stagedemo/ending_text.json'))
     pairs = json.load(open(ROOT + '/re/end_text_pairs.json'))
@@ -379,7 +438,7 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
     meta = {'blob_base': BLOB_BASE, 'blob_size': len(B.data), 'tiles': len(tiles) // 256, 'tnum_base': tnum_base,
             'scripts': {str(s): a for s, a in scripts.items()},
             'palettes': {str(s): [(b, c) for b, c in v] for s, v in pal_sets.items()}, 'errors': errors,
-            'objects': {f'{v:08x}': a for v, a in sorted(addr.items())}}
+            'objects': {f'{v:08x}': a for v, a in sorted(addr.items())}, 'dissolves': dissolves}
     json.dump(meta, open(out + '/meta.json', 'w'))
     print(f'blob {len(B.data):#x} bytes, tiles {len(tiles) // 256}, errors {len(errors)}')
     for e in errors[:20]: print('  ', e)
@@ -467,11 +526,15 @@ def generate(only):
          f'#define TXT_X(hx, hy) ((hx) + ({TXT_DX}))', f'#define TXT_Y(hx, hy) ((hy) + ({TXT_DY}))',
          '#define TEXT_TYPE_ATTR(s) (VU8(0x06040074 + (s) * 0x24) = 2)',
          'struct end_pal { s16 slot; s16 bank; u32 gfx; u32 pal; };   /* pal: palette RAM address of the bank */',
+         f'#define END_DISSOLVE_STEPS {DISSOLVE_STEPS}',
+         'struct end_dissolve { s32 slot; u32 pic; u32 first; u32 stride; };   /* src/ending.c cross-fades */',
+         'extern const struct end_dissolve end_dissolves[];',
          'extern const struct end_pal end_pals[]; extern const s16 end_slots[];',
          'extern const void *const gb2_end_table[27];', '#endif']
     c = ['/* generated by tools/port_endings.py - do not edit */', '#include "arcade.h"', '#include "gen_endings.h"',
          'const struct end_pal end_pals[] = {' + ', '.join(f'{{{s}, 0x{b:02X}, 0x{g:08X}, 0x{0x24040000 + b * 64:08X}}}' for s, b, g in pals) + ', {-1, 0, 0, 0}};',
          'const s16 end_slots[] = {' + ', '.join(str(s) for s in sorted(only)) + '};',
+         'const struct end_dissolve end_dissolves[] = {' + ''.join(f'{{{s}, 0x{p:08X}, 0x{f:08X}, {n}}}, ' for s, p, f, n in meta['dissolves']) + '{-1, 0, 0, 0}};',
          'const void *const gb2_end_table[27] = {' + ', '.join(f'(const void *){x}' for x in slots) + '};']
     open(ROOT + '/src/gen_endings.h', 'w').write('\n'.join(h) + '\n')
     open(ROOT + '/src/gen_endings.c', 'w').write('\n'.join(c) + '\n')

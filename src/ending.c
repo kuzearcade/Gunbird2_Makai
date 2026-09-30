@@ -110,6 +110,27 @@ int gb2_end_frame(void)
     return r;
 }
 
+/* ---- picture cross-fades ----------------------------------------------------------------------------------------
+ * The picture task w0C fades a new picture in over the old one (shade slot, w0F 0x3F -> 0), which the PS5 cannot do
+ * with 8bpp sprites.  For the long ones (end_dissolves, tools/port_endings.py DISSOLVES) the build pre-blends
+ * END_DISSOLVE_STEPS - 1 pictures; the one for the current alpha is drawn opaque instead of the new picture (its
+ * own palette bank, loaded with the ending: no palette change during the fade).  The shade register is set opaque
+ * too, so MAME shows the same as the board.  Returns the composite to draw, or 0 while nothing of the new picture
+ * shows yet. */
+static s32 dissolve(s32 t, s32 obj)
+{
+    const struct end_dissolve *d;
+    int o = V16(t + 0x48), slot = OBJ_SHADE(o), v, k;
+    if (!slot) return obj;
+    for (d = end_dissolves; d->slot >= 0; d++) if (d->slot == cur_slot && d->pic == (u32)obj) break;
+    if (d->slot < 0) return obj;
+    v = WORK(t, 0x0F) & 0x3F;
+    k = (((0x3F - v) * END_DISSOLVE_STEPS + 0x1F) * 0x410) >> 16;     /* round(opacity * steps); SH-2: no divide */
+    VU8(0x2405FFE0 + slot) = 0;
+    if (k >= END_DISSOLVE_STEPS) return obj;
+    return k <= 0 ? 0 : (s32)(d->first + (k - 1) * d->stride);
+}
+
 void gb2_seq_putobjwork(void)
 {
     s32 t = TASK, ctx = V32(t + 0x20);
@@ -122,6 +143,7 @@ void gb2_seq_putobjwork(void)
     V32(t + 0x3C) = obj;
     x = (s16)WORK(t, rx); y = (s16)WORK(t, ry);
     if (white_fade(t, obj)) return;
+    if (obj && V32(obj) != TEXT_MAGIC && !(obj = dissolve(t, obj))) { ObjHide(V16(t + 0x48)); return; }
     if (obj && V32(obj) == TEXT_MAGIC) {
         text_show((const struct text_desc *)obj, x, y);
         ObjHide(V16(t + 0x48));

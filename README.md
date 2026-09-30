@@ -150,9 +150,9 @@ gunbird2` reports it good). The zip's own checksum depends on how it was packed,
 
 | File | Size | CRC32 | SHA-1 |
 |---|---:|---|---|
-| `1_prog_h.u17` | 524288 | `00338a5f` | `1a3ed68aac60d58d67036ac186e4dce830bdcaa0` |
-| `2_prog_l.u16` | 524288 | `c6dae7c4` | `a194f280b4bcfe3eb7708e1ca557af79dc7e4282` |
-| `3_pdata.u1` | 524288 | `e27d2f07` | `c7bfed37c62977063466a331f416d68b34355ebc` |
+| `1_prog_h.u17` | 524288 | `b5e9396a` | `12fc09b6a580ed073a9b7551ce8f0aa80c3cab80` |
+| `2_prog_l.u16` | 524288 | `91d960c4` | `ca38dd8fd24d7464e3f1be188b9c750fe36d5451` |
+| `3_pdata.u1` | 524288 | `f54fe66d` | `765cbdb3892c496a79f7dd150bc0c8a4ac3bbb15` |
 | `0l.u3` | 8388608 | `5c826bc8` | `74fb6b242b4c5fe5365cfcc3029ed6da4cf3a621` |
 | `0h.u10` | 8388608 | `3df0cb6c` | `271d276fa0f63d84e458223316a9517865fc2255` |
 | `1l.u4` | 8388608 | `1558358d` | `e3b9c3da4e9b29ffa9568b57d14fe2b600aead68` |
@@ -185,17 +185,17 @@ depend on the compiler.
 
 | File | Size | CRC32 | SHA-1 |
 |---|---:|---|---|
-| `1_prog_h.u17` | 524288 | `00338a5f` | `1a3ed68aac60d58d67036ac186e4dce830bdcaa0` |
-| `2_prog_l.u16` | 524288 | `c6dae7c4` | `a194f280b4bcfe3eb7708e1ca557af79dc7e4282` |
-| `3_pdata.u1` | 524288 | `e27d2f07` | `c7bfed37c62977063466a331f416d68b34355ebc` |
+| `1_prog_h.u17` | 524288 | `b5e9396a` | `12fc09b6a580ed073a9b7551ce8f0aa80c3cab80` |
+| `2_prog_l.u16` | 524288 | `91d960c4` | `ca38dd8fd24d7464e3f1be188b9c750fe36d5451` |
+| `3_pdata.u1` | 524288 | `f54fe66d` | `765cbdb3892c496a79f7dd150bc0c8a4ac3bbb15` |
 | `0l.u3` | 8388608 | `5c826bc8` | `74fb6b242b4c5fe5365cfcc3029ed6da4cf3a621` |
 | `0h.u10` | 8388608 | `3df0cb6c` | `271d276fa0f63d84e458223316a9517865fc2255` |
 | `1l.u4` | 8388608 | `1558358d` | `e3b9c3da4e9b29ffa9568b57d14fe2b600aead68` |
 | `1h.u11` | 8388608 | `4ee0103b` | `29bbe0162dda39919fcd188ea4a6b7b5f20366ff` |
 | `2l.u5` | 8388608 | `e1c7a7b8` | `b5f6e5d53e21928197773df7dde0e7c83f4082af` |
 | `2h.u12` | 8388608 | `bc8a41df` | `90460b11eea778f17cf8be67430e2ab149680686` |
-| `3l.u6` | 8388608 | `ce92163f` | `5cd8dca37f694e722f96bf8ecfcbca1a6ecfde43` |
-| `3h.u13` | 8388608 | `e905b54d` | `39121e59b1558c86077e82334ecec5f0b1f739a4` |
+| `3l.u6` | 8388608 | `c5284f2a` | `8ae6aa0345b32488f53cdc74aa731d9e9a2a7eb9` |
+| `3h.u13` | 8388608 | `2bdd50ac` | `6fb26c0983a140d429823944208fd64a2426b9fa` |
 | `sound.u9` | 4194304 | `0e6b24f5` | `b3f0741564ac1d5b2b47ffe47241476bcb1a1021` |
 | `eeprom-gunbird2.bin` | 256 | `7ac38846` | `c5f4b05a94211f3c96b8c472adbe634f2e77d753` |
 

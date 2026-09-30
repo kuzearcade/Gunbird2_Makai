@@ -11,7 +11,7 @@ index f6b031f4526..bf3d80fc9aa 100644
  s1945ii
  s1945iii
 diff --git a/src/mame/psikyo/psikyosh.cpp b/src/mame/psikyo/psikyosh.cpp
-index 55fca667f07..0d3e29938eb 100644
+index 55fca667f07..88e9f43e698 100644
 --- a/src/mame/psikyo/psikyosh.cpp
 +++ b/src/mame/psikyo/psikyosh.cpp
 @@ -1122,6 +1122,34 @@ ROM_START( gunbird2a ) /* Internal date string shows Oct 08 17:02 - No specific
@@ -24,9 +24,9 @@ index 55fca667f07..0d3e29938eb 100644
 +*/
 +ROM_START( gunbird2m )
 +	ROM_REGION( 0x180000, "maincpu", 0 )
-+	ROM_LOAD32_WORD_SWAP( "2_prog_l.u16", 0x000002, 0x080000, CRC(c6dae7c4) SHA1(a194f280b4bcfe3eb7708e1ca557af79dc7e4282) )
-+	ROM_LOAD32_WORD_SWAP( "1_prog_h.u17", 0x000000, 0x080000, CRC(00338a5f) SHA1(1a3ed68aac60d58d67036ac186e4dce830bdcaa0) )
-+	ROM_LOAD16_WORD_SWAP( "3_pdata.u1",   0x100000, 0x080000, CRC(e27d2f07) SHA1(c7bfed37c62977063466a331f416d68b34355ebc) )
++	ROM_LOAD32_WORD_SWAP( "2_prog_l.u16", 0x000002, 0x080000, CRC(91d960c4) SHA1(ca38dd8fd24d7464e3f1be188b9c750fe36d5451) )
++	ROM_LOAD32_WORD_SWAP( "1_prog_h.u17", 0x000000, 0x080000, CRC(b5e9396a) SHA1(12fc09b6a580ed073a9b7551ce8f0aa80c3cab80) )
++	ROM_LOAD16_WORD_SWAP( "3_pdata.u1",   0x100000, 0x080000, CRC(f54fe66d) SHA1(765cbdb3892c496a79f7dd150bc0c8a4ac3bbb15) )
 +
 +	ROM_REGION( 0x4000000, "gfx", 0 )
 +	ROM_LOAD32_WORD( "0l.u3",  0x0000000, 0x800000, CRC(5c826bc8) SHA1(74fb6b242b4c5fe5365cfcc3029ed6da4cf3a621) )
@@ -35,8 +35,8 @@ index 55fca667f07..0d3e29938eb 100644
 +	ROM_LOAD32_WORD( "1h.u11", 0x1000002, 0x800000, CRC(4ee0103b) SHA1(29bbe0162dda39919fcd188ea4a6b7b5f20366ff) )
 +	ROM_LOAD32_WORD( "2l.u5",  0x2000000, 0x800000, CRC(e1c7a7b8) SHA1(b5f6e5d53e21928197773df7dde0e7c83f4082af) )
 +	ROM_LOAD32_WORD( "2h.u12", 0x2000002, 0x800000, CRC(bc8a41df) SHA1(90460b11eea778f17cf8be67430e2ab149680686) )
-+	ROM_LOAD32_WORD( "3l.u6",    0x3000000, 0x800000, CRC(ce92163f) SHA1(5cd8dca37f694e722f96bf8ecfcbca1a6ecfde43) )
-+	ROM_LOAD32_WORD( "3h.u13",   0x3000002, 0x800000, CRC(e905b54d) SHA1(39121e59b1558c86077e82334ecec5f0b1f739a4) )
++	ROM_LOAD32_WORD( "3l.u6",    0x3000000, 0x800000, CRC(c5284f2a) SHA1(8ae6aa0345b32488f53cdc74aa731d9e9a2a7eb9) )
++	ROM_LOAD32_WORD( "3h.u13",   0x3000002, 0x800000, CRC(2bdd50ac) SHA1(6fb26c0983a140d429823944208fd64a2426b9fa) )
 +
 +	ROM_REGION( 0x400000, "ymf", 0 ) /* Samples */
 +	ROM_LOAD( "sound.u9", 0x000000, 0x400000, CRC(0e6b24f5) SHA1(b3f0741564ac1d5b2b47ffe47241476bcb1a1021) )
