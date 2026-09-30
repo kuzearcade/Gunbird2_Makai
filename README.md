@@ -150,8 +150,8 @@ gunbird2` reports it good). The zip's own checksum depends on how it was packed,
 
 | File | Size | CRC32 | SHA-1 |
 |---|---:|---|---|
-| `1_prog_h.u17` | 524288 | `cf3b0c4a` | `f00a3fa952b15bdb5f9396c559382ed3c0073668` |
-| `2_prog_l.u16` | 524288 | `9d0b4dc4` | `a08f9cf618c7061d3fda86d52e69738d9fc8affc` |
+| `1_prog_h.u17` | 524288 | `00338a5f` | `1a3ed68aac60d58d67036ac186e4dce830bdcaa0` |
+| `2_prog_l.u16` | 524288 | `c6dae7c4` | `a194f280b4bcfe3eb7708e1ca557af79dc7e4282` |
 | `3_pdata.u1` | 524288 | `e27d2f07` | `c7bfed37c62977063466a331f416d68b34355ebc` |
 | `0l.u3` | 8388608 | `5c826bc8` | `74fb6b242b4c5fe5365cfcc3029ed6da4cf3a621` |
 | `0h.u10` | 8388608 | `3df0cb6c` | `271d276fa0f63d84e458223316a9517865fc2255` |
@@ -185,8 +185,8 @@ depend on the compiler.
 
 | File | Size | CRC32 | SHA-1 |
 |---|---:|---|---|
-| `1_prog_h.u17` | 524288 | `cf3b0c4a` | `f00a3fa952b15bdb5f9396c559382ed3c0073668` |
-| `2_prog_l.u16` | 524288 | `9d0b4dc4` | `a08f9cf618c7061d3fda86d52e69738d9fc8affc` |
+| `1_prog_h.u17` | 524288 | `00338a5f` | `1a3ed68aac60d58d67036ac186e4dce830bdcaa0` |
+| `2_prog_l.u16` | 524288 | `c6dae7c4` | `a194f280b4bcfe3eb7708e1ca557af79dc7e4282` |
 | `3_pdata.u1` | 524288 | `e27d2f07` | `c7bfed37c62977063466a331f416d68b34355ebc` |
 | `0l.u3` | 8388608 | `5c826bc8` | `74fb6b242b4c5fe5365cfcc3029ed6da4cf3a621` |
 | `0h.u10` | 8388608 | `3df0cb6c` | `271d276fa0f63d84e458223316a9517865fc2255` |

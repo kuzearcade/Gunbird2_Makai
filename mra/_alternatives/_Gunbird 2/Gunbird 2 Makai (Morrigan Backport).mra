@@ -38,8 +38,8 @@
 
 		<part repeat="0x800000">00</part>
 		<interleave output="64">
-			<part crc="9d0b4dc4" name="2_prog_l.u16" map="2165" />
-			<part crc="cf3b0c4a" name="1_prog_h.u17" map="216500" />
+			<part crc="c6dae7c4" name="2_prog_l.u16" map="2165" />
+			<part crc="00338a5f" name="1_prog_h.u17" map="216500" />
 		</interleave>
 		<part repeat="0x100000">00</part>
 		<interleave output="64">

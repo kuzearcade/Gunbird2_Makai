@@ -49,31 +49,35 @@ static void text_show(const struct text_desc *d, int ox, int oy)
  * (the stock game only ever blends 4bpp ones; on the board the plate stayed solid for its whole fade-out), so while the
  * plate is partly transparent it is hidden and the ending's palette banks are tinted toward white by the plate's
  * opacity instead - the same picture, as the plate is plain white over opaque pictures.  Bank 0xE0 (common composites:
- * the letterbox masks, the plate itself) is left alone. */
+ * the letterbox masks, the plate itself) is left alone.
+ * Board findings (PCB video 2026-09-30, reproduced in MAME frame by frame): the sprite list is shown a frame after it
+ * is built, palette writes at once.  Restoring the colours when the plate turned opaque showed the old picture in full
+ * colour for one frame (the list on screen still had the plate hidden), so under an opaque plate the tint is undone
+ * two frames later by gb2_end_frame (G_Ending's per-frame call), once the plate is surely on screen.  Reading the
+ * original colours back through the gfx ROM-test window every frame made random pixels shimmer on the board (the
+ * window shares the gfx ROM with the sprite engine), so load_ending keeps a RAM copy (END_PAL_CACHE, after the blob). */
 #define OBJ_SHADE(o)    ((VU8(0x06040079 + (o) * 0x24) >> 4) & 7)   /* alpha slot set by ChangeShadeObj */
+#define PAL_CACHE       ((const u32 *)END_PAL_CACHE)
 static int cur_slot;                            /* the loaded ending slot (0 = none: no ending uses slot 0) */
 static u32 tint_amt;
 static s32 tint_task;
+static int tint_hold;                           /* frames until the tint under an opaque plate is undone */
 
-/* a: 0 = the ending's colours .. 252 = (nearly) white.  The original colours are read back from the gfx ROM (no RAM
- * left for a copy), a 1 KB bank at a time through the ROM-test window. */
+/* a: 0 = the ending's colours .. 252 = (nearly) white, from the RAM copy of the loaded ending's tinted banks */
 static void pal_tint(u32 a)
 {
     const struct end_pal *p;
-    u32 save = VIDREG4, i;
+    const u32 *s = PAL_CACHE;
+    u32 i;
     for (p = end_pals; p->slot >= 0; p++) {
         volatile u32 *d = (volatile u32 *)p->pal;
         if (p->slot != cur_slot || p->bank >= 0xE0) continue;
         for (i = 0; i < 256; i++) {
-            u32 off = p->gfx + i * 4, c, r, g, b;
-            VIDREG4 = (save & ~0xFFF) | (off >> 17);
-            c = V32(GFX_WIN + (off & 0x1FFFF));
-            r = c >> 24; g = (c >> 16) & 0xFF; b = (c >> 8) & 0xFF;
+            u32 c = *s++, r = c >> 24, g = (c >> 16) & 0xFF, b = (c >> 8) & 0xFF;
             r += ((255 - r) * a) >> 8; g += ((255 - g) * a) >> 8; b += ((255 - b) * a) >> 8;   /* SH-2: no shld */
             d[i] = (r << 24) | (g << 16) | (b << 8) | (c & 0xFF);
         }
     }
-    VIDREG4 = save;
 }
 
 /* returns 1 when the plate is drawn as a palette tint this frame (the object stays hidden) */
@@ -86,11 +90,24 @@ static int white_fade(s32 t, s32 obj)
     if (obj == END_WHITE_PLATE && v) {
         a = (0x3F - v) << 2;                    /* opacity 0..252 (alpha table: 0 opaque .. 0x3F transparent) */
         if (t != tint_task || a != tint_amt) { pal_tint(a); tint_amt = a; tint_task = t; }
+        tint_hold = 0;
         ObjHide(V16(t + 0x48));
         return 1;
     }
-    if (t == tint_task) { pal_tint(0); tint_task = 0; tint_amt = 0; }
+    if (obj == END_WHITE_PLATE) {               /* opaque plate: drawn; the tint goes once it is on screen */
+        if (tint_task && !tint_hold) tint_hold = 2; /* armed once: some tasks re-put the plate every frame */
+        return 0;
+    }
+    if (t == tint_task) { pal_tint(0); tint_task = 0; tint_amt = 0; tint_hold = 0; }
     return 0;
+}
+
+/* G_Ending's frame call (its WaitFrame literal 0x0601FB24 points here, src/patches.txt) */
+int gb2_end_frame(void)
+{
+    int r = WaitFrameR();
+    if (tint_hold && --tint_hold == 0) { pal_tint(0); tint_task = 0; tint_amt = 0; }
+    return r;
 }
 
 void gb2_seq_putobjwork(void)
@@ -148,10 +165,14 @@ static void load_ending(int slot)
      * choice ("The medicine." / "None.") picks its text layout and cursor step from it.  The arcade clears the globals
      * at game start and never uses 0x0E, so it read 0 here: 32-pixel lines instead of the DC's 16 */
     SEQ_GLOBAL(0x0E) = 1;
-    cur_slot = slot; tint_task = 0; tint_amt = 0;
-    for (p = end_pals; p->slot >= 0; p++) {
-        if (p->slot != slot) continue;
-        gfx_copy((void *)p->pal, p->gfx, 256 * 4);
+    cur_slot = slot; tint_task = 0; tint_amt = 0; tint_hold = 0;
+    {
+        u32 *c = (u32 *)END_PAL_CACHE;
+        for (p = end_pals; p->slot >= 0; p++) {
+            if (p->slot != slot) continue;
+            gfx_copy((void *)p->pal, p->gfx, 256 * 4);
+            if (p->bank < 0xE0) { gfx_copy(c, p->gfx, 256 * 4); c += 256; }   /* pal_tint's originals */
+        }
     }
 }
 
