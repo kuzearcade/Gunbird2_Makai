@@ -179,9 +179,9 @@ depend on the compiler.
 
 | File | Size | CRC32 | SHA-1 |
 |---|---:|---|---|
-| `1_prog_h.u17` | 524288 | `c26d305c` | `1d90824ba64c6411caa353a847fc4c7c4be169cd` |
-| `2_prog_l.u16` | 524288 | `08253864` | `5020056133b7b7cb289c4f3dbce792349d0cf5d7` |
-| `3_pdata.u1` | 524288 | `7458b638` | `4cec865729f1be31a493656a79113a4b8e7b6139` |
+| `1_prog_h.u17` | 524288 | `7cf6f940` | `e8ce604ef04b356743603faef9cfa51675b4b13c` |
+| `2_prog_l.u16` | 524288 | `6157ed9b` | `cd29f233c408ef2eddf0a2130554b18020fdcf99` |
+| `3_pdata.u1` | 524288 | `baa2a0a1` | `521f0540e4a5b221662f52c5dd65ecc013dc21f4` |
 | `0l.u3` | 8388608 | `5c826bc8` | `74fb6b242b4c5fe5365cfcc3029ed6da4cf3a621` |
 | `0h.u10` | 8388608 | `3df0cb6c` | `271d276fa0f63d84e458223316a9517865fc2255` |
 | `1l.u4` | 8388608 | `1558358d` | `e3b9c3da4e9b29ffa9568b57d14fe2b600aead68` |
@@ -190,7 +190,7 @@ depend on the compiler.
 | `2h.u12` | 8388608 | `bc8a41df` | `90460b11eea778f17cf8be67430e2ab149680686` |
 | `3l.u6` | 8388608 | `ce92163f` | `5cd8dca37f694e722f96bf8ecfcbca1a6ecfde43` |
 | `3h.u13` | 8388608 | `e905b54d` | `39121e59b1558c86077e82334ecec5f0b1f739a4` |
-| `sound.u9` | 4194304 | `ba917b65` | `b5128356b99ef7b8da3e85b1e52631ae95ace0f5` |
+| `sound.u9` | 4194304 | `610aad01` | `82b153b1edb2a164e75601fc240eee80a54a1d5d` |
 | `eeprom-gunbird2.bin` | 256 | `7ac38846` | `c5f4b05a94211f3c96b8c472adbe634f2e77d753` |
 
 Banks 0-2 and the EEPROM image are the original files, unchanged. `build.py` also writes these values to
@@ -236,6 +236,7 @@ select-screen inputs (about 2 minutes).
 | `tools/mame/regress_game.py out/tmp/eeprom_regress.bin --one --two` | Whole games from coin to attract mode, for all 6 original characters and all 30 two-player pairings. Screen hashes every 4 frames must match. Select inputs come from `tools/mame/select_paths.py`. |
 | `tools/mame/regress_select.py <eeprom>` | Select screen and the first seconds of play, pixel for pixel |
 | `tools/mame/regress_sound.py <eeprom> --set gunbird2m` | Sound-chip register writes for all 6 characters, including bombs, charges and continues |
+| `tools/mame/check_sound.py` | Morrigan's 20 sounds: each game situation that plays them (bomb, charged shot levels 1-3, button 3, select, death, continue), whole games with no other character's sounds for her, and each sound's recording against the Dreamcast sample |
 | `tools/mame/check_stagedemo.py regress\|morrigan <eeprom>` | Original stage demos unchanged; contact sheets of all Morrigan scenes |
 | `tools/trace_compare.py` | Morrigan vs the Dreamcast: speed, hitboxes, per-hit damage, time to kill |
 | `tools/mame/check_endings.py` | All six Morrigan endings (Stage Select, Ending Demo) in English and Japanese: each plays to its end with no background layer on (the close-up backdrops are sprite objects), contact sheets for a visual check |

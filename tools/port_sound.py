@@ -4,8 +4,10 @@
 Space: the waves listed in re/sound_audit.json (tools/sound_audit.py: never played, dropped by the DC port) are
 removed and the remaining sample data is compacted (headers keep their wave numbers; only start addresses move;
 removed waves point at a short silence).  Morrigan's samples (DC P6_O.OSB #62-#77 and MAIN_O.OSB #152, AICA ADPCM
-22050 Hz) are decoded, scaled to the arcade's 8-bit level (DC/64, measured on the samples both versions share) and
-appended as new waves 0xDA+ (note 0x3F = 22171 Hz on the PS5 clock, see docs/NOTES.md "Sound").
+22050 Hz) are decoded, scaled to the arcade's 8-bit level (DC/64, measured on the samples both versions share; a
+sample whose peak would clip at that scale - her voices, recorded hotter on the DC - is scaled down to fit and its SE
+volume raised by the same amount) and appended as new waves 0xDA+ (note 0x3F = 22171 Hz on the PS5 clock, see
+docs/NOTES.md "Sound").
 
 IDs: the DC gives Morrigan IDs 0x150-0x162 (arcade IDs with other samples) and her own 0x84 (shared with Marion on the
 DC via per-player banks); they become free arcade IDs 0x16A+ (SE table ROM 0x40300 + 6*id: wave, volume, 0, group,
@@ -24,6 +26,7 @@ ENV = bytes.fromhex('00ff100600')                       # LFO/VIB, AR/D1R, DL/D2
 # pitch: octave = note/12 - 5, F-number row 0x10 = equal temperament; the PS5 clocks the YMF278B at 28.636 MHz
 # (not 33.8688), so note 0x3C plays at 22050 * 0.8455 = 18643 Hz.  Morrigan's 22050 Hz samples: note 0x3F = 22171 Hz
 NOTE = 0x3F
+TL_STEP_DB = 0.375                                      # YMF278B total level: 0.375 dB per step (volume = 127 - TL)
 DC_SE, DC_GRP, DC_BASE = 0x8C08D57C, 0x8C08E974, 0x8C010000
 # DC IDs Morrigan uses (Effect ops in her scripts, voice/shot/item tables) -> (bank file, sample index)
 M_IDS = list(range(0x150, 0x163)) + [0x84]
@@ -36,7 +39,7 @@ def level_and_note(bank, idx, grp):
     from sound_levels import dc_params
     p0, p1, _ = dc_params(bank, idx)
     k = LEVELS['k_voice'] if grp in (0, 1) else LEVELS['k_sfx']
-    tl = (-k - LEVELS['u'] * p1) / 0.375
+    tl = (-k - LEVELS["u"] * p1) / TL_STEP_DB
     return max(0, min(127, round(127 - tl))), NOTE + round(p0 / 100)
 # arcade channel groups (FUN_0602BE6C: channels 0x0E-0x17 = 5,5,3,3,3,2,2,2,0,0); the player waits forever for a free
 # channel of the entry's group, so every entry must use one of them.  DC group 1 (a second voice group) -> 0 (voices)
@@ -98,19 +101,20 @@ def main():
     freed = ROM_SIZE - pos
     # ---- Morrigan's samples -----------------------------------------------------------------------------
     banks = {0: dcsnd.bank('MAIN_O.OSB'), 1: dcsnd.bank('P6_O.OSB')}
-    wave_of, new_waves = {}, []
+    wave_of, new_waves, gain_of = {}, [], {}
     for dcid in M_IDS:
         bk, ix, grp = dc_entry(dcid)
         e = banks[bk][ix]
         key = (bk, e['start'], e['end'])                 # 0x160-0x162 reuse 0x15A's data (count at +0xA)
         if key not in wave_of:
             assert dcsnd.rate(e['pitch']) == 22050, (hex(dcid), dcsnd.rate(e['pitch']))
-            pcm = dcsnd.decode(dict(e, n=e['end']))
-            s8 = np.clip(np.round(pcm / 64.0), -128, 127).astype(np.int8).tobytes() + bytes(2)
+            pcm = dcsnd.decode(dict(e, n=e['end'])) / 64.0
+            g = min(1.0, 127.0 / max(1.0, np.abs(pcm).max()))  # fit 8 bits; the SE volume makes up for g
+            s8 = np.clip(np.round(pcm * g), -128, 127).astype(np.int8).tobytes() + bytes(2)
             wn = FIRST_NEW_WAVE + len(new_waves)
             out[12 * wn:12 * wn + 12] = header(0, pos, len(s8), len(s8) - 2)
             out += s8; pos += len(s8)
-            wave_of[key] = wn; new_waves.append((wn, hex(dcid), len(s8)))
+            wave_of[key] = wn; new_waves.append((wn, hex(dcid), len(s8))); gain_of[wn] = g
     assert pos <= ROM_SIZE, f'sound ROM overflow by {pos - ROM_SIZE} bytes'
     out += bytes(ROM_SIZE - pos)
     os.makedirs(ROOT + '/out/snd', exist_ok=True)
@@ -124,6 +128,9 @@ def main():
         aid = FIRST_NEW_ID + k; remap[dcid] = aid
         wn = wave_of[(bk, e['start'], e['end'])]
         vol, note = level_and_note(bk, ix, grp)
+        up = round(-20 * np.log10(gain_of[wn]) / TL_STEP_DB)          # the sample was scaled down by gain_of[wn]
+        assert vol + up <= 127, (hex(dcid), vol, up)
+        vol += up
         ent = struct.pack('>HBBBB', wn, vol, 0, GROUP[grp], note)
         pat.append(f'{0x40300 + 6 * aid:08X} {ent.hex().upper()}      # id {aid:#05x} = DC {dcid:#05x} (wave {wn:#04x}, '
                    f'volume {vol:#04x}, note {note:#04x})')

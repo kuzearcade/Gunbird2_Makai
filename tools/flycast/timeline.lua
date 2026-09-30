@@ -7,6 +7,9 @@
 --   until <addr> <lo> <hi>     pause the timeline (later frames shift) until the u16 at addr is in [lo, hi] (hex)
 --   timer <addr> <lo> <hi>     as until, but the u16 must also count down by 1 per frame for 5 frames (a live
 --                              countdown, e.g. the select timer on the stack, not stale stack contents)
+--   sndlog <file>              log sound-effect plays of the DC effect player 0x8C01BCE0: its 8 slots hold the last
+--                              id (u16 0x8C16D3A0 + 2 * slot) and a timer set to 10 on every play (u8 0x8C16D27C + slot);
+--                              a new id or a rising timer is a play: "<frame> <slot> <id hex>"
 --   exit
 local BTN = { A = 0x4, B = 0x2, X = 0x400, Y = 0x200, Start = 0x8, Up = 0x10, Down = 0x20, Left = 0x40, Right = 0x80 }
 local mem, inp = flycast.memory, flycast.input
@@ -20,6 +23,7 @@ table.sort(events, function(a, b) return a.frame < b.frame end)
 local held = {}              -- mask -> release frame (-1 = until release)
 local gate, shift = nil, 0   -- 'until' condition, frames the timeline has waited
 local tr = nil
+local snd = nil              -- sndlog: file, previous ids / timers per slot
 
 local function mask(names)
   local m = 0
@@ -80,8 +84,11 @@ local function run(cmd)
   elseif op == "until" or op == "timer" then
     local a, lo, hi = args:match("^(%x+)%s+(%x+)%s+(%x+)$")
     gate = { a = tonumber(a, 16), lo = tonumber(lo, 16), hi = tonumber(hi, 16), timer = op == "timer", run = 0 }
+  elseif op == "sndlog" then
+    snd = { fh = io.open(args, "w"), id = {}, t = {} }
   elseif op == "exit" then
     if tr then tr.fh:close() end
+    if snd then snd.fh:close() end
     io.stdout:flush()
     os.exit(0)
   end
@@ -106,6 +113,15 @@ function cbVBlank()
   end
   while not gate and idx <= #events and events[idx].frame + shift <= frame do run(events[idx].cmd); idx = idx + 1 end
   if tr then trace_frame() end
+  if snd then
+    for c = 0, 7 do
+      local id, t = mem.read16(0x8C16D3A0 + 2 * c), mem.read8(0x8C16D27C + c)
+      if snd.id[c] ~= nil and (id ~= snd.id[c] or t > snd.t[c]) then
+        snd.fh:write(string.format("%d %d %x\n", frame, c, id))
+      end
+      snd.id[c], snd.t[c] = id, t
+    end
+  end
 end
 
 flycast_callbacks = { vblank = cbVBlank }
