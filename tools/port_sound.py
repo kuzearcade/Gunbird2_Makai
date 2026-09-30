@@ -30,6 +30,10 @@ TL_STEP_DB = 0.375                                      # YMF278B total level: 0
 DC_SE, DC_GRP, DC_BASE = 0x8C08D57C, 0x8C08E974, 0x8C010000
 # DC IDs Morrigan uses (Effect ops in her scripts, voice/shot/item tables) -> (bank file, sample index)
 M_IDS = list(range(0x150, 0x163)) + [0x84]
+# the Morrigan-unlock voice (maintenance code 5-1-9-9-4, src/maint.c): "Morrigan" cut from her stage-demo line to
+# Marion "Watashi wa Morrigan." (DC S_16_1.P04: raw AICA ADPCM, 44100 Hz), halved to 22050 Hz like her other samples,
+# as the next free ID after hers, at the loudness of her select voice (DC 0x150)
+UNLOCK_SRC, UNLOCK_T0, UNLOCK_T1, UNLOCK_REF = 'S_16_1.P04', 0.44, 0.90, 0x150
 # level: the DC's per-sample level p1 mapped through the DC->arcade mix fit of tools/sound_levels.py
 # (re/sound_levels.json); pitch: the DC's per-sample pitch p0 (cents) added to NOTE, rounded to a semitone
 LEVELS = json.load(open(ROOT + '/re/sound_levels.json'))
@@ -44,6 +48,18 @@ def level_and_note(bank, idx, grp):
 # arcade channel groups (FUN_0602BE6C: channels 0x0E-0x17 = 5,5,3,3,3,2,2,2,0,0); the player waits forever for a free
 # channel of the entry's group, so every entry must use one of them.  DC group 1 (a second voice group) -> 0 (voices)
 GROUP = {0: 0, 1: 0, 2: 2, 3: 3, 5: 5}
+
+
+def unlock_voice():
+    """the unlock clip as float samples at 22050 Hz (DC scale / 64, like the OSB samples)"""
+    x = open(f'{ROOT}/assets/dc/US/fs/{UNLOCK_SRC}', 'rb').read()
+    a = dcsnd.decode(dict(file=x, start=0, n=len(x) * 2)).astype(np.float64)
+    a = a[int(UNLOCK_T0 * 44100):int(UNLOCK_T1 * 44100)]
+    k = np.arange(-32, 33); h = np.sinc(k / 2) / 2 * np.hanning(len(k)); h /= h.sum()   # low-pass at 11 kHz
+    a = np.convolve(a, h, 'same')[::2]
+    f = np.ones(len(a)); fi, fo = 110, 660                               # 5 ms fade-in, 30 ms fade-out
+    f[:fi] = np.linspace(0, 1, fi); f[-fo:] = np.linspace(1, 0, fo)
+    return a * f / 64.0
 
 
 def parse(rom):
@@ -101,7 +117,7 @@ def main():
     freed = ROM_SIZE - pos
     # ---- Morrigan's samples -----------------------------------------------------------------------------
     banks = {0: dcsnd.bank('MAIN_O.OSB'), 1: dcsnd.bank('P6_O.OSB')}
-    wave_of, new_waves, gain_of = {}, [], {}
+    wave_of, new_waves, gain_of, wave_start, wave_len = {}, [], {}, {}, {}
     for dcid in M_IDS:
         bk, ix, grp = dc_entry(dcid)
         e = banks[bk][ix]
@@ -113,8 +129,21 @@ def main():
             s8 = np.clip(np.round(pcm * g), -128, 127).astype(np.int8).tobytes() + bytes(2)
             wn = FIRST_NEW_WAVE + len(new_waves)
             out[12 * wn:12 * wn + 12] = header(0, pos, len(s8), len(s8) - 2)
+            wave_start[wn], wave_len[wn] = pos, len(s8)
             out += s8; pos += len(s8)
             wave_of[key] = wn; new_waves.append((wn, hex(dcid), len(s8))); gain_of[wn] = g
+    # unlock voice: 8-bit at full scale; its SE volume gives it the RMS level of the reference voice
+    pcm = unlock_voice()
+    g = 127.0 / np.abs(pcm).max()
+    s8 = np.clip(np.round(pcm * g), -128, 127).astype(np.int8).tobytes() + bytes(2)
+    unlock_wave = FIRST_NEW_WAVE + len(new_waves)
+    out[12 * unlock_wave:12 * unlock_wave + 12] = header(0, pos, len(s8), len(s8) - 2)
+    out += s8; pos += len(s8); new_waves.append((unlock_wave, 'unlock', len(s8)))
+    rms = lambda b: np.sqrt(np.mean(np.frombuffer(b[:-2], np.int8).astype(np.float64) ** 2))
+    ref_bk, ref_ix, _ = dc_entry(UNLOCK_REF); ref = banks[ref_bk][ref_ix]
+    ref_wave = wave_of[(ref_bk, ref['start'], ref['end'])]
+    ref_s8 = bytes(out[wave_start[ref_wave]:wave_start[ref_wave] + wave_len[ref_wave]])
+    unlock_db = 20 * np.log10(rms(ref_s8) / rms(s8))                    # vs the reference's 8-bit data
     assert pos <= ROM_SIZE, f'sound ROM overflow by {pos - ROM_SIZE} bytes'
     out += bytes(ROM_SIZE - pos)
     os.makedirs(ROOT + '/out/snd', exist_ok=True)
@@ -134,6 +163,15 @@ def main():
         ent = struct.pack('>HBBBB', wn, vol, 0, GROUP[grp], note)
         pat.append(f'{0x40300 + 6 * aid:08X} {ent.hex().upper()}      # id {aid:#05x} = DC {dcid:#05x} (wave {wn:#04x}, '
                    f'volume {vol:#04x}, note {note:#04x})')
+    bk, ix, grp = dc_entry(UNLOCK_REF)
+    ref_aid = remap[UNLOCK_REF]
+    ref_vol = struct.unpack('>HBBBB', bytes.fromhex(next(l for l in pat if f'# id {ref_aid:#05x} ' in l).split()[1]))[1]
+    unlock_id = FIRST_NEW_ID + len(M_IDS)
+    unlock_vol = ref_vol + round(unlock_db / TL_STEP_DB)
+    assert 0 <= unlock_vol <= 127, unlock_vol
+    ent = struct.pack('>HBBBB', unlock_wave, unlock_vol, 0, GROUP[grp], NOTE)
+    pat.append(f'{0x40300 + 6 * unlock_id:08X} {ent.hex().upper()}      # id {unlock_id:#05x} = unlock voice "Morrigan" '
+               f'(wave {unlock_wave:#04x}, volume {unlock_vol:#04x}, note {NOTE:#04x})')
     pat += ['# voice tables, 1-based charNo (DC 8C087E9C/EAC/EBC have 7 entries; the arcade ones 6, followed by the',
             '# next table: [7] of the first two falls on the unused [0] of the next one, the third is redirected)',
             '06031FAE 005B                      # item voice A tbl 0x06031FA0[7] (DC 0x5B)',
@@ -151,6 +189,7 @@ def main():
     h = ['/* generated by tools/port_sound.py - do not edit */', '#ifndef GEN_SOUND_H', '#define GEN_SOUND_H',
          '/* Morrigan\'s sound-effect IDs: SND_M(dc id) (the DC numbers, remapped to free arcade IDs) */']
     h += [f'#define SND_M_{dcid:03X} 0x{aid:03X}' for dcid, aid in remap.items()]
+    h += [f'#define SND_M_UNLOCK 0x{unlock_id:03X}   /* "Morrigan" (maintenance-code unlock, src/maint.c) */']
     h += ['#define SND_M(x) SND_M_##x', '#endif']
     open(ROOT + '/src/gen_sound.h', 'w').write('\n'.join(h) + '\n')
     json.dump({f'{k:#x}': v for k, v in remap.items()}, open(ROOT + '/out/snd/remap.json', 'w'), indent=0)

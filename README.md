@@ -146,9 +146,9 @@ gunbird2` reports it good). The zip's own checksum depends on how it was packed,
 
 | File | Size | CRC32 | SHA-1 |
 |---|---:|---|---|
-| `1_prog_h.u17` | 524288 | `7328d8bf` | `c640de1ab5b32400b2d77e0dc6e3ee0f78ab7803` |
-| `2_prog_l.u16` | 524288 | `76f934f0` | `cf197796d66f15639a6b3d5311c18da33cefd06b` |
-| `3_pdata.u1` | 524288 | `a5b697e6` | `947f124fa585c2cf77c6571af7559bd652897b89` |
+| `1_prog_h.u17` | 524288 | `230c32e2` | `b126b400c3c1526b264fb1f2e2e6a93ba5eb4d48` |
+| `2_prog_l.u16` | 524288 | `d2447a43` | `f740842880d0175bb851ca0725199bef1d89588d` |
+| `3_pdata.u1` | 524288 | `e27d2f07` | `c7bfed37c62977063466a331f416d68b34355ebc` |
 | `0l.u3` | 8388608 | `5c826bc8` | `74fb6b242b4c5fe5365cfcc3029ed6da4cf3a621` |
 | `0h.u10` | 8388608 | `3df0cb6c` | `271d276fa0f63d84e458223316a9517865fc2255` |
 | `1l.u4` | 8388608 | `1558358d` | `e3b9c3da4e9b29ffa9568b57d14fe2b600aead68` |
@@ -157,7 +157,7 @@ gunbird2` reports it good). The zip's own checksum depends on how it was packed,
 | `2h.u12` | 8388608 | `bc8a41df` | `90460b11eea778f17cf8be67430e2ab149680686` |
 | `3l.u6` | 4194304 | `0229d37f` | `f9d98d1d2dda2d552b2a46c76b4c7fc84b1aa4c6` |
 | `3h.u13` | 4194304 | `f41bbf2b` | `b705274e392541e2f513a4ae4bae543c03be0913` |
-| `sound.u9` | 4194304 | `f19796ab` | `b978f0550ebd675e8ce9d9edcfcc3f6214e49e8b` |
+| `sound.u9` | 4194304 | `0e6b24f5` | `b3f0741564ac1d5b2b47ffe47241476bcb1a1021` |
 | `eeprom-gunbird2.bin` | 256 | `7ac38846` | `c5f4b05a94211f3c96b8c472adbe634f2e77d753` |
 
 **Input: Dreamcast discs** (Redump-verified GDI dumps). The build reads the US disc's `track03.bin`; the JP disc is
@@ -181,9 +181,9 @@ depend on the compiler.
 
 | File | Size | CRC32 | SHA-1 |
 |---|---:|---|---|
-| `1_prog_h.u17` | 524288 | `7cf6f940` | `e8ce604ef04b356743603faef9cfa51675b4b13c` |
-| `2_prog_l.u16` | 524288 | `6157ed9b` | `cd29f233c408ef2eddf0a2130554b18020fdcf99` |
-| `3_pdata.u1` | 524288 | `baa2a0a1` | `521f0540e4a5b221662f52c5dd65ecc013dc21f4` |
+| `1_prog_h.u17` | 524288 | `230c32e2` | `b126b400c3c1526b264fb1f2e2e6a93ba5eb4d48` |
+| `2_prog_l.u16` | 524288 | `d2447a43` | `f740842880d0175bb851ca0725199bef1d89588d` |
+| `3_pdata.u1` | 524288 | `e27d2f07` | `c7bfed37c62977063466a331f416d68b34355ebc` |
 | `0l.u3` | 8388608 | `5c826bc8` | `74fb6b242b4c5fe5365cfcc3029ed6da4cf3a621` |
 | `0h.u10` | 8388608 | `3df0cb6c` | `271d276fa0f63d84e458223316a9517865fc2255` |
 | `1l.u4` | 8388608 | `1558358d` | `e3b9c3da4e9b29ffa9568b57d14fe2b600aead68` |
@@ -192,7 +192,7 @@ depend on the compiler.
 | `2h.u12` | 8388608 | `bc8a41df` | `90460b11eea778f17cf8be67430e2ab149680686` |
 | `3l.u6` | 8388608 | `ce92163f` | `5cd8dca37f694e722f96bf8ecfcbca1a6ecfde43` |
 | `3h.u13` | 8388608 | `e905b54d` | `39121e59b1558c86077e82334ecec5f0b1f739a4` |
-| `sound.u9` | 4194304 | `610aad01` | `82b153b1edb2a164e75601fc240eee80a54a1d5d` |
+| `sound.u9` | 4194304 | `0e6b24f5` | `b3f0741564ac1d5b2b47ffe47241476bcb1a1021` |
 | `eeprom-gunbird2.bin` | 256 | `7ac38846` | `c5f4b05a94211f3c96b8c472adbe634f2e77d753` |
 
 Banks 0-2 and the EEPROM image are the original files, unchanged. `build.py` also writes these values to

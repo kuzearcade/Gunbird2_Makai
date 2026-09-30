@@ -40,6 +40,56 @@ static void text_show(const struct text_desc *d, int ox, int oy)
     }
 }
 
+/* ---- white fades as palette fades ------------------------------------------------------------------------------
+ * The ending engine fades a full-screen white plate (END_WHITE_PLATE) in and out with sprite alpha (the picture slot
+ * tasks: ChangeShadeObj slot, FncShadeRegSet(slot, w0F), PutObjWork).  The real PS5 does not alpha-blend 8bpp sprites
+ * (the stock game only ever blends 4bpp ones; on the board the plate stayed solid for its whole fade-out), so while the
+ * plate is partly transparent it is hidden and the ending's palette banks are tinted toward white by the plate's
+ * opacity instead - the same picture, as the plate is plain white over opaque pictures.  Bank 0xE0 (common composites:
+ * the letterbox masks, the plate itself) is left alone. */
+#define OBJ_SHADE(o)    ((VU8(0x06040079 + (o) * 0x24) >> 4) & 7)   /* alpha slot set by ChangeShadeObj */
+static int cur_slot;                            /* the loaded ending slot (0 = none: no ending uses slot 0) */
+static u32 tint_amt;
+static s32 tint_task;
+
+/* a: 0 = the ending's colours .. 252 = (nearly) white.  The original colours are read back from the gfx ROM (no RAM
+ * left for a copy), a 1 KB bank at a time through the ROM-test window. */
+static void pal_tint(u32 a)
+{
+    const struct end_pal *p;
+    u32 save = VIDREG4, i;
+    for (p = end_pals; p->slot >= 0; p++) {
+        volatile u32 *d = (volatile u32 *)p->pal;
+        if (p->slot != cur_slot || p->bank >= 0xE0) continue;
+        for (i = 0; i < 256; i++) {
+            u32 off = p->gfx + i * 4, c, r, g, b;
+            VIDREG4 = (save & ~0xFFF) | (off >> 17);
+            c = V32(GFX_WIN + (off & 0x1FFFF));
+            r = c >> 24; g = (c >> 16) & 0xFF; b = (c >> 8) & 0xFF;
+            r += ((255 - r) * a) >> 8; g += ((255 - g) * a) >> 8; b += ((255 - b) * a) >> 8;   /* SH-2: no shld */
+            d[i] = (r << 24) | (g << 16) | (b << 8) | (c & 0xFF);
+        }
+    }
+    VIDREG4 = save;
+}
+
+/* returns 1 when the plate is drawn as a palette tint this frame (the object stays hidden) */
+static int white_fade(s32 t, s32 obj)
+{
+    int v;
+    u32 a;
+    if (obj != END_WHITE_PLATE && t != tint_task) return 0;
+    v = (obj == END_WHITE_PLATE && OBJ_SHADE(V16(t + 0x48))) ? WORK(t, 0x0F) & 0x3F : 0;
+    if (obj == END_WHITE_PLATE && v) {
+        a = (0x3F - v) << 2;                    /* opacity 0..252 (alpha table: 0 opaque .. 0x3F transparent) */
+        if (t != tint_task || a != tint_amt) { pal_tint(a); tint_amt = a; tint_task = t; }
+        ObjHide(V16(t + 0x48));
+        return 1;
+    }
+    if (t == tint_task) { pal_tint(0); tint_task = 0; tint_amt = 0; }
+    return 0;
+}
+
 void gb2_seq_putobjwork(void)
 {
     s32 t = TASK, ctx = V32(t + 0x20);
@@ -51,6 +101,7 @@ void gb2_seq_putobjwork(void)
     obj = WORK(t, ra);
     V32(t + 0x3C) = obj;
     x = (s16)WORK(t, rx); y = (s16)WORK(t, ry);
+    if (white_fade(t, obj)) return;
     if (obj && V32(obj) == TEXT_MAGIC) {
         text_show((const struct text_desc *)obj, x, y);
         ObjHide(V16(t + 0x48));
@@ -94,6 +145,7 @@ static void load_ending(int slot)
      * choice ("The medicine." / "None.") picks its text layout and cursor step from it.  The arcade clears the globals
      * at game start and never uses 0x0E, so it read 0 here: 32-pixel lines instead of the DC's 16 */
     SEQ_GLOBAL(0x0E) = 1;
+    cur_slot = slot; tint_task = 0; tint_amt = 0;
     for (p = end_pals; p->slot >= 0; p++) {
         if (p->slot != slot) continue;
         gfx_copy((void *)p->pal, p->gfx, 256 * 4);

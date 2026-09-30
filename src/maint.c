@@ -1,6 +1,7 @@
 /* Maintenance-code screen and secret flags (arcade 0x0600731C, 0x06022A3E/4E, 0x06022B10) with a sixth code
  * that unlocks Morrigan ("Up" on '?' at character select), mirroring how the arcade gates Aine. */
 #include "arcade.h"
+#include "gen_sound.h"
 
 s16 gb2_morrigan_enabled;
 
@@ -141,7 +142,7 @@ void gb2_maintenance_code(void)
         case 3: run = flag_screen((const char *)0x0602E838, cnt, 0x38, apply_flag1); break;     /* 5-3-7-6-5 */
         case 4: run = flag_screen((const char *)0x0602E84C, cnt, 0x32, apply_flag2); break;     /* 5-1-0-2-4 */
         case 5: MAINT_MODE_REQ = 0x100; run = 0; break;                                   /* 5-2-0-4-8 */
-        case 6: run = flag_screen("Sit a MORRIGAN Flag", cnt, 0x32, apply_morrigan); break; /* 5-1-9-9-4 */
+        case 6: run = flag_screen("Sit an MORRIGAN Flag", cnt, SND_M_UNLOCK, apply_morrigan); break;   /* 5-1-9-9-4 */
         case 100:
             PrintCentered((const char *)0x0602E860, 0x78);
             if (cnt < 0x78) cnt++;
