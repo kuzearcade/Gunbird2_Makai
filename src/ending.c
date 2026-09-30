@@ -5,7 +5,10 @@
  *   lines with the arcade text printers instead (EN or JP by region), replacing the DC's pre-rendered text images.
  * - gb2_end_slot: G_Ending scene slot for 7 characters (as gb2_demo_slot); for one of Morrigan's endings it loads
  *   the ending data (scripts/composites/text, linked for RAM 0x06034000) and its palette banks from the gfx ROM,
- *   read through the PS6406B ROM-test window (0x04060000, 128 KB bank selected by video register 4). */
+ *   read through the PS6406B ROM-test window (0x04060000, 128 KB bank selected by video register 4).  Her solo
+ *   ending (also Morrigan + Aine) has a choice whose cursor task reads the pad of the player in the ending task's
+ *   w0; G_Ending puts the last active player there (2 whenever two play; the DC's Ending Demo uses 1), so it is set
+ *   to Morrigan's player instead. */
 #include "arcade.h"
 #include "gen_endings.h"
 
@@ -152,9 +155,15 @@ static void load_ending(int slot)
     }
 }
 
-int gb2_end_slot(int count, int last)
+#define SOLO_SLOT       26                          /* T[6] in src/story.c: Morrigan alone or with Aine */
+#define P1_CHAR         V8(0x06055058)
+#define CHAR_MORRIGAN   7
+
+/* player: G_Ending's player number for the ending task's w0 (stack @(0x14,r15)) */
+int gb2_end_slot(int count, int last, s16 *player)
 {
     int slot = gb2_demo_slot(count, last), i;
     for (i = 0; i < END_N; i++) if (end_slots[i] == slot) { load_ending(slot); break; }
+    if (slot == SOLO_SLOT && count == 2) *player = P1_CHAR == CHAR_MORRIGAN ? 1 : 2;
     return slot;
 }
