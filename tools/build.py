@@ -241,6 +241,8 @@ def main():
     open(OUT + '/prog_be_patched.bin', 'wb').write(img.prog)
     open(OUT + '/pdata_be_patched.bin', 'wb').write(img.data)
     print('wrote', OUT + '/roms/' + a.set)
+    if a.set == 'gunbird2m':                                  # last step: MiSTer MRA + out/roms/gunbird2m.zip
+        print(run(f'{sys.executable} {ROOT}/tools/make_mra.py').strip())
 
 
 if __name__ == '__main__':
