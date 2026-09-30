@@ -48,3 +48,6 @@ re/port/
 out/tl/
 out/trace/
 out/trace_compare/report.md
+
+# stage-end / transition verification screenshots (local only)
+stage_endings_verification/

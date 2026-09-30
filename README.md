@@ -236,6 +236,8 @@ select-screen inputs (about 2 minutes).
 | `tools/mame/regress_game.py out/tmp/eeprom_regress.bin --one --two` | Whole games from coin to attract mode, for all 6 original characters and all 30 two-player pairings. Screen hashes every 4 frames must match. Select inputs come from `tools/mame/select_paths.py`. |
 | `tools/mame/regress_select.py <eeprom>` | Select screen and the first seconds of play, pixel for pixel |
 | `tools/mame/regress_sound.py <eeprom> --set gunbird2m` | Sound-chip register writes for all 6 characters, including bombs, charges and continues |
+| `tools/mame/check_stage_end.py` | Morrigan's post-stage story scenes: every stage 1-7 x every pairing with her (solo, P2-only, her with each partner on either side) via Stage Select PlayMode 'Stage Demo', and the real stage-to-stage flow in Full Play, English and Japanese; screenshots in `stage_endings_verification/port/` |
+| `tools/flycast/stage_end_dc.py` + `tools/stage_end_compare.py` | The same scenes on the US and JP Dreamcast discs (Test Mode, one Flycast session per disc) and side-by-side sheets DC vs port in `stage_endings_verification/compare/` |
 | `tools/mame/check_sound.py` | Morrigan's 20 sounds: each game situation that plays them (bomb, charged shot levels 1-3, button 3, select, death, continue), whole games with no other character's sounds for her, and each sound's recording against the Dreamcast sample |
 | `tools/mame/check_stagedemo.py regress\|morrigan <eeprom>` | Original stage demos unchanged; contact sheets of all Morrigan scenes |
 | `tools/trace_compare.py` | Morrigan vs the Dreamcast: speed, hitboxes, per-hit damage, time to kill |
