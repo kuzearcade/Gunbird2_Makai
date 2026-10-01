@@ -56,3 +56,5 @@ re/dc_*.auto.sym
 # analysis outputs not read by the build chain (tools/rescrawl.py, tools/objdt_match.py)
 re/morrigan_closure.json
 re/globaltbl_align.json
+# project notes, plan and task list - kept locally only
+docs/

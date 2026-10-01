@@ -40,7 +40,7 @@ sym32 06031A4C gb2_seq_putobjwork  # seq handler table 0x060318B0 [0x67] (was th
 # becomes 'w1 >= 5 -> gb2_rank_chain' (Aine as before, w1 == 6 Morrigan, else End)
 000AC4AE 0540                      # JumpCompare condition 0x100 (==) -> 0x500 (>=)
 sym32 000AC4B6 gb2_rank_chain
-# red damage-flash bank 0x20 -> 0x24 (docs/NOTES.md "Flash banks"): its gradient moves to lines 0x24-0x2F and its black
+# red damage-flash bank 0x20 -> 0x24: its gradient moves to lines 0x24-0x2F and its black
 # tail (pens 0xC0-0xFF) onto the all-black shadow lines 0x30-0x33, freeing lines 0x20-0x23 for Morrigan's colours.
 # Same instruction count everywhere: games without her stay frame-identical.
 060B6318 26080088 26080088 26080088 26080088  # PltBlockSet table of line 0x20 (select open, game start, attract):

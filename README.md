@@ -21,7 +21,6 @@ then converted and patched in by the tools here.
   - data ROM 512 KB;
   - sound ROM 4 MB (the YMF278B limit);
   - graphics ROM bank 3 filled with 64M EPROMs, the sockets' capacity.
-  See `docs/MORRIGAN_BACKPORT_PLAN.md` §0.1.
 - **The original game is left untouched.** With Morrigan locked, the patched set plays and looks exactly like the
   original. This is checked by whole-game regression runs for every character and every two-player pairing. The one
   change to the original's own palette use, moving the red damage-flash bank down four lines to make room for her
@@ -241,9 +240,6 @@ icon on the ranking after the core is reloaded, and the Morrigan unlock is kept.
 | `tools/mame/` | MAME timeline harness (`timeline.lua`, `run.sh`), Stage Select / code helpers, regression tests, driver patch |
 | `tools/flycast/` | Dreamcast reference harness (Flycast + Lua) |
 | `re/` | Symbol maps, DC↔arcade object and function maps, sequence-VM opcode data, Ghidra scripts |
-| `docs/NOTES.md` | Reverse-engineering notes: the technical findings behind each part |
-| `docs/MORRIGAN_BACKPORT_PLAN.md` | Original plan and hardware-capacity study |
-| `docs/PORT_TODO.md` | Detailed task list with status |
 
 Research tools (not part of the build; they regenerate the maps in `re/` or support analysis):
 
@@ -281,14 +277,13 @@ select-screen inputs (about 2 minutes).
 | `tools/mame/paldraw.py` | Which palette lines the original game draws with in each game state (screen hashes with lines repainted) |
 | `tools/mame/sprlog.py` | Which palette lines the original game's sprites can draw with in each game state, exactly, over whole games; the basis for choosing her lines |
 
-The regression EEPROM has Aine unlocked and Morrigan locked; `tools/mame/regress_setup.py` and `docs/NOTES.md`
-("Whole-game regression") describe its layout. With Morrigan unlocked, the `?` slot on the select screen draws from a
+The regression EEPROM has Aine unlocked and Morrigan locked; `tools/mame/regress_setup.py` describes its layout. With Morrigan unlocked, the `?` slot on the select screen draws from a
 larger random range, so the game legitimately takes a different course from the original.
 
 Some whole-game runs are not reproducible even on the original set: a few two-player cases take different courses
 from run to run, and under heavy load (many MAME processes at once) a scripted input can land a frame off. Rerun a
 failing case on its own with `--cases <case> --jobs 2`, and compare it against more than one original run before
-blaming a patch (`docs/NOTES.md` has examples).
+blaming a patch (2P6-5, for example, varies between runs even on the original set).
 
 ## To do
 
@@ -298,8 +293,6 @@ blaming a patch (`docs/NOTES.md` has examples).
 - **Not planned: Japanese ending pacing.** The Japanese disc has its own, slower ending scripts; the port plays the
   US scripts with the Japanese text, so its Japanese endings are shorter than the Japanese Dreamcast's. The arcade
   pacing fits an arcade machine better than the console release's.
-
-See `docs/PORT_TODO.md` for the full, itemised status and `docs/NOTES.md` for the technical findings behind each part.
 
 ## Legal
 

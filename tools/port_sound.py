@@ -6,8 +6,8 @@ removed and the remaining sample data is compacted (headers keep their wave numb
 removed waves point at a short silence).  Morrigan's samples (DC P6_O.OSB #62-#77 and MAIN_O.OSB #152, AICA ADPCM
 22050 Hz) are decoded, scaled to the arcade's 8-bit level (DC/64, measured on the samples both versions share; a
 sample whose peak would clip at that scale - her voices, recorded hotter on the DC - is scaled down to fit and its SE
-volume raised by the same amount) and appended as new waves 0xDA+ (note 0x3F = 22171 Hz on the PS5 clock, see
-docs/NOTES.md "Sound").
+volume raised by the same amount) and appended as new waves 0xDA+ (note 0x3F = 22171 Hz on the PS5 clock, which runs the
+YMF278B at 28.636 MHz).
 
 IDs: the DC gives Morrigan IDs 0x150-0x162 (arcade IDs with other samples) and her own 0x84 (shared with Marion on the
 DC via per-player banks); they become free arcade IDs 0x16A+ (SE table ROM 0x40300 + 6*id: wave, volume, 0, group,

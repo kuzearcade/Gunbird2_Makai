@@ -9,7 +9,7 @@
  *    banks, drawn with any sprite's own pens (pens 0xC0-0xFF of a flashing sprite reach the black lines 0x1C-0x1F /
  *    0x2C-0x2F, which her colours used first).  The red bank now starts at 0x24 (src/patches.txt), its black part
  *    lying on the shadow lines 0x30-0x33, so lines 0x20-0x23 are drawn by nothing else; the text entries are ones no
- *    original sprite or font can reach (docs/NOTES.md).  The select screen and every game start write these lines, so
+ *    original sprite or font can reach.  The select screen and every game start write these lines, so
  *    the sets are (re)loaded whenever play (GameLoop state 10) starts, and at G_Ranking.
  *  - select-screen art (pal_select): colr 0x10, lines 0x10-0x1F.  Not drawn on the select screen, but lines
  *    0x10-0x1B hold colours the select screen loads for later (drawn in play), so they are saved before the art is

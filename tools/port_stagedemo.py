@@ -4,7 +4,7 @@
 Inputs: out/stagedemo/scenes.json (tools/stagedemo_extract.py), out/stagedemo/stagedemo_text.json (tools/story_text.py; EN read from
 the US DC images, JP arcade font codes matched from the JP DC images).
 
-Arcade mechanics used (see docs/NOTES.md "Story screens"):
+Arcade mechanics used:
   - G_StageDemo picks (*(hdr+8))[0][stage-1][slot]; the slot comes from src/story.c gb2_demo_slot (DC 7-character
     triangle {0,7,13,18,22,25,26}), so the stage tables are rebuilt with 27 slots: the 21 original scenes move to
     their DC slots, Morrigan's six scenes fill slots 26 (solo, also Aine+Morrigan), 6, 12, 17, 21, 24.
