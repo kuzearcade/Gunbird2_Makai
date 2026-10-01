@@ -62,6 +62,7 @@ static int cur_slot;                            /* the loaded ending slot (0 = n
 static u32 tint_amt;
 static s32 tint_task;
 static int tint_hold;                           /* frames until the tint under an opaque plate is undone */
+static int end_active;                          /* in G_Ending's frame call with one of her endings (gb2_objlist) */
 
 /* a: 0 = the ending's colours .. 252 = (nearly) white, from the RAM copy of the loaded ending's tinted banks */
 static void pal_tint(u32 a)
@@ -105,7 +106,10 @@ static int white_fade(s32 t, s32 obj)
 /* G_Ending's frame call (its WaitFrame literal 0x0601FB24 points here, src/patches.txt) */
 int gb2_end_frame(void)
 {
-    int r = WaitFrameR();
+    int r;
+    end_active = cur_slot != 0;
+    r = WaitFrameR();
+    end_active = 0;
     if (tint_hold && --tint_hold == 0) { pal_tint(0); tint_task = 0; tint_amt = 0; }
     return r;
 }
@@ -129,6 +133,86 @@ static s32 dissolve(s32 t, s32 obj)
     VU8(0x2405FFE0 + slot) = 0;
     if (k >= END_DISSOLVE_STEPS) return obj;
     return k <= 0 ? 0 : (s32)(d->first + (k - 1) * d->stride);
+}
+
+/* ---- sprite load ------------------------------------------------------------------------------------------------
+ * PCB video (2026-09-30, IMG_2404): stray pixels at the picture edges and in the text, i.e. where the letterbox masks
+ * cover the pictures' overhang.  Her endings asked the sprite engine for 2-3 times the 8bpp data per scanline of the
+ * stock endings (MAME sprite lists: stock <= 536 bytes per line, hers up to 1550), and the board evidently drops
+ * pixels then; MAME does not model the limit.  Two kinds of sprites nobody can see are left out of the sprite list:
+ *  - duplicates: after every picture fade the engine keeps the picture in both w0C and w10, the same composite at the
+ *    same place;
+ *  - pictures under an opaque picture that covers the whole letterbox window while the masks show: the base picture
+ *    layer (HardObjPriority 2) stays under the close-ups, their backdrops and the next scene's pictures.
+ * gb2_objlist runs in place of the sprite-list build of WaitFrame (its literal 0x060289F8, src/patches.txt), after all
+ * tasks of the frame: it marks those objects hidden, builds the list and clears the marks again, so the scripts never
+ * see a change.  Only while G_Ending runs one of her endings (gb2_end_frame); elsewhere it is one test.  Levels:
+ * vidreg 0x08 maps HardObjPriority 0/1/2/3 to sprite levels 2/3/1/7; within a level the higher ObjPriority is on top.
+ * (The masks are 4bpp too, tools/port_endings.py MASK_COMP.) */
+#define OBJ_N           48
+#define OBJ_COMP(o)     V32(0x0604006C + (o) * 0x24)
+#define OBJ_X(o)        ((s16)V16(0x06040070 + (o) * 0x24))
+#define OBJ_Y(o)        ((s16)V16(0x06040072 + (o) * 0x24))
+#define OBJ_XY(o)       V32(0x06040070 + (o) * 0x24)
+#define OBJ_LEVEL(o)    (VU8(0x06040074 + (o) * 0x24) & 3)
+#define OBJ_PRIO(o)     VU8(0x06040077 + (o) * 0x24)
+#define OBJ_FLAGS(o)    V16(0x0604007C + (o) * 0x24)
+#define OBJ_HIDDEN(o)   (OBJ_FLAGS(o) & 0x8000)
+#define IN_BLOB(c)      ((u32)(c) - END_BLOB_BASE < 0x0C000)
+#define WIN_X0 0                                /* letterbox window: object x/y + composite x/y (hardware y/x) */
+#define WIN_X1 224
+#define WIN_Y0 112
+#define WIN_Y1 272
+#define ObjListBuild    FN(void, 0x06023FFC, (void))
+
+static int above(int j, int o)
+{
+    static const u8 level[4] = { 2, 3, 1, 7 };
+    int lj = level[OBJ_LEVEL(j)], lo = level[OBJ_LEVEL(o)];
+    return lj > lo || (lj == lo && OBJ_PRIO(j) > OBJ_PRIO(o));
+}
+
+static int covered(int o)
+{
+    const struct end_opaque *r;
+    int j;
+    for (j = 0; j < OBJ_N; j++) {
+        if (j == o || OBJ_HIDDEN(j) || OBJ_SHADE(j) || !above(j, o)) continue;
+        for (r = end_opaque; r->comp; r++) if (r->comp == (u32)OBJ_COMP(j)) break;
+        if (r->comp && OBJ_X(j) + r->x0 <= WIN_X0 && OBJ_X(j) + r->x1 >= WIN_X1
+                    && OBJ_Y(j) + r->y0 <= WIN_Y0 && OBJ_Y(j) + r->y1 >= WIN_Y1) return 1;
+    }
+    return 0;
+}
+
+/* The list builder can draw objects twice: it splits its list 0x06042BEC at two boundaries (0x06043602, 0x06043606:
+ * prefix counts of priority bands) and FUN_06024778 sends [0, first) and later [second, end) to the sprite engine;
+ * with her close-up priorities (0x0C-0x0F) the second boundary can come out below the first, so the entries between
+ * go out twice (the close-up scene's bokeh backdrop in Jiki6 + Jiki1: 4 full-width 8bpp sprites instead of 2). */
+#define LIST_SPLIT1     V16(0x06043602)
+#define LIST_SPLIT2     V16(0x06043606)
+
+void gb2_objlist(void)
+{
+    u8 cut[OBJ_N];
+    int n = 0, o, j, masks = 0;
+    if (end_active) {
+        for (o = 0; o < OBJ_N; o++) if (!OBJ_HIDDEN(o) && OBJ_COMP(o) == END_MASK) masks = 1;
+        for (o = 0; o < OBJ_N; o++) {
+            s32 c = OBJ_COMP(o);
+            int dup = 0;
+            if (OBJ_HIDDEN(o) || !IN_BLOB(c) || c == END_MASK) continue;
+            /* of two copies the one without a shade slot stays: the alpha register acts at once while the list goes
+             * out a frame later, so on the first frame of a fade the w0C copy would already be see-through */
+            for (j = 0; j < OBJ_N; j++)
+                if (j != o && !OBJ_HIDDEN(j) && OBJ_COMP(j) == c && OBJ_XY(j) == OBJ_XY(o)
+                    && (OBJ_SHADE(o) && !OBJ_SHADE(j) || !OBJ_SHADE(o) == !OBJ_SHADE(j) && j < o)) dup = 1;
+            if (dup || (masks && covered(o))) { OBJ_FLAGS(o) |= 0x8000; cut[n++] = o; }
+        }
+    }
+    ObjListBuild();
+    while (n) { o = cut[--n]; OBJ_FLAGS(o) &= 0x7FFF; }
+    if (end_active && (s16)LIST_SPLIT2 < (s16)LIST_SPLIT1) LIST_SPLIT2 = LIST_SPLIT1;
 }
 
 void gb2_seq_putobjwork(void)
@@ -206,6 +290,7 @@ static void load_ending(int slot)
 int gb2_end_slot(int count, int last, s16 *player)
 {
     int slot = gb2_demo_slot(count, last), i;
+    cur_slot = 0;                                   /* a stock ending: no palette fade, no sprite culling */
     for (i = 0; i < END_N; i++) if (end_slots[i] == slot) { load_ending(slot); break; }
     if (slot == SOLO_SLOT && count == 2) *player = P1_CHAR == CHAR_MORRIGAN ? 1 : 2;
     return slot;

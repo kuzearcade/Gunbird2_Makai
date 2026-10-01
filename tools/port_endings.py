@@ -188,6 +188,10 @@ DISSOLVES = [(21, 0x8C38CC4C, 0x8C38CC58, 0),          # Jiki6 + Jiki3: "No, mot
              (24, 0x8C38CD30, 0x8C38CD48, 0),          # Jiki6 + Jiki4: Hei-Cob before -> after, frame 1
              (24, 0x8C38CD3C, 0x8C38CD54, 0)]          #   frame 2
 DISSOLVE_STEPS = 16
+# the letterbox masks (common composite, 10 strips of 1x14 cells, all opaque black) as 4bpp sprites like the stock
+# game's: the PS5 fetches half the data for them.  The pictures' 8bpp data per scanline was 2-3 times the stock
+# endings' (see src/ending.c, shimmer on the board).
+MASK_COMP = 0x8C38A33C
 
 _bdmap = []
 
@@ -313,15 +317,48 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
             dis_tiles[i] = []
             for k in range(1, DISSOLVE_STEPS):
                 dis_tiles[i].append(len(tiles) // 256); tiles += gfxconv.cells_to_tiles(steps[(i, k)], pal)
+    # ---- 4bpp letterbox masks (see MASK_COMP) ----------------------------------------------------------------------
+    mask4 = None
+    if MASK_COMP in use:
+        cols = pal_of_group[(None, COMMON_BANK)]
+        black = [q for q in range(1, 16) if cols[q] >> 8 == 0]
+        assert black, 'no black pen in the first line of the common bank'
+        ps = dcend.parts(DI, MASK_COMP); n = max(p['W'] * p['H'] for p in ps)
+        assert all(p['W'] == 1 and p['idx'] == ps[0]['idx'] for p in ps)
+        mask4 = (len(tiles) // 128, black[0])                # 4bpp tile number relative to 2 * tnum_base
+        tiles += bytes([black[0] * 0x11]) * (128 * n)
+        if len(tiles) % 256: tiles += bytes(256 - len(tiles) % 256)
     open(out + '/tiles.bin', 'wb').write(tiles)
     # ---- blob: objdt composites -------------------------------------------------------------------------------
     B = Blob(BLOB_BASE); addr = {}
     for v, e in sorted(use.items()):
         B.align(); addr[v] = B.here()
         for p in all_parts(v):
-            w = p['raw']; t = tnum_base + tile_of_part[(v, p['idx'], e)]
+            w = p['raw']
             B.u16(w[0]); B.u16(w[1]); B.u16(w[2]); B.u16(w[3])
+            if v == MASK_COMP and mask4:                     # 4bpp: colour line 0xE0, tile in 128-byte units
+                t = 2 * tnum_base + mask4[0]
+                B.u16((COMMON_BANK << 8) | ((t >> 16) & 7)); B.u16(t & 0xFFFF); continue
+            t = tnum_base + tile_of_part[(v, p['idx'], e)]
             B.u16((comp_bank[v] << 8) | 0x80 | ((t >> 16) & 7)); B.u16(t & 0xFFFF)
+    # fully opaque solid-rectangle composites (src/ending.c hides a picture that one of them covers): (address,
+    # x0, y0, x1, y1) in composite coordinates; animated composites per frame
+    opaque = []
+    for v, e in sorted(use.items()):
+        cs = dcend.cells('US', FILES[e] if e is not None else common_file(v)) if v not in BD_OBJ else dcend.cells('US', FILES[e])
+        a, off = v, 0
+        for _ in range(FRAMES.get(v, 1) if v not in BD_OBJ else 1):
+            ps = dcend.parts(DI, BD_OBJ.get(a, a)) if v in BD_OBJ else dcend.parts(DI, a)
+            # a part spans 16 * H along x (hardware y) and 16 * W along y (hardware x): pictures are W 10 x H 14
+            x0 = min(p['x'] for p in ps); y0 = min(p['y'] for p in ps)
+            x1 = max(p['x'] + 16 * p['H'] for p in ps); y1 = max(p['y'] + 16 * p['W'] for p in ps)
+            cover = np.zeros((y1 - y0, x1 - x0), bool); solid = True
+            for p in ps:
+                for c in part_cells(v, p, cs):
+                    solid &= bool(((np.asarray(c) & 0x8000) != 0).all())
+                cover[p['y'] - y0:p['y'] - y0 + 16 * p['W'], p['x'] - x0:p['x'] - x0 + 16 * p['H']] = True
+            if solid and cover.all(): opaque.append((addr[v] + off, x0, y0, x1, y1))
+            off += 12 * len(ps); a += 12 * len(ps)
     dissolves = []                                           # (slot, new picture, first step, stride)
     for i, tts in sorted(dis_tiles.items()):
         e, va, vb, bp = DISSOLVES[i]
@@ -438,7 +475,7 @@ def build(only=None, tnum_base=None, out=ROOT + '/out/end'):
     meta = {'blob_base': BLOB_BASE, 'blob_size': len(B.data), 'tiles': len(tiles) // 256, 'tnum_base': tnum_base,
             'scripts': {str(s): a for s, a in scripts.items()},
             'palettes': {str(s): [(b, c) for b, c in v] for s, v in pal_sets.items()}, 'errors': errors,
-            'objects': {f'{v:08x}': a for v, a in sorted(addr.items())}, 'dissolves': dissolves}
+            'objects': {f'{v:08x}': a for v, a in sorted(addr.items())}, 'dissolves': dissolves, 'opaque': opaque}
     json.dump(meta, open(out + '/meta.json', 'w'))
     print(f'blob {len(B.data):#x} bytes, tiles {len(tiles) // 256}, errors {len(errors)}')
     for e in errors[:20]: print('  ', e)
@@ -529,11 +566,15 @@ def generate(only):
          f'#define END_DISSOLVE_STEPS {DISSOLVE_STEPS}',
          'struct end_dissolve { s32 slot; u32 pic; u32 first; u32 stride; };   /* src/ending.c cross-fades */',
          'extern const struct end_dissolve end_dissolves[];',
+         f'#define END_MASK 0x{meta["objects"].get(f"{MASK_COMP:08x}", 0):08X}   /* letterbox masks */',
+         'struct end_opaque { u32 comp; s16 x0, y0, x1, y1; };   /* fully opaque rectangle composites */',
+         'extern const struct end_opaque end_opaque[];',
          'extern const struct end_pal end_pals[]; extern const s16 end_slots[];',
          'extern const void *const gb2_end_table[27];', '#endif']
     c = ['/* generated by tools/port_endings.py - do not edit */', '#include "arcade.h"', '#include "gen_endings.h"',
          'const struct end_pal end_pals[] = {' + ', '.join(f'{{{s}, 0x{b:02X}, 0x{g:08X}, 0x{0x24040000 + b * 64:08X}}}' for s, b, g in pals) + ', {-1, 0, 0, 0}};',
          'const s16 end_slots[] = {' + ', '.join(str(s) for s in sorted(only)) + '};',
+         'const struct end_opaque end_opaque[] = {' + ''.join(f'{{0x{a:08X}, {x0}, {y0}, {x1}, {y1}}}, ' for a, x0, y0, x1, y1 in meta['opaque']) + '{0, 0, 0, 0, 0}};',
          'const struct end_dissolve end_dissolves[] = {' + ''.join(f'{{{s}, 0x{p:08X}, 0x{f:08X}, {n}}}, ' for s, p, f, n in meta['dissolves']) + '{-1, 0, 0, 0}};',
          'const void *const gb2_end_table[27] = {' + ', '.join(f'(const void *){x}' for x in slots) + '};']
     open(ROOT + '/src/gen_endings.h', 'w').write('\n'.join(h) + '\n')
