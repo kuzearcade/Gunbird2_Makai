@@ -80,7 +80,7 @@ Inputs (not included; place them as shown, all git-ignored):
 |---|---|
 | MAME `gunbird2` ROM set (`gunbird2.zip`) | `mame_roms/` |
 | Dreamcast *Gunbird 2* US v1.000 disc (GDI) | extracted to `assets/dc/US/fs/` (see below) |
-| Dreamcast JP v1.002 disc (GDI) – optional, for the JP comparison | `assets/dc/JP/fs/` |
+| Dreamcast JP v1.002 disc (GDI) – needed for the Japanese story and ending text | extracted to `assets/dc/JP/fs/` |
 
 Tools:
 
@@ -108,9 +108,11 @@ python3 tools/arcade_images.py mame_roms/gunbird2.zip
    -rompath $OLDPWD/mame_roms -video none -sound none -nothrottle -skip_gameinfo \
    -autoboot_script $OLDPWD/tools/mame/dumpram.lua)
 
-# 2. Dreamcast files: extract the GDI's data track (track03.bin) and keep a copy of the main program
-python3 tools/gdi_extract.py "<disc>/track03.bin" assets/dc/US/fs
-cp assets/dc/US/fs/1ST_READ.BIN re/1st_read_US.bin          # same for JP -> assets/dc/JP/fs, re/1st_read_JP.bin
+# 2. Dreamcast files: extract both GDIs' data tracks (track03.bin) and keep a copy of each main program
+python3 tools/gdi_extract.py "<US disc>/track03.bin" assets/dc/US/fs
+cp assets/dc/US/fs/1ST_READ.BIN re/1st_read_US.bin
+python3 tools/gdi_extract.py "<JP disc>/track03.bin" assets/dc/JP/fs   # the Japanese text (step 3) comes from here
+cp assets/dc/JP/fs/1ST_READ.BIN re/1st_read_JP.bin
 
 # 3. extract the Dreamcast story data (scene lists, ending scripts, Japanese text as arcade font codes)
 python3 tools/stagedemo_extract.py # -> out/stagedemo/scenes.json (+ img/)
@@ -174,8 +176,8 @@ gunbird2` reports it good). The zip's own checksum depends on how it was packed,
 | `sound.u9` | 4194304 | `f19796ab` | `b978f0550ebd675e8ce9d9edcfcc3f6214e49e8b` |
 | `eeprom-gunbird2.bin` | 256 | `7ac38846` | `c5f4b05a94211f3c96b8c472adbe634f2e77d753` |
 
-**Input: Dreamcast discs** (Redump-verified GDI dumps). The build reads the US disc's `track03.bin`; the JP disc is
-optional (Japanese-version comparison and research tools).
+**Input: Dreamcast discs** (Redump-verified GDI dumps). The build reads both discs' `track03.bin`: the US disc for
+her graphics, scripts, sounds and English text, the JP disc for the Japanese story and ending text.
 
 | Disc / file | Size | CRC32 | SHA-1 |
 |---|---:|---|---|
