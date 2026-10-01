@@ -242,7 +242,7 @@ Research tools (not part of the build; they regenerate the maps in `re/` or supp
 
 | Tool | Purpose |
 |---|---|
-| `tools/rescrawl.py`, `tools/blockmatch.py`, `tools/objdt_match.py` | DC↔arcade resource correspondence (`re/map_dc2arc.json`, `re/morrigan_closure.json`, `re/globaltbl_align.json`) |
+| `tools/rescrawl.py`, `tools/blockmatch.py`, `tools/objdt_match.py` | DC↔arcade resource correspondence (`re/map_dc2arc.json`; also write `re/morrigan_closure.json` and `re/globaltbl_align.json`, local analysis output, not committed) |
 | `tools/funcmatch2.py`, `tools/funcmatch.py` | DC↔arcade function matching (`re/func_dc2arc.json`, `re/arcade.sym`) |
 | `tools/seq_oplen.py`, `tools/seqtypes.py` | Sequence-VM operand counts and types (`re/seq_opcodes.json`, `re/seq_types.json`) |
 | `tools/sound_audit.py`, `tools/sound_levels.py`, `tools/mame/sndcov.py` | Sound ID audit, levels and coverage (`re/sound_*.json`) |
