@@ -290,10 +290,11 @@ blaming a patch (`docs/NOTES.md` has examples).
   bank-3 EPROM pair (all six endings ran from it). To re-test: the Jiki6 + Jiki1 and Jiki6 + Jiki0 endings, whose
   close-ups ("Morrigan! You!!", "Soul Fist!!") now show the Dreamcast backdrop as a sprite object instead of a
   background layer (the layer covered the pictures on the board and turned the text blue).
-- **Japanese ending pacing (open).** The Japanese disc has its own, slower ending scripts; the port plays the US
-  scripts with the Japanese text, so its Japanese endings are shorter than the Japanese Dreamcast's.
 - **Not planned (Dreamcast-only):** stage-demo and ending voices (no sound ROM space), and the staff-roll movie (no
   video playback on the board).
+- **Not planned: Japanese ending pacing.** The Japanese disc has its own, slower ending scripts; the port plays the
+  US scripts with the Japanese text, so its Japanese endings are shorter than the Japanese Dreamcast's. The arcade
+  pacing fits an arcade machine better than the console release's.
 
 See `docs/PORT_TODO.md` for the full, itemised status and `docs/NOTES.md` for the technical findings behind each part.
 
