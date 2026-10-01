@@ -58,28 +58,27 @@ static void text_show(const struct text_desc *d, int ox, int oy)
  * window shares the gfx ROM with the sprite engine), so load_ending keeps a RAM copy (END_PAL_CACHE, after the blob). */
 #define OBJ_SHADE(o)    ((VU8(0x06040079 + (o) * 0x24) >> 4) & 7)   /* alpha slot set by ChangeShadeObj */
 #define PAL_CACHE       ((const u32 *)END_PAL_CACHE)
+#define VBL_COUNT       0x0604C21C              /* vblank job queue: u16 count, {fn, a, b, c} x 32 */
+#define VBL_JOBS        0x0604C220
 static int cur_slot;                            /* the loaded ending slot (0 = none: no ending uses slot 0) */
 static u32 tint_amt;
 static s32 tint_task;
 static int tint_hold;                           /* frames until the tint under an opaque plate is undone */
 static int end_active;                          /* in G_Ending's frame call with one of her endings (gb2_objlist) */
 
-/* a: 0 = the ending's colours .. 252 = (nearly) white, from the RAM copy of the loaded ending's tinted banks */
-static void pal_tint(u32 a)
+/* a: 0 = the ending's colours .. 252 = (nearly) white, for one bank from its RAM copy s */
+static void tint_bank(volatile u32 *d, const u32 *s, u32 a)
 {
-    const struct end_pal *p;
-    const u32 *s = PAL_CACHE;
     u32 i;
-    for (p = end_pals; p->slot >= 0; p++) {
-        volatile u32 *d = (volatile u32 *)p->pal;
-        if (p->slot != cur_slot || p->bank >= 0xE0) continue;
-        for (i = 0; i < 256; i++) {
-            u32 c = *s++, r = c >> 24, g = (c >> 16) & 0xFF, b = (c >> 8) & 0xFF;
-            r += ((255 - r) * a) >> 8; g += ((255 - g) * a) >> 8; b += ((255 - b) * a) >> 8;   /* SH-2: no shld */
-            d[i] = (r << 24) | (g << 16) | (b << 8) | (c & 0xFF);
-        }
+    if (!a) { for (i = 0; i < 256; i++) d[i] = s[i]; return; }
+    for (i = 0; i < 256; i++) {
+        u32 c = s[i], r = c >> 24, g = (c >> 16) & 0xFF, b = (c >> 8) & 0xFF;
+        r += ((255 - r) * a) >> 8; g += ((255 - g) * a) >> 8; b += ((255 - b) * a) >> 8;   /* SH-2: no shld */
+        d[i] = (r << 24) | (g << 16) | (b << 8) | (c & 0xFF);
     }
 }
+
+static void pal_vblank(void);
 
 /* returns 1 when the plate is drawn as a palette tint this frame (the object stays hidden) */
 static int white_fade(s32 t, s32 obj)
@@ -90,7 +89,7 @@ static int white_fade(s32 t, s32 obj)
     v = (obj == END_WHITE_PLATE && OBJ_SHADE(V16(t + 0x48))) ? WORK(t, 0x0F) & 0x3F : 0;
     if (obj == END_WHITE_PLATE && v) {
         a = (0x3F - v) << 2;                    /* opacity 0..252 (alpha table: 0 opaque .. 0x3F transparent) */
-        if (t != tint_task || a != tint_amt) { pal_tint(a); tint_amt = a; tint_task = t; }
+        tint_amt = a; tint_task = t;            /* written in vblank (pal_vblank) */
         tint_hold = 0;
         ObjHide(V16(t + 0x48));
         return 1;
@@ -99,7 +98,7 @@ static int white_fade(s32 t, s32 obj)
         if (tint_task && !tint_hold) tint_hold = 2; /* armed once: some tasks re-put the plate every frame */
         return 0;
     }
-    if (t == tint_task) { pal_tint(0); tint_task = 0; tint_amt = 0; tint_hold = 0; }
+    if (t == tint_task) { tint_task = 0; tint_amt = 0; tint_hold = 0; }
     return 0;
 }
 
@@ -108,9 +107,14 @@ int gb2_end_frame(void)
 {
     int r;
     end_active = cur_slot != 0;
+    if (cur_slot && V16(VBL_COUNT) < 32) {          /* palette writes in vblank: engine job queue (FUN_06027868) */
+        u16 n = V16(VBL_COUNT);
+        V16(VBL_COUNT) = n + 1;
+        V32(VBL_JOBS + n * 16) = (u32)pal_vblank;
+    }
     r = WaitFrameR();
     end_active = 0;
-    if (tint_hold && --tint_hold == 0) { pal_tint(0); tint_task = 0; tint_amt = 0; }
+    if (tint_hold && --tint_hold == 0) { tint_task = 0; tint_amt = 0; }
     return r;
 }
 
@@ -192,6 +196,62 @@ static int covered(int o)
 #define LIST_SPLIT1     V16(0x06043602)
 #define LIST_SPLIT2     V16(0x06043606)
 
+/* vblank job (queued by gb2_end_frame): the white-fade tint for the banks of the pictures on screen, from the RAM
+ * copy, only where the amount changed; when the fade is over every bank goes back (a plain copy).  PCB video
+ * IMG_2435/2436: rewriting all the ending's banks (up to 13 x 256 colours) every frame during the display made
+ * pixels shimmer while the castle (Jiki6 + Jiki2) and Marion's slide-up (Jiki6 + Jiki1) faded in from white - the
+ * game itself changes colours only in vblank (FUN_06028564).  Being in vblank, the change also lands exactly between
+ * the frame whose sprite list it belongs to and the next. */
+static u8 bank_amt[16];                         /* tint applied per bank (bank >> 4) */
+
+static void pal_vblank(void)
+{
+    const struct end_pal *p;
+    const u32 *s = PAL_CACHE;
+    u8 vis[16];
+    int o, i;
+    for (i = 0; i < 16; i++) vis[i] = 0;
+    if (tint_amt)
+        for (o = 0; o < OBJ_N; o++) {
+            s32 c = OBJ_COMP(o);
+            int n;
+            if (OBJ_HIDDEN(o) || !IN_BLOB(c)) continue;
+            n = ((V16(c + 2) >> 8) >> 2) & 0x3F;      /* SH-2 shifts: 1, 2, 8, 16 */
+            if (!n) n = 1;
+            for (i = 0; i < n; i++) vis[(VU8(c + 12 * i + 8) >> 2) >> 2] = 1;
+        }
+    for (p = end_pals; p->slot >= 0; p++) {
+        int k = ((u16)p->bank >> 2) >> 2;
+        u32 want;
+        if (p->slot != cur_slot || p->bank >= 0xE0) continue;
+        want = vis[k] ? tint_amt : tint_amt ? bank_amt[k] : 0;
+        if (want != bank_amt[k]) { tint_bank((volatile u32 *)p->pal, s, want); bank_amt[k] = want; }
+        s += 256;
+    }
+}
+
+/* Sprites entirely under a letterbox mask (hardware x < 112 or >= 272) and below the masks' level (HardObjPriority 0
+ * or 2 - the masks are 1) cannot be seen: the pictures' overhang, e.g. the second part of a close-up sliding in.
+ * They are moved below the screen after the list build.  Sprite entries: w0 = y << 16 | x (10 bits each, x wraps
+ * at 1024), w1 bits 8-11 width - 1 (cells), 12-13 HardObjPriority; indices in 0x06042BEC [0, count 0x060435EC). */
+#define SPR(i)          ((volatile u32 *)(0x24000000 + ((i) & 0x3FF) * 16))
+#define SPR_LIST        ((volatile u16 *)0x06042BEC)
+#define SPR_TOTAL       V16(0x060435EC)
+
+static void cull_masked(void)
+{
+    int i, n = SPR_TOTAL;
+    if (n > 0x300) return;
+    for (i = 0; i < n; i++) {
+        volatile u32 *s = SPR(SPR_LIST[i]);
+        u32 w0 = s[0], w1 = s[1];
+        int x = w0 & 0x3FF, w = (((w1 >> 8) & 15) + 1) * 16, pri = ((w1 >> 8) >> 2) >> 2 & 3;   /* SH-2 shifts: 1, 2, 8, 16 */
+        if (pri == 1 || pri == 3) continue;                       /* the masks' level and above */
+        if (x >= 512) x -= 1024;
+        if (x + w <= WIN_Y0 || x >= WIN_Y1) s[0] = (w0 & 0xFFFF) | 0x03000000;
+    }
+}
+
 void gb2_objlist(void)
 {
     u8 cut[OBJ_N];
@@ -213,6 +273,7 @@ void gb2_objlist(void)
     ObjListBuild();
     while (n) { o = cut[--n]; OBJ_FLAGS(o) &= 0x7FFF; }
     if (end_active && (s16)LIST_SPLIT2 < (s16)LIST_SPLIT1) LIST_SPLIT2 = LIST_SPLIT1;
+    if (end_active && masks) cull_masked();
 }
 
 void gb2_seq_putobjwork(void)
@@ -272,6 +333,7 @@ static void load_ending(int slot)
      * at game start and never uses 0x0E, so it read 0 here: 32-pixel lines instead of the DC's 16 */
     SEQ_GLOBAL(0x0E) = 1;
     cur_slot = slot; tint_task = 0; tint_amt = 0; tint_hold = 0;
+    { int k; for (k = 0; k < 16; k++) bank_amt[k] = 0; }
     {
         u32 *c = (u32 *)END_PAL_CACHE;
         for (p = end_pals; p->slot >= 0; p++) {
