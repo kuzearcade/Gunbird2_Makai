@@ -12,8 +12,11 @@ MEMORY
 SECTIONS
 {
     .text   : { *(.text.hooks) *(.text) *(.text.*) } > ROMFREE1
-    .rodata : { *(.rodata) *(.rodata.*) *(.rdata) } > ROMFREE1
+    .rodata : { *(EXCLUDE_FILE(*maint.o *select.o *hud.o) .rodata .rodata.* .rdata) } > ROMFREE1
     .story  : { *(.story) } > ROMSTORY
+    /* ROMFREE1 is full: the small constant data of these go behind the story data (ROMSTORY ends at 0x5FFFF,
+       the end of the free program ROM 0x57D71-0x5FFFF) */
+    .rodata2 : { *maint.o(.rodata .rodata.* .rdata) *select.o(.rodata .rodata.* .rdata) *hud.o(.rodata .rodata.* .rdata) } > ROMSTORY
     .data   : { *(.data) *(.data.*) } > ROMFREE1   /* must stay empty: no writable initialised data */
     .bss (NOLOAD) : { __bss_start = .; *(.bss) *(.bss.*) *(COMMON) __bss_end = .; } > RAMFREE
     /DISCARD/ : { *(.comment) *(.note*) *(.eh_frame) }

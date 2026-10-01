@@ -1,14 +1,17 @@
 /* Character select screen - C port of arcade 0x0601CDFC (DC twin FUN_8C039CC0) with the Dreamcast's Morrigan
- * secret added: with the cursor on '?' (slot 5), Up picks Morrigan (character 7) once she is unlocked
- * (maintenance code 5-1-9-9-4), just as Down picks Aine when the Aine flag is 2.
+ * secret added: with the cursor on '?' (slot 5), Up picks Morrigan (character 7) when her flag is 2 (maintenance code
+ * 5-1-9-9-4), just as Down picks Aine when the Aine flag is 2; with flag 1 (5-3-9-9-4) she only comes up on the
+ * random '?', like Aine with flag 1.
  *
  * Everything not Morrigan-related follows the arcade function 0x0601CDFC; the Morrigan parts follow the DC function
  * 0x8C039CC0 (study them in the local, git-ignored Ghidra export re/export/ - tools/reexport.sh):
  *  - '?' shows character rot/3, rot advancing every frame; a matched secret pins rot to 0xF (Aine) / 0x12
  *    (Morrigan); matching one secret cancels the other
- *  - rot range: /3 <= 4 without the Aine flag, 5 with it, 6 with Aine flag + Morrigan; in 2P, when rot hits the
- *    other player's character it skips 3 ahead, wrapping at /3 > 5 (> 6 with Morrigan)
- *  - initial rot: Random(0x12) with Morrigan unlocked, else Random(0xF)
+ *  - rot range: /3 <= 4 without the Aine flag, 5 with it; with a Morrigan flag up to 6 (the DC only with the Aine
+ *    flag as well; here her own flag 1 is what lets her come up), Aine's 5 skipped while her flag is 0; in 2P, when
+ *    rot hits the other player's character it skips 3 ahead, wrapping at /3 > 5 (> 6 with Morrigan)
+ *  - initial rot: Random(0x12) with a Morrigan flag (Aine's 5 -> Morrigan while the Aine flag is 0), else Random(0xF)
+ *  Without a Morrigan flag every path is the arcade's (regress_select / regress_game compare it with the original).
  * Slot values: bits 0-3 slot, 0x10 = decided.  Objects: see enum. */
 #include "arcade.h"
 #include "gen_gfx.h"
@@ -77,12 +80,14 @@ static void portrait_anim(int o, int c, int x, int y)
 /* rot advance for a '?' cursor that is not decided; other = the other player's slot (-1 in 1P) */
 static s16 rot_next(s16 rot, int other)
 {
-    int max = SECRET_AINE == 0 ? 4 : (gb2_morrigan_enabled ? 6 : 5);
+    int m = gb2_morrigan_enabled, max = m ? 6 : SECRET_AINE == 0 ? 4 : 5;
     rot++;
     if (ROT3(rot) > max) rot = 0;
+    if (m && SECRET_AINE == 0 && ROT3(rot) == 5) rot = ROT_MORRIGAN;        /* Aine locked: skip her */
     if (other >= 0 && (other & 0xF) == ROT3(rot)) {
         rot += 3;
-        if (ROT3(rot) > (gb2_morrigan_enabled ? 6 : 5)) rot = 0;
+        if (m && SECRET_AINE == 0 && ROT3(rot) == 5) rot += 3;
+        if (ROT3(rot) > (m ? 6 : 5)) rot = 0;
     }
     return rot;
 }
@@ -138,6 +143,7 @@ static int select_screen(int *art)
     buf[0] = 0;
     Random(gb2_morrigan_enabled ? ROT_MORRIGAN : 0xF);
     rot = Random(gb2_morrigan_enabled ? ROT_MORRIGAN : 0xF);
+    if (gb2_morrigan_enabled && SECRET_AINE == 0 && ROT3(rot) == 5) rot = ROT_MORRIGAN;
     CreateTask(2, V32(gt + 0x1BC));
     for (i = 0; i < 5; i++) if (WaitFrameR()) return 7;
     ScreenClear(0, 0x14, 0, 6);
@@ -217,7 +223,7 @@ static int select_screen(int *art)
             int on_q = (slot[0] & 0xF) == 5 || (slot[1] & 0xF) == 5;
             int *hit = i ? &m_hit : &a_hit, *draw = i ? &m_draw : &a_draw;
             int c = i ? 6 : 5;
-            if (i == 0 ? SECRET_AINE != 2 : !gb2_morrigan_enabled) continue;
+            if (i == 0 ? SECRET_AINE != 2 : gb2_morrigan_enabled != 2) continue;
             if (!on_q) { *hit = 0; continue; }
             if (*hit) continue;
             *hit = buf[bufi] == (i ? MORRIGAN_CODE : AINE_CODE);

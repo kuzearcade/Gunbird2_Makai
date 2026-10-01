@@ -27,14 +27,15 @@ then converted and patched in by the tools here.
   change to the original's own palette use, moving the red damage-flash bank down four lines to make room for her
   colours, renders identically.
 - **English and Japanese.** Her story text is present for both regions (region jumper / MAME "Region" setting).
-- **Arcade-style unlock.** Morrigan is unlocked with a maintenance code, like the arcade's own Aine secret.
+- **Arcade-style unlock.** Morrigan is unlocked with maintenance codes, like the arcade's own Aine secret: one code
+  puts her on the random `?`, another also lets you pick her directly, and a third locks her again.
 
 ## Features
 
 - **Playable Morrigan** as 1P or 2P: all shot power levels, sub-shot, charged shots (all gauge levels, including the
   full-screen level-3 attack), bomb, death, respawn and continue.
-- **Character select:** after unlocking, move to `?` and press **Up** to pick her. Her portraits, slot icon and select
-  voice follow the Dreamcast's random-pick rules.
+- **Character select:** with Flag 2, move to `?` and press **Up** to pick her; with Flag 1 (or 2) she can come up when
+  you take the random `?`. Her portraits, slot icon and select voice follow the Dreamcast's random-pick rules.
 - **Sound:** her voices and effects from the Dreamcast sound banks (20 sound IDs, 17 samples), resampled for the
   arcade's YMF278B. Levels and pitch are fitted to the Dreamcast, and her item-pickup voices are included. To make
   room, 27 samples that the original game never plays were removed; they are kept locally in
@@ -55,11 +56,18 @@ then converted and patched in by the tools here.
   - `3l.u6` and `3h.u13`, 8 MB each, instead of 4 MB.
   - A MAME driver entry for it is in `tools/mame/gunbird2m_driver.patch`; MAME lists it as "Gunbird 2 Makai
     (Morrigan Backport)".
-- **Unlocking Morrigan:**
-  1. Enter Test Mode (Service switch, F2 in MAME).
-  2. Choose **Maintenance Code** (fifth item).
-  3. Enter **5-1-9-9-4**. The code is saved to the EEPROM.
-- **Picking her:** on character select, move to `?` and press **Up**.
+- **Unlocking Morrigan:** enter Test Mode (Service switch, F2 in MAME), choose **Maintenance Code** (fifth item) and
+  enter one of her codes. They mirror the arcade's Aine codes, play her voice, and are saved to the EEPROM:
+
+  | Code | Message | Effect |
+  |---|---|---|
+  | **5-3-9-9-4** | Sit an MORRIGAN Flag1 | she can come up on the random `?` (like Aine's Flag1, 5-3-7-6-5) |
+  | **5-1-9-9-4** | Sit an MORRIGAN Flag2 | also `?` + **Up** picks her directly (like Aine's Flag2, 5-1-0-2-4) |
+  | **5-3-1-9-9** | MORRIGAN Flag Cancelled | locks her again (her flags only) |
+
+  "All data initialized" (5-3-5-7-3) clears her flag together with Aine's; the Aine cancel (5-3-1-5-7) leaves hers.
+  A board unlocked with an earlier build keeps Flag 2.
+- **Picking her:** on character select, move to `?` and press **Up** (Flag 2), or take the random `?`.
 - **Other codes:** the arcade's own maintenance codes still work, e.g. 5-1-0-2-4 for Aine.
 
 ## Requirements
@@ -150,8 +158,8 @@ gunbird2` reports it good). The zip's own checksum depends on how it was packed,
 
 | File | Size | CRC32 | SHA-1 |
 |---|---:|---|---|
-| `1_prog_h.u17` | 524288 | `31327d0e` | `8ef38aefb57851147b14f196d6decfde52fd6225` |
-| `2_prog_l.u16` | 524288 | `268a2572` | `763f9920a91b0b54a7404148db8a8029df174276` |
+| `1_prog_h.u17` | 524288 | `f850d33c` | `e8241c97f1812e14c2e016caeba6ec1a7dffc36b` |
+| `2_prog_l.u16` | 524288 | `d58149c8` | `9ef3e08296fd82da7c2a196c03a842da2eb82cea` |
 | `3_pdata.u1` | 524288 | `e5e9c8be` | `cec48a297d1b7e172ff5a2eb8fec8bf28c611845` |
 | `0l.u3` | 8388608 | `5c826bc8` | `74fb6b242b4c5fe5365cfcc3029ed6da4cf3a621` |
 | `0h.u10` | 8388608 | `3df0cb6c` | `271d276fa0f63d84e458223316a9517865fc2255` |
@@ -185,8 +193,8 @@ depend on the compiler.
 
 | File | Size | CRC32 | SHA-1 |
 |---|---:|---|---|
-| `1_prog_h.u17` | 524288 | `31327d0e` | `8ef38aefb57851147b14f196d6decfde52fd6225` |
-| `2_prog_l.u16` | 524288 | `268a2572` | `763f9920a91b0b54a7404148db8a8029df174276` |
+| `1_prog_h.u17` | 524288 | `f850d33c` | `e8241c97f1812e14c2e016caeba6ec1a7dffc36b` |
+| `2_prog_l.u16` | 524288 | `d58149c8` | `9ef3e08296fd82da7c2a196c03a842da2eb82cea` |
 | `3_pdata.u1` | 524288 | `e5e9c8be` | `cec48a297d1b7e172ff5a2eb8fec8bf28c611845` |
 | `0l.u3` | 8388608 | `5c826bc8` | `74fb6b242b4c5fe5365cfcc3029ed6da4cf3a621` |
 | `0h.u10` | 8388608 | `3df0cb6c` | `271d276fa0f63d84e458223316a9517865fc2255` |

@@ -67,7 +67,8 @@ typedef int s32;          typedef unsigned int u32;
 
 /* ---- Morrigan patch state (lives in free RAM, see gb2.ld) -------------------------------------- */
 #define EEP_MORRIGAN       0x20              /* 2 bytes, unused by the original game */
-#define MORRIGAN_MAGIC     0x4D6F            /* 'Mo' = enabled */
-extern s16 gb2_morrigan_enabled;
+#define MORRIGAN_MAGIC     0x4D6F            /* 'Mo' = Morrigan flag 2 (also '?' + Up); boards unlocked before keep it */
+#define MORRIGAN_MAGIC1    0x4D31            /* 'M1' = Morrigan flag 1 (random '?' only) */
+extern s16 gb2_morrigan_enabled;               /* Morrigan flag: 0, 1 (random '?'), 2 (also '?' + Up) */
 
 #endif

@@ -1,5 +1,7 @@
-/* Maintenance-code screen and secret flags (arcade 0x0600731C, 0x06022A3E/4E, 0x06022B10) with a sixth code
- * that unlocks Morrigan ("Up" on '?' at character select), mirroring how the arcade gates Aine. */
+/* Maintenance-code screen and secret flags (arcade 0x0600731C, 0x06022A3E/4E, 0x06022B10) with three Morrigan codes
+ * mirroring the arcade's Aine codes: 5-3-9-9-4 flag 1 (she can come up on the random '?'), 5-1-9-9-4 flag 2 (also
+ * '?' + Up picks her), 5-3-1-9-9 cancels both.  "All Data Initialized" (5-3-5-7-3) clears her flag with Aine's; the
+ * Aine cancel (5-3-1-5-7) leaves it, as the Morrigan cancel leaves Aine's. */
 #include "arcade.h"
 #include "gen_sound.h"
 
@@ -8,7 +10,7 @@ s16 gb2_morrigan_enabled;
 /* original codes live in the D section at 0x0602E77D (5 x 5 digits); initial digits at 0x0602E796 */
 #define ORIG_CODES   ((const s8 *)0x0602E77D)
 #define INIT_DIGITS  ((const s16 *)0x0602E796)
-static const s8 morrigan_code[5] = { 5, 1, 9, 9, 4 };
+static const s8 morrigan_codes[3][5] = { { 5, 1, 9, 9, 4 }, { 5, 3, 9, 9, 4 }, { 5, 3, 1, 9, 9 } };   /* states 6-8 */
 
 /* 0x06022A3E: clear secret block */
 void gb2_secret_clear(void)
@@ -39,7 +41,7 @@ void gb2_secret_save(void)
     EepWrite(0x1C, (const void *)0x0605CA50, 2);
     EepWrite(0x1E, (const void *)0x0605CA54, 2);
     EepWrite(0x2E, &sum, 2);
-    m = gb2_morrigan_enabled ? MORRIGAN_MAGIC : 0;
+    m = gb2_morrigan_enabled == 2 ? MORRIGAN_MAGIC : gb2_morrigan_enabled == 1 ? MORRIGAN_MAGIC1 : 0;
     EepWrite(EEP_MORRIGAN, &m, 2);
 }
 
@@ -52,7 +54,7 @@ int gb2_secret_load(void)
     EepRead(0x1E, (void *)0x0605CA54, 2);
     EepRead(0x2E, &sum, 2);
     EepRead(EEP_MORRIGAN, &m, 2);
-    gb2_morrigan_enabled = (m == MORRIGAN_MAGIC);
+    gb2_morrigan_enabled = m == MORRIGAN_MAGIC ? 2 : m == MORRIGAN_MAGIC1 ? 1 : 0;
     if (sum != (u16)(SECRET_TIME + SECRET_PLAYS + SECRET_AINE)) {
         SECRET_TIME = 0;
         SECRET_PLAYS = 0;
@@ -83,10 +85,16 @@ static int flag_screen(const char *msg, s16 cnt, int sound, void (*apply)(void))
     return 1;
 }
 
-static void apply_cancel(void) { gb2_secret_clear(); SECRET_COUNTED = 1; gb2_secret_save(); }
+static void apply_cancel(void)                  /* Aine's cancel: her flag only */
+{
+    s16 m = gb2_morrigan_enabled;
+    gb2_secret_clear(); gb2_morrigan_enabled = m; SECRET_COUNTED = 1; gb2_secret_save();
+}
 static void apply_flag1(void)  { SECRET_PLAYS = 7; SECRET_AINE = 1; SECRET_COUNTED = 1; gb2_secret_save(); }
 static void apply_flag2(void)  { SECRET_PLAYS = 0x1E; SECRET_AINE = 2; SECRET_COUNTED = 1; gb2_secret_save(); }
-static void apply_morrigan(void) { gb2_morrigan_enabled = 1; SECRET_COUNTED = 1; gb2_secret_save(); }
+static void apply_morrigan2(void) { gb2_morrigan_enabled = 2; SECRET_COUNTED = 1; gb2_secret_save(); }
+static void apply_morrigan1(void) { gb2_morrigan_enabled = 1; SECRET_COUNTED = 1; gb2_secret_save(); }
+static void apply_morrigan0(void) { gb2_morrigan_enabled = 0; SECRET_COUNTED = 1; gb2_secret_save(); }
 
 void gb2_maintenance_code(void)
 {
@@ -119,8 +127,8 @@ void gb2_maintenance_code(void)
             if (pad(0x10) && --cursor < 0) cursor = 4;
             if (pad(8)) {
                 state = 100;
-                for (c = 0; c < 6; c++) {
-                    const s8 *code = c < 5 ? ORIG_CODES + c * 5 : morrigan_code;
+                for (c = 0; c < 8; c++) {
+                    const s8 *code = c < 5 ? ORIG_CODES + c * 5 : morrigan_codes[c - 5];
                     for (i = 0; i < 5 && digit[i] == code[i]; i++) ;
                     if (i == 5) { state = c + 1; break; }
                 }
@@ -142,7 +150,9 @@ void gb2_maintenance_code(void)
         case 3: run = flag_screen((const char *)0x0602E838, cnt, 0x38, apply_flag1); break;     /* 5-3-7-6-5 */
         case 4: run = flag_screen((const char *)0x0602E84C, cnt, 0x32, apply_flag2); break;     /* 5-1-0-2-4 */
         case 5: MAINT_MODE_REQ = 0x100; run = 0; break;                                   /* 5-2-0-4-8 */
-        case 6: run = flag_screen("Sit an MORRIGAN Flag", cnt, SND_M_UNLOCK, apply_morrigan); break;   /* 5-1-9-9-4 */
+        case 6: run = flag_screen("Sit an MORRIGAN Flag2", cnt, SND_M_UNLOCK, apply_morrigan2); break;  /* 5-1-9-9-4 */
+        case 7: run = flag_screen("Sit an MORRIGAN Flag1", cnt, SND_M_UNLOCK, apply_morrigan1); break;  /* 5-3-9-9-4 */
+        case 8: run = flag_screen("MORRIGAN Flag Cancelled", cnt, SND_M_UNLOCK, apply_morrigan0); break; /* 5-3-1-9-9 */
         case 100:
             PrintCentered((const char *)0x0602E860, 0x78);
             if (cnt < 0x78) cnt++;

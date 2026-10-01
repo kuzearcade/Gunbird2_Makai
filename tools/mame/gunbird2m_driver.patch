@@ -11,7 +11,7 @@ index f6b031f4526..bf3d80fc9aa 100644
  s1945ii
  s1945iii
 diff --git a/src/mame/psikyo/psikyosh.cpp b/src/mame/psikyo/psikyosh.cpp
-index 55fca667f07..bfce2847e88 100644
+index 55fca667f07..eb10911fd88 100644
 --- a/src/mame/psikyo/psikyosh.cpp
 +++ b/src/mame/psikyo/psikyosh.cpp
 @@ -1122,6 +1122,34 @@ ROM_START( gunbird2a ) /* Internal date string shows Oct 08 17:02 - No specific
@@ -24,8 +24,8 @@ index 55fca667f07..bfce2847e88 100644
 +*/
 +ROM_START( gunbird2m )
 +	ROM_REGION( 0x180000, "maincpu", 0 )
-+	ROM_LOAD32_WORD_SWAP( "2_prog_l.u16", 0x000002, 0x080000, CRC(268a2572) SHA1(763f9920a91b0b54a7404148db8a8029df174276) )
-+	ROM_LOAD32_WORD_SWAP( "1_prog_h.u17", 0x000000, 0x080000, CRC(31327d0e) SHA1(8ef38aefb57851147b14f196d6decfde52fd6225) )
++	ROM_LOAD32_WORD_SWAP( "2_prog_l.u16", 0x000002, 0x080000, CRC(d58149c8) SHA1(9ef3e08296fd82da7c2a196c03a842da2eb82cea) )
++	ROM_LOAD32_WORD_SWAP( "1_prog_h.u17", 0x000000, 0x080000, CRC(f850d33c) SHA1(e8241c97f1812e14c2e016caeba6ec1a7dffc36b) )
 +	ROM_LOAD16_WORD_SWAP( "3_pdata.u1",   0x100000, 0x080000, CRC(e5e9c8be) SHA1(cec48a297d1b7e172ff5a2eb8fec8bf28c611845) )
 +
 +	ROM_REGION( 0x4000000, "gfx", 0 )
