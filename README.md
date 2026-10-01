@@ -3,8 +3,8 @@
 Morrigan Aensland was added to the Dreamcast release of Psikyo's *Gunbird 2* as a Capcom guest character. The
 original arcade game (Psikyo PS5 board, MAME set `gunbird2`) never had her. This project (`Gunbird2_Makai`)
 backports her from the Dreamcast release to the arcade game: her sprites, shots, bombs, sounds, story scenes,
-endings and ranking animation. It targets the real PS5 board's limits, so the result could run on real hardware as
-well as in MAME.
+endings and ranking animation. It targets the real PS5 board's limits and has been tested on a real PS5 board, as
+well as in MAME and on a MiSTer.
 
 The name comes from **Makai** (魔界), the demon realm Morrigan comes from.
 
@@ -43,7 +43,10 @@ then converted and patched in by the tools here.
   stage-demo lines (`S_16_1.P04`) and added as a new sound (ID 0x17E).
 - **Story:** all 36 of her stage-demo scenes (every stage, alone or with each partner), with portraits and English
   and Japanese text.
-- **Endings:** her solo ending and every pair ending, converted to 8-bit colour tiles.
+- **Endings:** her solo ending and every pair ending, converted to 8-bit colour tiles and adapted to the real board,
+  which cannot blend 8-bit colour sprites: fades to and from white are palette fades (written in vblank), the two
+  long picture dissolves are pre-blended, and sprites nobody can see are left out so the board never runs short of
+  sprite time on a scanline. Confirmed perfect on a real PS5 board.
 - **HUD and menus:** HUD life icons, all-clear bonus tally, name entry, and her animated high-score ranking icon.
   In the maintenance Stage Select she appears as "Jiki6", the Dreamcast's internal name.
 - **ROM test:** the boot-time ROM checksums are recomputed on every build, so the game's own ROM test passes.
@@ -218,6 +221,10 @@ ROMs, run step 6 to update the driver entry (and these tables).
 for graphics (the sound ROM follows at 0x3C00000), so the MRA loads only the first 6 MB of each bank-3 chip; the rest
 is empty (the build's MRA step checks this).
 
+**Tested on a real PS5 board** (2026-10-01): her palette (select-screen art and in-game sprites), enemy hit flashes
+and red debris, the 64M bank-3 EPROM pair, and all six of her endings in English and Japanese - fades, picture
+dissolves and close-ups, with no shimmer - are correct on the hardware.
+
 **Tested and working on a MiSTer** (2026-09-30, core `PsikyoSH2_20260817.rbf`), despite the 60 MB graphics limit:
 the set boots, Morrigan unlocks with her maintenance code, all six of her endings play correctly from Stage Select
 (their graphics are the highest data in the ROM, so they are the ones that would break), and she plays normally.
@@ -285,11 +292,7 @@ blaming a patch (`docs/NOTES.md` has examples).
 
 ## To do
 
-- **Real-PCB re-test (open).** Confirmed on a real board: her palette (select-screen art and in-game sprites),
-  enemy hit flashes and red debris after the red-bank move, the Jiki6 + Jiki4 Japanese ending text, and the 64M
-  bank-3 EPROM pair (all six endings ran from it). To re-test: the Jiki6 + Jiki1 and Jiki6 + Jiki0 endings, whose
-  close-ups ("Morrigan! You!!", "Soul Fist!!") now show the Dreamcast backdrop as a sprite object instead of a
-  background layer (the layer covered the pictures on the board and turned the text blue).
+- **Nothing open.** The real-PCB re-test is complete (2026-10-01): every ending is correct on the board.
 - **Not planned (Dreamcast-only):** stage-demo and ending voices (no sound ROM space), and the staff-roll movie (no
   video playback on the board).
 - **Not planned: Japanese ending pacing.** The Japanese disc has its own, slower ending scripts; the port plays the
